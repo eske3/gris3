@@ -1,0 +1,11 @@
+// THis procedure bridges from mel to python command.
+// It requires a python class "GlobalMelPyConnector" in "lib" module.
+
+global proc globalMelPyConnector(string $commandKey)
+{
+    python(
+        "from gris3.gadgets.oldModules import lib as gOldModLib;gOldModLib.GlobalMelPyConnector().exeCommand('"
+        + $commandKey
+        + "');"
+    );
+}

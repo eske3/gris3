@@ -1,0 +1,106 @@
+# -*- coding:utf-8 -*-
+r'''
+    @file     scriptTemplate
+    @brief    ハイモデルを構築するための処理を記述したモジュール。
+    @class    Constructor : ハイモデルのリグを構築するクラス。
+'''
+from gris3 import constructors, func, node
+mainModule = constructors.mainModule(__name__, True)
+cmds = func.cmds
+
+# /////////////////////////////////////////////////////////////////////////////
+# ラップするオブジェクトを辞書型で定義する。
+# キーでケージ指定し、バリューにはラップされるオブジェクトのリストを指定する。
+WrapListLR = {
+}
+WrapList = {
+}
+
+# ベースジョイントからレンダーオブジェクトへペアレントするオブジェクトを辞書で
+# キーで親ジョイントを指定し、バリューには子となるレンダーオブジェクトのリスト
+# を指定する。
+ParentListLR = {
+}
+ParentList = {
+}
+# /////////////////////////////////////////////////////////////////////////////
+
+class Constructor(mainModule.Constructor):
+    r'''
+        @brief       ハイモデルのリグを構築するクラス。
+        @inheritance mainModule.Constructor
+    '''
+    def preSetupForLOD(self):
+        r'''
+            @brief  setupメソッド前に実行される事前準備用のメソッド。
+            @return None
+        '''
+        # バインドジョイントを作成する。
+        # self.createBindJoint('hip_jnt_C')
+
+        # ExtraJointを読み込む。
+        self.loadExtraJoints()
+        # スキンのウェイトを読み込む。
+        self.loadSkinWeights()
+
+    def wrapObjects(self):
+        r'''
+            @brief  WrapList(LR)で定義されたオブジェクトをラップする。
+            @return None
+        '''
+        for s in func.SuffixIter():
+            for cage in WrapListLR:
+                self.localWrap([x*s for x in WrapListLR[cage]], cage*s)
+        for cage in WrapList:
+            self.localWrap(WrapList[cage], cage)
+
+    def parent(self):
+        r'''
+            @brief  ParentList(LR)で定義されたオブジェクトを親子付する。
+            @return None
+        '''
+        def matrixConstraint(parent, target, mtx_nodes=None):
+            r'''
+                @brief  matrixを仕様して親子付を行う。
+                @param  parent : [str]
+                @param  target : [str]
+                @param  mtx_nodes(None) : [list]
+                @return list
+            '''
+            if not mtx_nodes:
+                mtx_nodes = self.createMatrixConstraint(parent, target)
+            else:
+                func.makeDecomposeMatrixConnection(mtx_nodes[0], [target])
+            return mtx_nodes
+        for s in func.SuffixIter():
+            for parent in ParentListLR:
+                mtx_nodes = None
+                for target in ParentListLR[parent]:
+                    mtx_nodes = matrixConstraint(
+                        s(parent), s(target), mtx_nodes
+                    )
+        for parent in ParentList:
+            mtx_nodes = None
+            for target in ParentList[parent]:
+                mtx_nodes = matrixConstraint(parent, target, mtx_nodes)
+
+    def setup(self):
+        r'''
+            @brief  コントローラのセットアップを行う。
+            @return None
+        '''
+        super(Constructor, self).setup()
+
+        # ドリブンキーをロードする。
+        self.loadDrivenKeys()
+        # WrapListで定義されたオブジェクトをラップする。
+        self.wrapObjects()
+        # ParentListで定義されたオブジェクトを親子付けする。
+        self.parent()
+
+    def postProcessForLOD(self):
+        r'''
+            @brief  処理終了後の後処理を行う。
+            @return None
+        '''
+        pass

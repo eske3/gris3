@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<grisPref>
+    <constructorPrefix>gris3AddOns.constructors</constructorPrefix>
+    <rigUnitPrefix>gris3AddOns.rigUnits</rigUnitPrefix>
+    <factoryModules>gris3AddOns.factoryModules</factoryModules>
+</grisPref>

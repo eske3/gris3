@@ -1,0 +1,43 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+from gris3 import rigScripts, node
+func = rigScripts.func
+cmds = func.cmds
+
+Category = 'Vehicle'
+
+class JointCreator(rigScripts.JointCreator):
+    r"""
+        ジョイント作成機能を提供するクラス。
+    """
+    def process(self):
+        r"""
+            ジョイント作成プロセスとしてコールされる。
+        """
+        from gris3.tools import jointEditor
+        name = self.basenameObject()
+        parent = self.parent()
+
+        # ユニット設定。-------------------------------------------------------
+        unit = self.unit()
+        #unit.addMember('attrName', [jointName, ...])
+        # ---------------------------------------------------------------------
+
+        # ノードをルートととして登録する。 ------------------------------------
+        #self.asRoot(jointName, ...)
+        # ---------------------------------------------------------------------
+
+
+class RigCreator(rigScripts.RigCreator):
+    r"""
+        リグ作成機能を提供するクラス。
+    """
+    def process(self):
+        r"""
+            コントローラ作成プロセスとしてコールされる。
+        """
+        unit = self.unit()
+        unitname = self.unitName()
+        basename = unitname.name()
+        side = unit.positionIndex()
+        anim_set = self.animSet()

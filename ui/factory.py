@@ -6,16 +6,16 @@ r"""
     
     Dates:
         date:2017/01/21 11:47[Eske](eske3g@gmail.com)
-        update:2021/04/24 05:12 eske yoshinob[eske3g@gmail.com]
+        update:2025/05/24 13:50 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
 import os
 
-from .. import uilib, style, factoryModules
+from .. import uilib, style, factoryModules, lib
 from ..uilib import mayaUIlib
 from ..gadgets import toolbar
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
@@ -435,6 +435,11 @@ class MainGUI(AdvancedTabWidget):
     def updateSettings(self):
         r"""
             FactoryのUIを更新する。
+            戻り値として設定されたアセット名、アセットタイプ、プロジェクト名を
+            返す。
+            
+            Returns:
+                tuple: 設定されたセット名、アセットタイプ、プロジェクト名
         """
         fs = factoryModules.FactorySettings()
         fs.isChanged.emit()
@@ -443,6 +448,7 @@ class MainGUI(AdvancedTabWidget):
         for f in (1, -1):
             size.setWidth(size.width() + f)
             self.resize(size)
+        return fs.assetName(), fs.assetType(), fs.project()
 
     def setRootPath(self, rootPath, emitSignal=True):
         r"""
@@ -572,6 +578,17 @@ class FactoryWidget(QtWidgets.QWidget):
         tool_bar = toolbar.Toolbar(self)
         tool_bar.addPreset(toolbar.FACTORY_TOOLBAR)
         # =====================================================================
+        
+        # =====================================================================
+        self.__sub_label = QtWidgets.QLabel()
+        self.__sub_label.setMinimumWidth(10)
+        self.__sub_label.setStyleSheet(
+            'font-weight: bold;'
+        )
+        fs = factoryModules.FactorySettings()
+        fs.isChanged.connect(self.updateSubLabel)
+        # =====================================================================
+        
 
         # プロジェクトセレクタの作成。=========================================
         p_btn = uilib.OButton()
@@ -588,8 +605,9 @@ class FactoryWidget(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(style.scaled(5))
         layout.addWidget(tool_bar, 0, 0, 1, 1)
-        layout.addWidget(p_btn, 0, 1, 1, 1)
-        layout.addWidget(self.__maingui, 1, 0, 1, 2)
+        layout.addWidget(self.__sub_label, 0, 1, 1, 1)
+        layout.addWidget(p_btn, 0, 2, 1, 1)
+        layout.addWidget(self.__maingui, 1, 0, 1, 3)
         layout.setColumnStretch(0, 1)
 
         self.showProjectSelector()
@@ -616,6 +634,23 @@ class FactoryWidget(QtWidgets.QWidget):
         """
         self.__selector.hide()
 
+    def updateSubLabel(self):
+        r"""
+            タイトルバーの横に表示するサブラベルを設定する。
+
+            Args:
+                name (str):
+        """
+        fs = factoryModules.FactorySettings()
+        p, name, typ = fs.project(), fs.assetName(), fs.assetType()
+        label = '{} / {}'.format(lib.title(p), lib.title(name))
+        tooltip = 'Asset Name : {}<br>Asset Type : {}<br>Project : {}'.format(
+            name, typ, p
+        )
+        self.__sub_label.setText(label)
+        self.__sub_label.setToolTip(tooltip)
+
+
     def applyProject(self, path):
         r"""
             プロジェクトをセットする。
@@ -623,8 +658,9 @@ class FactoryWidget(QtWidgets.QWidget):
             Args:
                 path (str):プロジェクトパス
         """
-        self.__maingui.setRootPath(path, False)
-        self.__maingui.updateSettings()
+        main_gui = self.mainGUI()
+        main_gui.setRootPath(path, False)
+        main_gui.updateSettings()
 
     def setup(
         self, directoryPath='', assetName='', assetType='', project='',

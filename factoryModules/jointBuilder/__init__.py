@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ここに説明文を記入
+    ジョイントの作成、編集、書き出し機能を提供するモジュール。
     
     Dates:
         date:2017/01/21 22:35[Eske](eske3g@gmail.com)
@@ -17,7 +17,6 @@ from gris3 import core, factoryModules, exporter, uilib, func
 from gris3.uilib import factoryUI
 from gris3.gadgets import jointEditorWidget, unitCreator
 from gris3.tools import jointEditor
-# from gris3.factoryModules.jointBuilder import unitCreator
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
@@ -62,8 +61,8 @@ class JointManager(factoryModules.AbstractDepartmentGUI):
             選択アイテムを書き出す。
             
             Args:
-                rootpath (str):
-                filename (str):
+                rootpath (str):書き出し先のディレクトリパス
+                filename (str):ファイル名
         """
         exporter.exportMayaFile(
             rootpath, filename, self.__view.isOverwrite()
@@ -79,6 +78,8 @@ class Department(factoryModules.AbstractDepartment):
 
     def label(self):
         r"""
+            Factoryのタブに表示するラベルを返す。
+
             Returns:
                 str:
         """
@@ -86,6 +87,8 @@ class Department(factoryModules.AbstractDepartment):
 
     def priority(self):
         r"""
+            表示優先順位を返す。
+
             Returns:
                 int:
         """

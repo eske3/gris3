@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ここに説明文を記入
+    サブ骨を作成、編集、書き出しをするための機能を提供するクラス。
     
     Dates:
         date:2017/01/22 0:04[Eske](eske3g@gmail.com)
-        update:2022/07/08 11:56 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/05/25 09:46 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -63,6 +63,11 @@ class ContextOption(factoryUI.ContextOption):
                 model.setItem(row, col, item)
 
     def selectNodesFromView(self, selected, deselected):
+        r"""
+            Args:
+                selected (QtCore.QItemSelection):
+                deselected (QtCore.QItemSelection):
+        """
         from ...tools import selectionUtil
         sel_model = self.__view.selectionModel()
         selection_list = {}
@@ -92,9 +97,6 @@ class ContextOption(factoryUI.ContextOption):
                 bool:
         """
         return True
-
-    # def hiddenTrigger(self):
-        # return 0
 
     def contextSize(self):
         r"""
@@ -144,18 +146,18 @@ class ExtraJointExporter(QtWidgets.QWidget):
 
     def selectExtraJoint(self):
         r"""
-            選択ノード下のExtraジョイントが入っているノードを選択する
+            選択ノード下のExtraジョイントが入っているノードを選択する。
         """
         with core.Do:
             extraJoint.selectExtraJoint(core.selected())
 
     def export(self, rootpath, filename):
         r"""
-            選択ノードについているDrivenキーをエクスポートする
+            選択ノードについているDrivenキーをエクスポートする。
             
             Args:
-                rootpath (str):
-                filename (str):
+                rootpath (str):書き出し先のディレクトリパス
+                filename (str):ファイル名
         """
         from gris3 import exporter
         exporter.exportExtraJointScripts(

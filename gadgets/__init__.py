@@ -147,8 +147,12 @@ def showRenamer():
 
 
 def showAutoRenamer():
+    r"""
+        自動リネームツールを起動する。
+    """
     from . import renamer
     renamer.showAutoRenameWindow()
+
 
 def showNodeRenamer():
     r"""

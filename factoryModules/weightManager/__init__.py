@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/01/22 0:04[Eske](eske3g@gmail.com)
-        update:2022/07/08 12:08 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/05/25 09:50 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -221,6 +221,7 @@ class WeightEditor(factoryModules.AbstractDepartmentGUI):
         isOverwrite = self.__isOverwrite.isChecked()
         exporter.exportMultSkinWeights(rootpath, isOverwrite)
         self.__view.refresh()
+
 
 class Department(factoryModules.AbstractDepartment):
     def init(self):

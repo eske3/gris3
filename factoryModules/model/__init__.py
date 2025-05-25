@@ -87,6 +87,7 @@ class ModelFileView(factoryUI.FileView):
         """
         return BasenameEditor()
 
+
 class ModelManager(factoryModules.AbstractDepartmentGUI):
     r"""
         モデル編集機能およびセーブ機能を提供するGUIクラス。
@@ -95,22 +96,6 @@ class ModelManager(factoryModules.AbstractDepartmentGUI):
         view = ModelFileView()
         view.setRootPath(self.workspaceDir())
         view.exportButtonClicked.connect(self.export)
-
-        # # タブを作成。=======================================================
-        # tab = factoryUI.ToolTabWidget()
-        # btn = tab.addTab(
-            # modelSetupWidget.ModelSetupWidget(),
-            # uilib.IconPath('uiBtn_toolBox'), 'Edit'
-        # )
-        # btn.setBgColor(*tab.ToolColor)
-
-        # btn = tab.addTab(
-            # view, uilib.IconPath('folder.png'), 'Save Joints'
-        # )
-        # btn.setBgColor(*tab.SaveColor)
-        
-        # tab.setCurrentIndex(1)
-        # # ===================================================================
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -130,6 +115,7 @@ class ModelManager(factoryModules.AbstractDepartmentGUI):
             rootpath, filename, self.__view.isOverwrite(),
         )
 
+
 class Department(factoryModules.AbstractDepartment):
     r"""
         ベースジョイントにまつわる機能を管理するためのクラス。
@@ -139,6 +125,8 @@ class Department(factoryModules.AbstractDepartment):
 
     def label(self):
         r"""
+             Factoryのタブに表示するラベルを返す。
+
             Returns:
                 str:
         """
@@ -146,6 +134,8 @@ class Department(factoryModules.AbstractDepartment):
 
     def priority(self):
         r"""
+            表示優先順位を返す。
+
             Returns:
                 int:
         """

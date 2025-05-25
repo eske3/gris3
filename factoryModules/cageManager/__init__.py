@@ -1,34 +1,30 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     __init__.py
-    @brief    ケージにまつわる機能を提供するモジュール。
-    @class    CageManager : ケージなどを保存したりするUIを提供するクラス。
-    @class    Department : ケージにまつわる機能を管理するためのクラス。
-    @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-    @update      2017/01/22 0:03[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    ケージにまつわる機能を提供するモジュール。
+    
+    Dates:
+        date:2017/01/22 0:03[Eske](eske3g@gmail.com)
+        update:2025/05/25 09:39 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from gris3 import factoryModules, exporter
 from gris3.uilib import factoryUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
 
+
 class CageManager(factoryModules.AbstractDepartmentGUI):
-    r'''
-        @brief       ケージなどを保存したりするUIを提供するクラス。
-        @inheritance factoryModules.AbstractDepartmentGUI
-        @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-        @update      2017/01/22 0:03[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        ケージなどを保存したりするUIを提供するクラス。
+    """
     def init(self):
-        r'''
-            @brief  初期化関数。
-            @return None
-        '''
         view = factoryUI.FileView()
         view.setRootPath(self.workspaceDir())
         view.setBrowserContext(factoryUI.MayaAsciiBrowserContext)
@@ -41,48 +37,48 @@ class CageManager(factoryModules.AbstractDepartmentGUI):
         self.__view = view
 
     def export(self, rootpath, filename):
-        r'''
-            @brief  ここに説明文を記入
-            @param  rootpath : [edit]
-            @param  filename : [edit]
-            @return None
-        '''
+        r"""
+            Mayaファイルの書き出しを行う。
+            
+            Args:
+                rootpath (str): 書き出し先のディレクトリパス
+                filename (str):ファイル名
+        """
         exporter.exportMayaFile(
             rootpath, filename, self.__view.isOverwrite()
         )
 
 
 class Department(factoryModules.AbstractDepartment):
-    r'''
-        @brief       ケージにまつわる機能を管理するためのクラス。
-        @inheritance factoryModules.AbstractDepartment
-        @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-        @update      2017/01/22 0:03[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        ケージにまつわる機能を管理するためのクラス。
+    """
     def init(self):
-        r'''
-            @brief  初期化関数。
-            @return None
-        '''
         self.setDirectoryName('cages')
 
     def label(self):
-        r'''
-            @brief  Factoryのタブに表示するラベルを返すメソッド。
-            @return str
-        '''
+        r"""
+            Factoryのタブに表示するラベルを返す。
+            
+            Returns:
+                str:
+        """
         return 'Cage Exporter'
 
     def priority(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            表示優先順位を返す。
+            
+            Returns:
+                int:
+        """
         return 9
         
     def GUI(self):
-        r'''
-            @brief  Factoryのタブに表示するUIを定義するクラスを返すメソッド。
-            @return CageManager
-        '''
+        r"""
+            Factoryのタブに表示するUIを定義するクラスを返す。
+            
+            Returns:
+                CageManager:
+        """
         return CageManager

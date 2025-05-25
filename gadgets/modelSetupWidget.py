@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ここに説明文を記入
+    モデリング用補助ツール群を提供するガジェット
     
     Dates:
         date:2017/07/06 5:35[Eske](eske3g@gmail.com)
@@ -18,6 +18,7 @@ from gris3.uilib import mayaUIlib
 from gris3 import lib, uilib, node
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 Exec_Color = (64, 72, 150)
+
 
 class AllGroupCreator(QtWidgets.QWidget):
     r"""
@@ -49,6 +50,7 @@ class AllGroupCreator(QtWidgets.QWidget):
         from gris3 import core
         with node.DoCommand():
             core.createModelRoot()
+
 
 class PolyEditor(QtWidgets.QGroupBox):
     r"""
@@ -253,6 +255,7 @@ class MirrorToolTrsOption(AbstractMirrorToolOption):
         )
         action.setFlags(flags)
 
+
 class MirrorToolRenameOption(AbstractMirrorToolOption):
     r"""
         ミラー後のリネーム処理を定義するGUI。
@@ -290,6 +293,7 @@ class MirrorToolRenameOption(AbstractMirrorToolOption):
         """
         action.setSearchingText(self.__search_edit.text())
         action.setReplacingText(self.__replace_edit.text())
+
 
 class MirrorToolParentOption(MirrorToolRenameOption):
     r"""
@@ -499,6 +503,7 @@ class MirrorTool(uilib.ClosableGroup):
         p.delete()
         self.returnViewMode()
 
+
 class PolyHalfRemover(mayaUIlib.DirectionPlaneWidget):
     r"""
         任意の軸の半分側のフェイスを削除する。
@@ -564,6 +569,7 @@ class PolyHalfRemover(mayaUIlib.DirectionPlaneWidget):
         """
         modelingSupporter.removePolyFaceOnHalf(axisA, self.getAxis(button))
 
+
 class PolyMirror(PolyHalfRemover):
     r"""
         ミラージオメトリを実行する。
@@ -607,6 +613,7 @@ class PolyMirror(PolyHalfRemover):
             axis=self.Direction[axisA], baseAxis=self.getAxis(button)
         )
 
+
 class PolyMirrorEditor(uilib.ClosableGroup):
     r"""
         ポリゴンのミラーリング機能を集めたグループ
@@ -632,6 +639,7 @@ class PolyMirrorEditor(uilib.ClosableGroup):
             QtCore.Qt.AlignLeft
         )
         layout.addWidget(mirror_view, 1, 1, 1, 1)
+
 
 class PolyCutGeometry(PolyHalfRemover):
     r"""
@@ -682,6 +690,7 @@ class PolyCutGeometry(PolyHalfRemover):
         with node.DoCommand():
             modelingSupporter.cutGeometry(operation=operation)
 
+
 class PolyCutEditor(uilib.ClosableGroup):
     r"""
         ポリゴンのカット機能を集めたグループ
@@ -699,6 +708,7 @@ class PolyCutEditor(uilib.ClosableGroup):
         
         layout = QtWidgets.QGridLayout(self)
         layout.addWidget(cut_view, 0, 0, 1, 1)
+
 
 class SelectedVertexPicker(QtWidgets.QWidget):
     r"""
@@ -854,6 +864,7 @@ class MainGUI(uilib.AbstractSeparatedWindow):
         """
         return ModelSetupWidget()
 
+
 class PolyHalfRemoverWidget(uilib.AbstractSeparatedWindow):
     r"""
         任意の軸でポリゴンフェースを削除するGUIを提供するクラス。
@@ -870,6 +881,7 @@ class PolyHalfRemoverWidget(uilib.AbstractSeparatedWindow):
         self.setScalable(False)
         return PolyHalfRemover()
 
+
 class PolyMirrorWidget(uilib.AbstractSeparatedWindow):
     r"""
         任意の軸でもポリゴンをミラーリングする機能を提供するクラス
@@ -885,6 +897,7 @@ class PolyMirrorWidget(uilib.AbstractSeparatedWindow):
         self.resize(uilib.hires(200), uilib.hires(220))
         self.setScalable(False)
         return PolyMirror()
+
 
 class PolyCutWidget(uilib.AbstractSeparatedWindow):
     r"""
@@ -942,6 +955,7 @@ class PolyCutWidget(uilib.AbstractSeparatedWindow):
         with node.DoCommand():
             modelingSupporter.cutToolManipulator()
 
+
 def showPolyHalfRemover():
     r"""
         PolyHalfRemoverWidgetを起動する
@@ -952,6 +966,7 @@ def showPolyHalfRemover():
     widget = PolyHalfRemoverWidget(mayaUIlib.MainWindow)
     widget.show()
     return widget
+
 
 def showPolyMirror():
     r"""
@@ -964,6 +979,7 @@ def showPolyMirror():
     widget.show()
     return widget
 
+
 def showPolyCutter():
     r"""
         PolyCutWidgetを起動する
@@ -974,6 +990,7 @@ def showPolyCutter():
     widget = PolyCutWidget(mayaUIlib.MainWindow)
     widget.show()
     return widget
+
 
 def showWindow():
     r"""

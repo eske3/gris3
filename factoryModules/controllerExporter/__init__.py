@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ここに説明文を記入
+    コントローラに関する編集や書き出しなどを行う機能を提供するモジュール。
     
     Dates:
         date:2017/01/22 0:03[Eske](eske3g@gmail.com)
-        update:2022/07/17 15:17 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/05/25 09:40 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -20,6 +20,7 @@ from ...uilib import factoryUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
+
 
 class ContextOption(factoryUI.ContextOption):
     def __init__(self, parent=None):
@@ -61,6 +62,11 @@ class ContextOption(factoryUI.ContextOption):
             model.setItem(row, 0, item)
 
     def selectNodesFromView(self, selected, deselected):
+        r"""
+            Args:
+                selected (QtCore.QItemSelection):
+                deselected (QtCore.QItemSelection):
+        """
         from ...tools import selectionUtil
         sel_model = self.__view.selectionModel()
         selection_list = []
@@ -78,9 +84,6 @@ class ContextOption(factoryUI.ContextOption):
                 bool:
         """
         return True
-
-    # def hiddenTrigger(self):
-        # return 0
 
     def contextSize(self):
         r"""
@@ -146,6 +149,8 @@ class Department(factoryModules.AbstractDepartment):
 
     def label(self):
         r"""
+            Factoryのタブに表示するラベルを返す。
+
             Returns:
                 str:
         """
@@ -153,6 +158,8 @@ class Department(factoryModules.AbstractDepartment):
 
     def priority(self):
         r"""
+            表示優先順位を返す。
+
             Returns:
                 int:
         """
@@ -160,7 +167,7 @@ class Department(factoryModules.AbstractDepartment):
 
     def GUI(self):
         r"""
-            Factoryのタブに表示するUIを定義するクラスを返すメソッド。
+            Factoryのタブに表示するUIを定義するクラスを返す。
             
             Returns:
                 ControllerManager:

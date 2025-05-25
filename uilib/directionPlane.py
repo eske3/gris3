@@ -214,10 +214,10 @@ class DirectionView(QtWidgets.QGraphicsView):
 
     def setVectorPlane(self, planeType):
         r"""
-            ここに説明文を記入
+            ベクトルを定義するプレーンを設定する。
             
             Args:
-                planeType (any):
+                planeType (list or tuple): ベクトルを表す３軸のリスト
         """
         self.__basePlane = planeType
 

@@ -1,18 +1,18 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     __init__.py
-    @brief    ここに説明文を記入
-    @class    DrivenKeyEditor : ここに説明文を記入
-    @class    DrivenKeyExporter : DrivenKeyを書き出すための補助ツールとエクスポーター
-    @class    DrivenManager : ベースジョイントの編集・保存などのUIを提供するクラス。
-    @class    Department : ここに説明文を記入
-    @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-    @update      2017/09/03 23:28[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    ドリブンキーの編集や書き出しなどを行う機能を提供するモジュール。
+    
+    Dates:
+        date:2017/01/22 0:03[Eske](eske3g@gmail.com)
+        update:2025/05/25 09:43 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from gris3 import factoryModules, exporter
 from gris3 import uilib
 from gris3.gadgets import drivenManager
@@ -22,19 +22,14 @@ QtWidgets, QtGui, QtCore = (
 )
 
 class DrivenKeyExporter(QtWidgets.QWidget):
-    r'''
-        @brief       DrivenKeyを書き出すための補助ツールとエクスポーター
-        @brief       を提供するクラス。
-        @inheritance QtWidgets.QWidget
-        @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-        @update      2017/09/03 23:28[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        DrivenKeyを書き出すための補助ツールとエクスポーターを提供するクラス。
+    """
     def __init__(self, parent=None):
-        r'''
-            @brief  初期化メソッド。
-            @param  parent(None) : [QtWidgets.QWidget]
-            @return None
-        '''
+        r"""            
+            Args:
+                parent (QtWidgets.QWidget):親ウィジェット
+        """
         super(DrivenKeyExporter, self).__init__(parent)
         
         utility = drivenManager.DrivenUtility()
@@ -52,44 +47,38 @@ class DrivenKeyExporter(QtWidgets.QWidget):
         self.__view = view
 
     def setRootPath(self, path):
-        r'''
-            @brief  エクスポーターで表示するディレクトリを指定するメソッド。
-            @param  path : [str]ディレクトリパス
-            @return None
-        '''
+        r"""
+            エクスポーターで表示するディレクトリを指定するメソッド。
+            
+            Args:
+                path (str):ディレクトリパス
+        """
         self.__view.setRootPath(path)
 
     def selectDrivenNodes(self):
-        r'''
-            @brief  選択ノード下のDrivenキーが入っているノードを選択する
-            @return None
-        '''
+        r"""
+            選択ノード下のDrivenキーが入っているノードを選択する
+        """
         drivenUtilities.selectDrivenNode(isSelecting=True)
 
     def export(self, rootpath, filename):
-        r'''
-            @brief  選択ノードについているDrivenキーをエクスポートする
-            @param  rootpath : [str]
-            @param  filename : [str]
-            @return None
-        '''
+        r"""
+            選択ノードについているDrivenキーをエクスポートする
+            
+            Args:
+                rootpath (str):書き出し先のディレクトリパス
+                filename (str):ファイル名
+        """
         exporter.exportSelectedDrivenKeys(
             rootpath, filename, self.__view.isOverwrite()
         )
 
 
 class DrivenManager(factoryModules.AbstractDepartmentGUI):
-    r'''
-        @brief       ベースジョイントの編集・保存などのUIを提供するクラス。
-        @inheritance factoryModules.AbstractDepartmentGUI
-        @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-        @update      2017/09/03 23:28[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        ベースジョイントの編集・保存などのUIを提供するクラス。
+    """
     def init(self):
-        r'''
-            @brief  初期化関数。
-            @return None
-        '''
         # タブを作成。=========================================================
         view = DrivenKeyExporter()
         view.setRootPath(self.workspaceDir())
@@ -101,36 +90,32 @@ class DrivenManager(factoryModules.AbstractDepartmentGUI):
 
 
 class Department(factoryModules.AbstractDepartment):
-    r'''
-        @brief       ここに説明文を記入
-        @inheritance factoryModules.AbstractDepartment
-        @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-        @update      2017/09/03 23:28[Eske](eske3g@gmail.com)
-    '''
     def init(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
         self.setDirectoryName('drivenKeys')
 
     def label(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            Factoryのタブに表示するラベルを返す。
+            
+            Returns:
+                str:
+        """
         return 'Driven Manager'
 
     def priority(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            表示優先順位を返す
+            
+            Returns:
+                int:
+        """
         return 5
 
     def GUI(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            Factoryのタブに表示するUIを定義するクラスを返す。
+            
+            Returns:
+                DrivenManager:
+        """
         return DrivenManager

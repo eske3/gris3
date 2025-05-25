@@ -1,16 +1,18 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     __init__.py
-    @brief    ここに説明文を記入
-    @class    WorkspaceManager : ベースジョイントの編集・保存などのUIを提供するクラス。
-    @class    Department : ベースジョイントにまつわる機能を管理するためのクラス。
-    @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-    @update      2017/01/23 0:17[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    仮の作業データ保存機能を提供するモジュール。
+    
+    Dates:
+        date:2017/01/22 0:03[Eske](eske3g@gmail.com)
+        update:2025/05/25 09:52 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from gris3 import factoryModules, exporter, uilib
 from gris3.uilib import factoryUI
 QtWidgets, QtGui, QtCore = (
@@ -18,17 +20,10 @@ QtWidgets, QtGui, QtCore = (
 )
 
 class WorkspaceManager(factoryModules.AbstractDepartmentGUI):
-    r'''
-        @brief       ベースジョイントの編集・保存などのUIを提供するクラス。
-        @inheritance factoryModules.AbstractDepartmentGUI
-        @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-        @update      2017/01/23 0:17[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        ファイルの保存、オープンなどのオペレーション機能を提供するクラス。
+    """
     def init(self):
-        r'''
-            @brief  初期化関数。
-            @return None
-        '''
         self.__save_module = exporter.MayaFileSaver()
 
         view = factoryUI.FileView()
@@ -61,12 +56,13 @@ class WorkspaceManager(factoryModules.AbstractDepartmentGUI):
         # self.__save_module.setIsMakingCurrent(False)
 
     def save(self, rootpath, filename):
-        r'''
-            @brief  ファイルをセーブするメソッド。
-            @param  rootpath : [str]
-            @param  filename : [str]
-            @return None
-        '''
+        r"""
+            ファイルをセーブするメソッド。
+            
+            Args:
+                rootpath (str):書き出し先のディレクトリパス
+                filename (str):ファイル名
+        """
         import re
         extensions = list(self.__save_module.FileTypes.values())
         for ptn in [re.compile('\.'+x+'$', re.IGNORECASE) for x in extensions]:
@@ -82,36 +78,32 @@ class WorkspaceManager(factoryModules.AbstractDepartmentGUI):
         )
 
 class Department(factoryModules.AbstractDepartment):
-    r'''
-        @brief       ベースジョイントにまつわる機能を管理するためのクラス。
-        @inheritance factoryModules.AbstractDepartment
-        @date        2017/01/22 0:03[Eske](eske3g@gmail.com)
-        @update      2017/01/23 0:17[Eske](eske3g@gmail.com)
-    '''
     def init(self):
-        r'''
-            @brief  初期化関数。
-            @return None
-        '''
         self.setDirectoryName('workScenes')
 
     def label(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            Factoryのタブに表示するラベルを返す。
+            
+            Returns:
+                str:
+        """
         return 'Workspace'
 
     def priority(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            表示優先順位を返す。
+            
+            Returns:
+                int:
+        """
         return -1001
 
     def GUI(self):
-        r'''
-            @brief  Factoryのタブに表示するUIを定義するクラスを返すメソッド。
-            @return JointManager
-        '''
+        r"""
+            Factoryのタブに表示するUIを定義するクラスを返す。
+            
+            Returns:
+                WorkspaceManager:
+        """
         return WorkspaceManager

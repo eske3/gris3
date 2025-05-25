@@ -537,7 +537,8 @@ class PolyHalfRemover(mayaUIlib.DirectionPlaneWidget):
         return (
             'Left Button : World\n'
             'Middle Button : Pivot\n'
-            'Right Button : Object Center'
+            'Right Button : Object Center\n'
+            'Ctrl : Pivot (Local)'
         )
 
     def getAxis(self, button):
@@ -567,7 +568,11 @@ class PolyHalfRemover(mayaUIlib.DirectionPlaneWidget):
                 button (int):押されたボタン
                 modifiers (int):押された修飾キー
         """
-        modelingSupporter.removePolyFaceOnHalf(axisA, self.getAxis(button))
+        if modifiers == QtCore.Qt.ControlModifier:
+            base_axis = 'local'
+        else:
+            base_axis = self.getAxis(button)
+        modelingSupporter.removePolyFaceOnHalf(axisA, base_axis)
 
 
 class PolyMirror(PolyHalfRemover):

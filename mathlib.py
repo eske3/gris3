@@ -407,6 +407,47 @@ class Vector(list):
         """
         self.__checkNumber(value)
         self[2] = value
+
+
+class Axis(str):
+    r"""
+        与えれた行列の位置情報からベクトルを表す文字列を生成する。
+    """
+    Axislist = {0:'+x', 1:'-x', 2:'+y', 3:'-y', 4:'+z', 5:'-z'}
+    BasicVectors = [
+        Vector([1, 0, 0]),
+        Vector([-1, 0, 0]),
+        Vector([0, 1, 0]),
+        Vector([0, -1, 0]),
+        Vector([0, 0, 1]),
+        Vector([0, 0, -1]),
+    ]
+    def __new__(cls, matrix):
+        r"""
+            Args:
+                matrix (list):16個のfloatからなる行列を表す文字列
+                
+            Returns:
+                Axis:
+        """
+        vec = Vector(matrix.translate())
+        vec.normalize()
+
+        dotProducts = [x * vec for x in Axis.BasicVectors]
+        maxIndex = dotProducts.index(max(dotProducts))
+
+        obj = super(Axis, cls).__new__(cls, Axis.Axislist[maxIndex])
+        obj.__matrix = matrix
+        return obj
+
+    def asMatrix(self):
+        r"""
+            入力ソースとなった行列を返す。
+            
+            Returns:
+                list:
+        """
+        return self.__matrix
 # /////////////////////////////////////////////////////////////////////////////
 #                                                                            //
 # /////////////////////////////////////////////////////////////////////////////

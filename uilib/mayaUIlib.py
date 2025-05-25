@@ -424,55 +424,12 @@ class MarkingMenuWithTool(object):
         mel.eval(command)
 
 
-class Axis(str):
-    r"""
-        与えれた行列の位置情報からベクトルを表す文字列を生成する。
-    """
-    Axislist = {0:'+x', 1:'-x', 2:'+y', 3:'-y', 4:'+z', 5:'-z'}
-    BasicVectors = [
-        mathlib.Vector([1, 0, 0]),
-        mathlib.Vector([-1, 0, 0]),
-        mathlib.Vector([0, 1, 0]),
-        mathlib.Vector([0, -1, 0]),
-        mathlib.Vector([0, 0, 1]),
-        mathlib.Vector([0, 0, -1]),
-    ]
-    def __new__(cls, matrix):
-        r"""
-            初期化を行う。
-            
-            Args:
-                matrix (list):16個のfloatからなる行列を表す文字列
-                
-            Returns:
-                Axis:
-        """
-        vec = mathlib.Vector(matrix.translate())
-        vec.normalize()
-
-        dotProducts = [x * vec for x in Axis.BasicVectors]
-        maxIndex = dotProducts.index(max(dotProducts))
-
-        obj = super(Axis, cls).__new__(cls, Axis.Axislist[maxIndex])
-        obj.__matrix = matrix
-        return obj
-
-    def asMatrix(self):
-        r"""
-            入力ソースとなった行列を返す。
-            
-            Returns:
-                list:
-        """
-        return self.__matrix
-
-
 class DirectionPlaneWidget(directionPlane.DirectionView):
     r"""
         ビュー上で指示した方向を、Mayaのアクティブなビュー空間
         に変換したベクトルを渡すUIをを提供するクラス。
     """
-    directionDecided = QtCore.Signal(Axis, Axis, int, int)
+    directionDecided = QtCore.Signal(mathlib.Axis, mathlib.Axis, int, int)
     def __init__(self, parent=None):
         r"""
             Args:
@@ -516,7 +473,7 @@ class DirectionPlaneWidget(directionPlane.DirectionView):
         # X,Y,Z軸と比較し、最終的な軸を決定する。==============================
         result = []
         for matrix in (vector_mtx, cam_dir_mtx):
-            result.append(Axis(matrix))
+            result.append(mathlib.Axis(matrix))
         # =====================================================================
 
         self.directionDecided.emit(

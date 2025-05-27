@@ -6,10 +6,10 @@ r"""
     
     Dates:
         date:2017/01/21 23:02[Eske](eske3g@gmail.com)
-        update:2021/04/27 01:17 eske yoshinob[eske3g@gmail.com]
+        update:2025/05/27 17:57 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
@@ -414,10 +414,15 @@ class SuffixIter(object):
         return obj
 
     def __getitem__(self, slice):
+        r"""
+            Args:
+                slice (any):
+        """
         return SuffixModifier(self.__suffixes[slice], self.__separator)
 
     def __len__(self):
         return len(self.__suffixes)
+
 
 def copyJointState(srcJoint, tgtJoint):
     r"""
@@ -431,6 +436,7 @@ def copyJointState(srcJoint, tgtJoint):
         for axis in Axis:
             value = cmds.getAttr('%s.%s%s' % (srcJoint, attr, axis))
             cmds.setAttr('%s.%s%s' % (tgtJoint, attr, axis), value)
+
 
 def makeDecomposeMatrixConnection(
     decomposeMatrix, targets, makeShearConnection=True
@@ -454,6 +460,7 @@ def makeDecomposeMatrixConnection(
                 if dst.isLocked():
                     continue
                 src >> dst
+
 
 def createDecomposeMatrix(
         target=None, matrices=[], withMultMatrix=True, startNumber=0,
@@ -493,6 +500,7 @@ def createDecomposeMatrix(
         connectMultAttr(matrices, mltmtx/'matrixIn', startNumber)
     return [decmtx, mltmtx]
 
+
 def connectMatrix(target, matrices=[], withMultMatrix=True, startNumber=0):
     r"""
         任意の行列リストをtargetへ接続する。
@@ -513,6 +521,7 @@ def connectMatrix(target, matrices=[], withMultMatrix=True, startNumber=0):
     return createDecomposeMatrix(
         target, matrices, withMultMatrix, startNumber
     )
+
 
 def copyNode(nodename, nodeType=None, parent=None, suffix=''):
     r"""
@@ -561,6 +570,7 @@ def copyNode(nodename, nodeType=None, parent=None, suffix=''):
         newnode.setInverseScale()
     return newnode
 
+
 def copyNodeTree(rootNode, nodeType=None, parent=None, endJoint=None):
     r"""
         選択ノードの子供も調べて、その子も含めてコピーする。
@@ -589,6 +599,7 @@ def copyNodeTree(rootNode, nodeType=None, parent=None, endJoint=None):
             continue
         result.extend(copyNodeTree(child, nodeType, newnode, endJoint))
     return result
+
 
 def copyMesh(mesh, typeSuffix, nodeType='', parent=None):
     r"""
@@ -638,7 +649,8 @@ def copyMesh(mesh, typeSuffix, nodeType='', parent=None):
 
     return new_mesh
 
-def  copyMeshNode(mesh, nodeType, parent=None):
+
+def copyMeshNode(mesh, nodeType, parent=None):
     r"""
         入力メッシュをコピーする。
         copyMeshと違い、こちらはTransformを新規で作成し、その下にコピーされた
@@ -665,6 +677,7 @@ def  copyMeshNode(mesh, nodeType, parent=None):
     new_mesh = copyMesh(mesh, 'CPDTEMP', 'TEMPTYPE', trs)
     new_mesh.rename(trs + 'Shape')
     return trs
+
 
 def listCommonParentPathList(targetA, targetB):
     r"""
@@ -698,6 +711,7 @@ def listCommonParentPathList(targetA, targetB):
 
         index = parentsB.index(parentsA[i])
         return [parentsA[:i+1], parentsB[:index+1]]
+
 
 def listNodeChain(startNode, endNode):
     r"""
@@ -749,6 +763,7 @@ def listSingleChain(topNode):
     from gris3.tools import util
     return util.listSingleChain(topNode)
 
+
 def listLength(nodelist):
     r"""
         与えられたノードチェーンの、各ブロック間の長さをリストで返す。
@@ -770,6 +785,7 @@ def listLength(nodelist):
 
     return node_length_list
 
+
 def listLengthRatio(nodelist):
     r"""
         与えられたノードチェーンの各ブロックの長さの、全長における割合を返す。
@@ -790,6 +806,46 @@ def listLengthRatio(nodelist):
         current_length += l
         result.append(current_length / total_length)
     return result
+
+
+def listMatrixPath(targetA, targetB):
+    r"""
+        targetAからtargetBまでの共通の親を検索し、共通親を経由したローカル行列
+        を返す。
+        戻り値はリスト２つを持つtupleで1つ目は
+            targetAから共通親までのmatrixで階層をつくるノードのリスト
+        2つ目は
+        　　共通親からtargetBまでのinverseMatrixで階層をつくるノードのリスト
+        となる。
+
+        共通の親が見つからない場合はNoneを返す。
+
+        Args:
+            targetA (str): トランスフォームノード（開始地点）
+            targetB (str):トランスフォームノード（終了地点）
+        
+        Returns:
+            tuple: 
+    """
+    target_a = node.asObject(targetA)
+    target_b = node.asObject(targetB)
+    st_p_list = target_a.fullName()
+    ed_p_list = target_b.fullName()
+    parent = st_p_list
+    mtxlist = []
+    while(True):
+        parent, child = parent.rsplit('|', 1)
+        mtxlist.append(parent)
+        if not parent:
+            break
+        if ed_p_list.startswith(parent):
+            break
+    if not parent:
+        return
+    mtxlist = node.toObjects(mtxlist)
+    invlist = func.listNodeChain(parent, target_b)
+    return mtxlist, invlist[:-1]
+
 
 def expandAttr(attributes):
     r"""
@@ -834,6 +890,7 @@ def expandAttr(attributes):
             result.append('%sZ' % data[0])
     return result
 
+
 def controlChannels(nodes, attributes,
     isKeyable=None, isLocked=None, isChannelBox=None, **keywords
     ):
@@ -867,6 +924,7 @@ def controlChannels(nodes, attributes,
                 k=isKeyable, l=isLocked, cb=isChannelBox
             )
 
+
 def lockTransform(nodes, hideVisibility=True):
     r"""
         ノードのリストのtrsアトリビュートをロック＆非表示する。
@@ -892,6 +950,11 @@ def unlockTransform(nodes, showVisibility=True):
 
 
 def setRenderStats(nodes, **keywords):
+    r"""
+        Args:
+            nodes (any):
+            **keywords (any):
+    """
     default_settings = {
         'castsShadows': 1,
         'receiveShadows': 1,
@@ -948,6 +1011,7 @@ def fitTransform(
     )
     dst.fitTo(src, flags)
 
+
 def fConnectAttr(srcNodeAttr, dstNodeAttr):
     r"""
         srcNodeAttrをdstNodeAttrへ接続する。
@@ -963,6 +1027,7 @@ def fConnectAttr(srcNodeAttr, dstNodeAttr):
     cmds.connectAttr(srcNodeAttr, dstNodeAttr, f=True)
     if lockState:
         cmds.setAttr(dstNodeAttr, l=True)
+
 
 def kConnectAttr(srcNodeAttr, dstNodeAttr, ignoreKeyable=False):
     r"""
@@ -985,6 +1050,7 @@ def kConnectAttr(srcNodeAttr, dstNodeAttr, ignoreKeyable=False):
 
     cmds.connectAttr(srcNodeAttr, dstNodeAttr, f=True)
     return True
+
 
 def transferConnection(srcNodeAttr, dstNodeAttr, keepConnection=False):
     r"""
@@ -1009,6 +1075,7 @@ def transferConnection(srcNodeAttr, dstNodeAttr, keepConnection=False):
         cmds.setAttr(srcNodeAttr, value)
     return src[0]
 
+
 def connectKeyableAttr(srcNode, dstNode):
     r"""
         keyableアトリビュート同士を接続する。
@@ -1027,6 +1094,7 @@ def connectKeyableAttr(srcNode, dstNode):
             continue
         fConnectAttr('%s.%s' % (srcNode, at), '%s.%s' % (dstNode, at))
 
+
 def connectMultAttr(srcAttrs, dstAttr, startNumber=0):
     r"""
         マルチアトリビュートdstAttrに、srcAttrsを順に接続する。
@@ -1039,6 +1107,7 @@ def connectMultAttr(srcAttrs, dstAttr, startNumber=0):
     for src_attr in srcAttrs:
         cmds.connectAttr(src_attr, '%s[%s]' % (dstAttr, startNumber))
         startNumber += 1
+
 
 def connect3ChannelAttr(
         srcAttr, dstAttr, srcAxises='xyz', dstAxises='xyz',
@@ -1074,6 +1143,7 @@ def connect3ChannelAttr(
             src_attr_format % src_axis, dst_attr_format % dst_axis,
             ignoreKeyable
         )
+
 
 def replaceConnections(srcNode, dstNode, source=True, destination=True):
     r"""
@@ -1136,6 +1206,7 @@ def blendAttr(srcNodeAttr, targetAttr):
     cmds.connectAttr('%s.output' % blender, targetAttr, f=True)
     return blender
 
+
 def copyKeyableAttr(srcNode, dstNode):
     r"""
         srcNodeのkeyableアトリビュートの値をdstNodeへ適用する
@@ -1153,6 +1224,7 @@ def copyKeyableAttr(srcNode, dstNode):
             continue
         value = cmds.getAttr('%s.%s' % (srcNode, attr))
         cmds.setAttr('%s.%s' % (dstNode, attr), value)
+
 
 def setAttrFromConnected(nodeAttr, **keywords):
     r"""
@@ -1210,6 +1282,7 @@ def createMovementWeightList(transforms, ratioPower=2):
         tmp_length += trs_length_list[i]
         result.append((tmp_length / total_length) ** ratioPower)
     return result
+
 
 def blendTransform(
         srcNodeA, srcNodeB, dstNodes, blendControlAttr=None,
@@ -1301,6 +1374,7 @@ def blendTransform(
 
     return result
 
+
 def blendSelfConnection(node, blendControlAttr=None,
         skipTranslate=False, skipRotate=False,  skipScale=False,
         blendMode=0, origToBlended=True
@@ -1380,6 +1454,7 @@ def blendSelfConnection(node, blendControlAttr=None,
 
     return result
 
+
 def fixConstraint(constraintCommand, *node, **keywords):
     r"""
         コンストレイン実行後、ワールド空間との接続を切る。
@@ -1402,6 +1477,7 @@ def fixConstraint(constraintCommand, *node, **keywords):
         cnst.attr(attr).disconnect(True)
         cnst(attr, matrix, type='matrix')
     return cnst
+
 
 def localConstraint(constraintCommand, *node, **keywords):
     r"""
@@ -2290,6 +2366,7 @@ def createBendControl(
 
     return result
     
+    
 def createNonTwistedBender(startJoint, endJoint):
     r"""
         createBendControlで作成されたベンド機構からツイスト動作を抜いた状態の
@@ -2418,15 +2495,18 @@ def createFkController(
         space.lockTransform()
     return [ctrl, space]
 
+
 def connectMcpBakeToCtrl(srcNode, dstNode):
     r"""
         srcNodeからdstNodeへmcpBake用の関係を表すmessageコネクションを作成する。
+        
         Args:
             srcNode (str):
             dstNode (str):
     """
     cmds.addAttr(dstNode, ln='mcpBakeSourceNode', at='message')
     cmds.connectAttr('%s.message' % srcNode, '%s.mcpBakeSourceNode' % dstNode)
+
 
 def createSculptDeformer(
         targetShapes, name='sculpt', position=None, parent=None
@@ -2473,6 +2553,7 @@ def createSculptDeformer(
 
     return [group, sculpts[0], sculpts[1], sculpts[2]]
 
+
 def createAngleDriverNode(targetNode, name='angleDriver#', parent=None):
     r"""
         ベクトルベースの角度を返すangleDriverノードを作成する
@@ -2488,11 +2569,13 @@ def createAngleDriverNode(targetNode, name='angleDriver#', parent=None):
     from gris3.tools import drivers
     return drivers.createAngleDriver(targetNode, name, parent)
 
+
 def createDistanceDriverNode(
     startNode, endNode, name='distanceDriver#', parent=None
 ):
     r"""
-        ２つのマトリクス間の距離ベースの伸縮率を返すdistanceDriverノードを作成する。
+        ２つのマトリクス間の距離ベースの伸縮率を返すdistanceDriverノードを
+        作成する。
         
         Args:
             startNode (str):
@@ -2508,6 +2591,7 @@ def createDistanceDriverNode(
         x if '.' in x else x+'.worldMatrix' for x in (startNode, endNode)
     ]
     return drivers.createDistanceDriver(inputs[0], inputs[1], name, parent)
+
 
 class SurfaceFitter(object):
     r"""
@@ -2643,6 +2727,7 @@ class SurfaceFitter(object):
                 result.append((n,))
         return result
 
+
 def wrap(targets, cage):
     r"""
         exclusiveBindがOnなWrapを実行する。
@@ -2660,6 +2745,7 @@ def wrap(targets, cage):
         'doWrapArgList "7" { "1","0","1", "2", "1", "1", "0", "1" };'
     )
     return wrap_nodes
+
 
 def localWrap(targets, cage):
     r"""
@@ -2764,6 +2850,7 @@ def localWrap(targets, cage):
 
     return {'wrapNode':wrap_nodes, 'baseNode':base_nodes}
 
+
 def localizeDeformer(inputPlug, inverseMatrices, withOffset=True):
     r"""
         inputPlugに刺さっているコネクションの間にtransformGeometryを挟み
@@ -2810,6 +2897,7 @@ def localizeDeformer(inputPlug, inverseMatrices, withOffset=True):
     cmds.connectAttr('%s.outputGeometry' % trsgeo, inputPlug, f=True)
 
     return trsgeo
+
     
 def createPoleVector(ikHandles=None):
     r"""
@@ -2852,6 +2940,7 @@ def createPoleVector(ikHandles=None):
         result.append(trs)
 
     return result
+
 
 class SoftModification(object):
     r"""
@@ -3045,10 +3134,10 @@ class SoftModification(object):
             各内容には以下のキーでアクセスする。
                 controllers : [ctrl, r_ctrl, ctrl_space]
                 proxies : [handle, r_ctrl_proxy, ctrl_space_proxy]
-
+            
             Args:
                 *nodes (tuple):操作対象となるノードのリスト
-
+                
             Returns:
                 dict:
         """
@@ -3157,7 +3246,7 @@ class SoftModification(object):
             proxies : 作成された代理コントローラとその代理スペーサーのリスト
             コントローラはメインコントローラ、影響範囲制御コントローラ、スペーサー
             が作成され、この順番にリストに格納されている。
-
+            
             Args:
                 originalNode (str):
                 removeOriginal (bool):
@@ -3335,6 +3424,7 @@ def createBindJoint(
     create(top_joint, parent, pattern_objects)
     return parent
 
+
 def findBindJoint(baseJoint):
     r"""
         与えれたジョイントのバインドジョイントを見つけ、返す。
@@ -3356,6 +3446,7 @@ def findBindJoint(baseJoint):
         for x in targets if x.endswith('.bindJoint')
     ]
     return result
+
 
 def connectToBindJoint(topJoint):
     r"""
@@ -3379,6 +3470,7 @@ def connectToBindJoint(topJoint):
                 continue
             connectKeyableAttr(joint, target)
             target('isConnected', True)
+
 
 def createSurfaceOnTrs(transform, name=None, axis='x', size=1):
     r"""

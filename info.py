@@ -15,12 +15,24 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '1.1.2.0'
-LastModified = 20241110
+Version = '1.1.3.2'
+LastModified = 20250527
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('1.1.3.2',
+(
+    'polyHalfRemoverとpolyMirrorのローカル軸対応。',
+)
+),
+
+('1.1.3.0',
+(
+    'facialMemoryManagerならびにfacialExpressionManagerの追加。',
+)
+),
+
 ('1.1.2.0',
 (
     'archiveモジュールのarchiveProject関数内のローカル関数を一部グローバル化。',

@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/08/17 22:43[Eske](eske3g@gmail.com)
-        update:2025/02/27 10:21 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/05/27 16:59 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -18,7 +18,7 @@ import re
 
 from maya import mel
 
-from .. import node
+from .. import node, mathlib
 from . import util, selectionUtil, cleanup
 cmds = node.cmds
 
@@ -1134,17 +1134,18 @@ class MirrorObjectUtil(object):
 # /////////////////////////////////////////////////////////////////////////////
 
 
-def removePolyFaceOnHalf(axis='+x', baseAxis='world'):
+def removePolyFaceOnHalf(axis=None, baseAxis='world'):
     r"""
         指定した軸の半分のポリゴンを削除する。
         
         Args:
-            axis (str):削除基準となる軸
+            axis (mathlib.Axis):削除基準となる軸
             baseAxis (str):ワールドかローカルか
             
         Returns:
             bool:
     """
+    from maya.api import OpenMaya
     class Position(object):
         r"""
             位置情報xyzアトリビュートで参照するための内部クラス
@@ -1159,58 +1160,91 @@ def removePolyFaceOnHalf(axis='+x', baseAxis='world'):
             self.x = x
             self.y = y
             self.z = z
+    
+    def get_localize_matrix(dag_path, fn_trs):
+        r"""
+            Args:
+                dag_path (any):
+                fn_trs (any):
+        """
+        w_mtx = list(
+            fn_trs.transformation().asMatrix() * dag_path.exclusiveMatrix()
+        )
+        w_mtx[12:15] = list(fn_trs.rotatePivot(OpenMaya.MSpace.kWorld))[:3]
+        w_mtx = OpenMaya.MMatrix(w_mtx)
+        return w_mtx
 
-    from maya import OpenMaya
-    selection = OpenMaya.MSelectionList()
-    OpenMaya.MGlobal.getActiveSelectionList(selection)
+    def localized_point(pos, inverse_mtx):
+        r"""
+            Args:
+                pos (any):
+                inverse_mtx (any):
+        """
+        if not inverse_mtx:
+            return pos
+        mtx = node.identityMatrix()
+        mtx[12:15] = list(pos)[:3]
+        new_pos = node.multiplyMatrix([mtx, inverse_mtx])
+        return OpenMaya.MPoint(new_pos[12:15])
+            
+    selection = OpenMaya.MGlobal.getActiveSelectionList()
     if selection.isEmpty():
         return
     pre_selected = cmds.ls(sl=True)
 
-    axis = axis.lower()
-    if axis == '+x':
-        fn = lambda x, y : x.x > y.x
-    elif axis == '-x':
-        fn = lambda x, y : x.x < y.x
-    elif axis == '+y':
-        fn = lambda x, y : x.y > y.y
-    elif axis == '-y':
-        fn = lambda x, y : x.y < y.y
-    elif axis == '+z':
-        fn = lambda x, y : x.z > y.z
-    elif axis == '-z':
-        fn = lambda x, y : x.z < y.z
-    else:
-        raise ValueError('axis must be "+/-x", "+/-y" or "+/-z".')
+    if axis is None:
+        _mtx = node.identityMatrix()
+        _mtx[12] = 1
+        axis = mathlib.Axis(mathlib.FMatrix(_mtx))
 
     iter = OpenMaya.MItSelectionList(selection)
-    dagPath = OpenMaya.MDagPath()
-    component = OpenMaya.MObject()
-    dgModifier = OpenMaya.MDGModifier()
-    deleteList = OpenMaya.MSelectionList()
+    deleted_list = []
     while not iter.isDone():
-        iter.getDagPath(dagPath, component)
-        transFn = OpenMaya.MFnTransform(dagPath)
-        meshFn = OpenMaya.MFnMesh(dagPath)
-        polyIter = OpenMaya.MItMeshPolygon(dagPath, component)
-
+        _axis = axis.lower()
+        inv_mtx = None
+        dagpath = iter.getDagPath()
+        trans_fn = OpenMaya.MFnTransform(dagpath)
+        poly_iter = OpenMaya.MItMeshPolygon(dagpath)
         if baseAxis == 'world':
             center = Position()
         elif baseAxis == 'pivot':
-            center = transFn.rotatePivot(OpenMaya.MSpace.kWorld)
+            center = trans_fn.rotatePivot(OpenMaya.MSpace.kWorld)
+        elif baseAxis == 'center':
+            center = trans_fn.boundingBox.center
         else:
-            center = transFn.boundingBox().center()
+            mtx = get_localize_matrix(dagpath, trans_fn)
+            vec = OpenMaya.MMatrix(axis.asMatrix().asList())
+            inv_mtx = mtx.inverse()
+            _axis = mathlib.Axis(mathlib.FMatrix(list(vec * inv_mtx)))
+            center = OpenMaya.MPoint(0, 0, 0)
+            inv_mtx = list(inv_mtx)
+        if _axis == '+x':
+            fn = lambda x, y : x.x > y.x
+        elif _axis == '-x':
+            fn = lambda x, y : x.x < y.x
+        elif _axis == '+y':
+            fn = lambda x, y : x.y > y.y
+        elif _axis == '-y':
+            fn = lambda x, y : x.y < y.y
+        elif _axis == '+z':
+            fn = lambda x, y : x.z > y.z
+        elif _axis == '-z':
+            fn = lambda x, y : x.z < y.z
+        else:
+            raise ValueError('axis must be a type : {}'.format(mathlib.Axis))
 
-        while not polyIter.isDone():
-            facePos = polyIter.center(OpenMaya.MSpace.kWorld)
-            if fn(facePos, center):
-                deleteList.add(dagPath, polyIter.currentItem())
-            polyIter.next()
+        while not poly_iter.isDone():
+            face_pos = poly_iter.center(OpenMaya.MSpace.kWorld)
+            if fn(localized_point(face_pos, inv_mtx), center):
+                face_name = '{}.f[{}]'.format(
+                    dagpath.partialPathName(), poly_iter.index()
+                )
+                deleted_list.append(face_name)
+            poly_iter.next()
         iter.next()
-    if not deleteList:
+    if not deleted_list:
         return False
-    OpenMaya.MGlobal.selectCommand(deleteList)
-    OpenMaya.MGlobal.executeCommand('delete', False, True)
+    cmds.delete(deleted_list)
     cmds.select(pre_selected, r=True, ne=True)
     return True
 
@@ -1222,9 +1256,13 @@ def mirrorGeometry(nodelist=None, axis=0, baseAxis='world'):
         Args:
             nodelist (list):対象ノードのリスト
             axis (int):ミラー軸を表す整数
-            baseAxis (str):
+            baseAxis (str): world, local, pivotまたはboundingBox
+        
+        Returns:
+            list: 生成されたpolyMirrorノードのリスト
     """
     nodelist = node.selected(nodelist)
+    results = []
     for n in nodelist:
         args = {
             'ws':1, 'direction':axis, 'mergeMode':1,
@@ -1233,13 +1271,53 @@ def mirrorGeometry(nodelist=None, axis=0, baseAxis='world'):
         }
         if baseAxis == 'world':
             args['pivot'] = [0, 0, 0]
-        elif baseAxis == 'pivot':
+        elif baseAxis in ('pivot', 'local'):
             if n.isType('mesh'):
                 piv = n.parent().rotatePivot()
             else:
                 piv = n.rotatePivot()
             args['pivot'] = piv
-        cmds.polyMirrorFace(n, **args)
+        pm = cmds.polyMirrorFace(n, **args)
+        results.extend(pm)
+        if baseAxis == 'local':
+            cmds.setAttr(pm[0]+'.mirrorAxis', 1)
+    return results
+
+
+def mirrorGeometryByAxis(nodelist=None, axis=None, baseAxis='world'):
+    r"""
+        任意の軸でmirrorGeometryを行うラッパー関数。
+        baseAxisがlocalの場合は、引数axisはmathlib.Axisによる行列データが格納
+        された軸情報である必要がある。
+        軸情報の行列は、オフセット値をベクトルとして扱い、ミラーしたい軸を定義
+        する。
+        ミラー時に軸情報はローカル化され、polyMirrorのミラー軸に使用される。
+
+        Args:
+            nodelist (any):
+            axis (mathlib.Axis):
+            baseAxis (str): ミラーの基準空間
+
+        Returns:
+            list: 生成されたpolyMirrorノードのリスト
+    """
+    if axis is None:
+        _mtx = node.identityMatrix()
+        _mtx[12] = 1
+        axis = mathlib.Axis(mathlib.FMatrix(_mtx))
+    direction = {
+        '+x' : 0, '-x' : 1, '+y' : 2, '-y' : 3, '+z' : 4, '-z' : 5
+    }
+    nodelist = node.selected(nodelist)
+    if baseAxis != 'local':
+        return mirrorGeometry(nodelist, direction[axis], baseAxis)
+    results = []
+    for n in nodelist:
+        inv_mtx = node.MMatrix(n.inverseMatrix())
+        vec = node.MMatrix(axis.asMatrix().asList())
+        _axis = mathlib.Axis(mathlib.FMatrix(list(vec * inv_mtx)))
+        results.extend(mirrorGeometry([n], direction[_axis], baseAxis))
+    return results
 
 
 def cutGeometry(operation='x'):

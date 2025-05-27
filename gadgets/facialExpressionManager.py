@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/07/06 5:35[Eske](eske3g@gmail.com)
-        update:2025/04/22 16:43 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/05/27 14:24 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -20,18 +20,65 @@ QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 Exec_Color = (48, 85, 150)
 
 
-def getManagerNode(blendShapeName):
+class ManagerEngine(object):
     r"""
-        Args:
-            blendShapeName (str):
+        表情管理ノードに関する制御を行う機能を提供するクラス。
+        このクラスは表情管理ノードの取得や作成を管理するため、このクラスを
+        継承したサブクラスをFacialExpressionManagerにわたすことにより、表情
+        管理ノードを独自の仕様で管理できる。
     """
-    root = facialMemoryManager.listManagerNode()
-    if not root:
-        root = facialMemoryManager.createManagerNode()
-        root.setBlendShapeName(blendShapeName)
-    else:
-        root = root[0]
-    return root
+    def __init__(self, blendShapeName=''):
+        r"""
+            Args:
+                blendShapeName (str):
+        """
+        self.__blend_shape_name = blendShapeName
+
+    def blendShapeName(self):
+        return self.__blend_shape_name
+    
+    def setBlendShapeName(self, blendShapeName):
+        r"""
+            Args:
+                blendShapeName (str):
+        """
+        self.__blend_shape_name = blendShapeName
+
+    def createManagerNode(self):
+        r"""
+            getManagerNode内で呼ばれる、管理ノード作成関数。
+            必要に応じて継承したクラスでこのメソッドを上書きすることにより
+            カスタマイズされたマネージャーノードを作成することが可能。
+        """
+        with node.DoCommand():
+            root = facialMemoryManager.createManagerNode()
+            root.setBlendShapeName(self.blendShapeName())
+        return root
+
+    def getManagerNode(self, autoCreation=True):
+        r"""
+            管理ノードを返す。
+            autoCreationがTrueの場合で、管理ノードgあみつからない場合、自動で
+            作成する。
+            
+            Args:
+                autoCreation (bool): 
+                
+            Returns:
+                tools.facialMemoryManager.FacialMemoryManagerRoot
+        """
+        if not self.blendShapeName():
+            raise RuntimeError(
+                'No blend shape name was specified. '
+                'Use setBlendShapeName method and set the blend shape name '
+                'before use this method.'
+            )
+        root = facialMemoryManager.listManagerNode()
+        if root:
+            return root[0]
+        if not autoCreation:
+            return
+        return self.createManagerNode()
 
 
 class Settings(QtWidgets.QGroupBox):
@@ -265,8 +312,8 @@ class ExpressionButton(QtWidgets.QWidget):
         r"""
             Args:
                 root (facialMemoryManager.FacialMemoryManagerRoot):
-                exp (str): 表情名
-                parent (QtWidgets.QWidget): 親ウィジェット
+                exp (str):表情名
+                parent (QtWidgets.QWidget):親ウィジェット
         """
         super(ExpressionButton, self).__init__(parent)
         self.__v_btn = VirtualSliderButton(root, exp)
@@ -316,14 +363,13 @@ class FacialExpressionView(QtWidgets.QScrollArea):
                 widget.deleteLater()
         return layout
 
-    def reload(self, blendShapeName):
+    def reload(self, managerEngine):
         r"""
             Args:
-                blendShapeName (str):
+                managerEngine (ManagerEngine):
         """
         layout = self.clear()
-        with node.DoCommand():
-            root = getManagerNode(blendShapeName)
+        root = managerEngine.getManagerNode()
         for exp in root.listExpressions():
             btn = ExpressionButton(root, exp)
             layout.addWidget(btn)
@@ -373,19 +419,27 @@ class FacialExpressionManager(QtWidgets.QWidget):
     r"""
         モデルデータの作成、チェックを行う機能を提供するクラス
     """
-    def __init__(self, parent=None):
+    def __init__(self, managerEngine=None, parent=None):
         r"""
+            第１引数には表情管理ノードを取得するためのクラス
+            ManagerEngine
+            のインスタンスを渡す。
+            指定がない場合はデフォルトではManagerEngineクラスが使用される。
+
             Args:
+                managerEngine (ManagerEngine):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(FacialExpressionManager, self).__init__(parent)
         self.setWindowTitle('+Facial Expression Manager')
+        
+        self.setManagerEngine(managerEngine)
 
         self.__settings = Settings()
         self.__settings.editButtonClicked.connect(self.editExpressionMode)
         
         self.__f_view = FacialExpressionView()
-        self.__settings.reloadButtonClicked.connect(self.__f_view.reload)
+        self.__settings.reloadButtonClicked.connect(self.reloadView)
         
         self.__exp_editor = ExpressionEditor()
         self.__exp_editor.editingFinished.connect(self.expressionListMode)
@@ -399,10 +453,43 @@ class FacialExpressionManager(QtWidgets.QWidget):
         layout.addWidget(self.__tab)
         layout.setStretchFactor(self.__tab, 1)
 
+    def setManagerEngine(self, managerEngine=None):
+        r"""
+            表情管理ノードを取得するためのオブジェクトを設定する。
+
+            Args:
+                managerEngine (ManagerEngine):
+        """
+        if not managerEngine:
+            managerEngine = ManagerEngine()
+        print('Install manager engine : %s' % managerEngine)
+        self.__manager_engine = managerEngine
+
+    def managerEngine(self):
+        r"""
+            設定された表情管理ノードを取得するためのオブジェクトを返す。
+
+            Returns:
+                ManagerEngine:
+        """
+        return self.__manager_engine
+
     def settings(self):
+        r"""
+            設定操作を行うためのGUIを返す。
+
+            Returns:
+                Settings:
+        """
         return self.__settings
 
     def facialView(self):
+        r"""
+            設定操作を行うためのGUIを返す。
+
+            Returns:
+                Settings:
+        """
         return self.__f_view
     
     def expressionEditor(self):
@@ -413,7 +500,9 @@ class FacialExpressionManager(QtWidgets.QWidget):
 
     def reloadView(self):
         bs = self.settings().blendShape()
-        self.facialView().reload(bs)
+        me = self.managerEngine()
+        me.setBlendShapeName(bs)
+        self.facialView().reload(me)
 
     def setBlendShape(self, blendShapeName):
         r"""
@@ -421,12 +510,13 @@ class FacialExpressionManager(QtWidgets.QWidget):
                 blendShapeName (str):
         """
         self.settings().setBlendShape(blendShapeName)
-        self.facialView().reload(blendShapeName)
+        me = self.managerEngine()
+        me.setBlendShapeName(blendShapeName)
+        self.facialView().reload(me)
 
     def editExpressionMode(self):
         tab = self.tab().moveTo(1)
-        with node.DoCommand():
-            root = getManagerNode(self.settings().blendShape())
+        root = self.managerEngine().getManagerNode()
         explist = list(root.listExpressions().keys())
         self.expressionEditor().setExpressionList(explist)
     
@@ -439,8 +529,8 @@ class FacialExpressionManager(QtWidgets.QWidget):
         result = 0
         if not textlist:
             return
+        root = self.managerEngine().getManagerNode()
         with node.DoCommand():
-            root = getManagerNode(self.settings().blendShape())
             result = root.updateExpressionFromDataList(textlist)
         if result:
             self.reloadView()
@@ -448,12 +538,11 @@ class FacialExpressionManager(QtWidgets.QWidget):
     def getExpressionData(self):
         r"""
             登録されている表情とそれを構成するパラメータの一覧を返す。
-
+            
             Returns:
                 OrderedDict:
         """
-        with node.DoCommand():
-            root = getManagerNode(self.settings().blendShape())
+        root = self.managerEngine().getManagerNode()
         return root.listExpressionData()
 
 

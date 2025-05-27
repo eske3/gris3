@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/08/17 22:43[Eske](eske3g@gmail.com)
-        update:2025/02/27 10:21 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/05/27 16:59 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -1162,6 +1162,11 @@ def removePolyFaceOnHalf(axis=None, baseAxis='world'):
             self.z = z
     
     def get_localize_matrix(dag_path, fn_trs):
+        r"""
+            Args:
+                dag_path (any):
+                fn_trs (any):
+        """
         w_mtx = list(
             fn_trs.transformation().asMatrix() * dag_path.exclusiveMatrix()
         )
@@ -1170,6 +1175,11 @@ def removePolyFaceOnHalf(axis=None, baseAxis='world'):
         return w_mtx
 
     def localized_point(pos, inverse_mtx):
+        r"""
+            Args:
+                pos (any):
+                inverse_mtx (any):
+        """
         if not inverse_mtx:
             return pos
         mtx = node.identityMatrix()
@@ -1246,9 +1256,13 @@ def mirrorGeometry(nodelist=None, axis=0, baseAxis='world'):
         Args:
             nodelist (list):対象ノードのリスト
             axis (int):ミラー軸を表す整数
-            baseAxis (str):
+            baseAxis (str): world, local, pivotまたはboundingBox
+        
+        Returns:
+            list: 生成されたpolyMirrorノードのリスト
     """
     nodelist = node.selected(nodelist)
+    results = []
     for n in nodelist:
         args = {
             'ws':1, 'direction':axis, 'mergeMode':1,
@@ -1257,13 +1271,53 @@ def mirrorGeometry(nodelist=None, axis=0, baseAxis='world'):
         }
         if baseAxis == 'world':
             args['pivot'] = [0, 0, 0]
-        elif baseAxis == 'pivot':
+        elif baseAxis in ('pivot', 'local'):
             if n.isType('mesh'):
                 piv = n.parent().rotatePivot()
             else:
                 piv = n.rotatePivot()
             args['pivot'] = piv
-        cmds.polyMirrorFace(n, **args)
+        pm = cmds.polyMirrorFace(n, **args)
+        results.extend(pm)
+        if baseAxis == 'local':
+            cmds.setAttr(pm[0]+'.mirrorAxis', 1)
+    return results
+
+
+def mirrorGeometryByAxis(nodelist=None, axis=None, baseAxis='world'):
+    r"""
+        任意の軸でmirrorGeometryを行うラッパー関数。
+        baseAxisがlocalの場合は、引数axisはmathlib.Axisによる行列データが格納
+        された軸情報である必要がある。
+        軸情報の行列は、オフセット値をベクトルとして扱い、ミラーしたい軸を定義
+        する。
+        ミラー時に軸情報はローカル化され、polyMirrorのミラー軸に使用される。
+
+        Args:
+            nodelist (any):
+            axis (mathlib.Axis):
+            baseAxis (str): ミラーの基準空間
+
+        Returns:
+            list: 生成されたpolyMirrorノードのリスト
+    """
+    if axis is None:
+        _mtx = node.identityMatrix()
+        _mtx[12] = 1
+        axis = mathlib.Axis(mathlib.FMatrix(_mtx))
+    direction = {
+        '+x' : 0, '-x' : 1, '+y' : 2, '-y' : 3, '+z' : 4, '-z' : 5
+    }
+    nodelist = node.selected(nodelist)
+    if baseAxis != 'local':
+        return mirrorGeometry(nodelist, direction[axis], baseAxis)
+    results = []
+    for n in nodelist:
+        inv_mtx = node.MMatrix(n.inverseMatrix())
+        vec = node.MMatrix(axis.asMatrix().asList())
+        _axis = mathlib.Axis(mathlib.FMatrix(list(vec * inv_mtx)))
+        results.extend(mirrorGeometry([n], direction[_axis], baseAxis))
+    return results
 
 
 def cutGeometry(operation='x'):

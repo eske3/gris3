@@ -579,9 +579,6 @@ class PolyMirror(PolyHalfRemover):
     r"""
         ミラージオメトリを実行する。
     """
-    Direction = {
-        '+x' : 0, '-x' : 1, '+y' : 2, '-y' : 3, '+z' : 4, '-z' : 5
-    }
     def label(self):
         r"""
             ラベルを返す
@@ -601,7 +598,8 @@ class PolyMirror(PolyHalfRemover):
         return (
             'Left Button : World\n'
             'Middle Button : Pivot\n'
-            'Right Button : Bounding Box'
+            'Right Button : Bounding Box\n'
+            'Ctrl : Pivot (Local)'
         )
 
     def doIt(self, axisA, axisB, button, modifiers):
@@ -614,9 +612,14 @@ class PolyMirror(PolyHalfRemover):
                 button (int):押されたボタン
                 modifiers (int):押された修飾キー
         """
-        modelingSupporter.mirrorGeometry(
-            axis=self.Direction[axisA], baseAxis=self.getAxis(button)
-        )
+        if modifiers == QtCore.Qt.ControlModifier:
+            baseAxis = 'local'
+        else:
+            baseAxis = self.getAxis(button)
+        with node.DoCommand():
+            modelingSupporter.mirrorGeometryByAxis(
+                axis=axisA, baseAxis=baseAxis
+            )
 
 
 class PolyMirrorEditor(uilib.ClosableGroup):

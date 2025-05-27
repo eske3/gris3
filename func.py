@@ -843,7 +843,7 @@ def listMatrixPath(targetA, targetB):
     if not parent:
         return
     mtxlist = node.toObjects(mtxlist)
-    invlist = func.listNodeChain(parent, target_b)
+    invlist = listNodeChain(parent, target_b)
     return mtxlist, invlist[:-1]
 
 

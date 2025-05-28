@@ -328,15 +328,15 @@ class ExpressionButton(QtWidgets.QWidget):
 
         self.refreshState()
 
-    def refreshState(self):
-        data = self.__v_btn.manager().listExpressionData(useCache=True)
+    def refreshState(self, useCache=True):
+        data = self.__v_btn.manager().listExpressionData(useCache=useCache)
         val = data.get(self.__v_btn.expression())
         color = [] if val is None else [16, 64, 140]
         self.__st_btn.setBgColor(*color)
 
     def storeValue(self):
         self.__v_btn.applyValueFromCurrent()
-        self.refreshState()
+        self.refreshState(False)
 
 
 class FacialExpressionView(QtWidgets.QScrollArea):

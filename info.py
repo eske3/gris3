@@ -21,7 +21,7 @@ LastModified = 20250527
 
 
 ReleaseNote = [
-('1.1.4.0',
+('1.1.4.1',
 (
     'facialExpressionManagerの登録ボタンを押した際にGUIが更新されないバグを修正。',
 )

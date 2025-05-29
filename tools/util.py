@@ -49,7 +49,7 @@ class ClosestVertexFinder(object):
             self.__points_list[p] = mesh.getPoints(OpenMaya.MSpace.kWorld)
     
     def getPoints(self, name):
-        self.__points_list.get(name, [])
+        return self.__points_list.get(name, [])
 
     def setCellCount(self, count):
         self.__cell_count = count
@@ -61,7 +61,6 @@ class ClosestVertexFinder(object):
         from collections import defaultdict
         grid = defaultdict(list)
         points = self.getPoints(name)
-        
         # バウンディングボックスを取得。
         xlist, ylist, zlist = set(), set(), set()
         for pt in points:
@@ -69,16 +68,22 @@ class ClosestVertexFinder(object):
             ylist.add(pt.y)
             zlist.add(pt.z)
         bb = [f(x) for x in [xlist, ylist, zlist] for f in [min, max]]
-        cell_size = (
-            max([bb[1] - bb[0], bb[3] - bb[2], bb[5] - bb[4]])
-            / self.cellCount()
+        cell_size = OpenMaya.MPoint(
+            [
+                (bb[y] - bb[x]) / self.cellCount() for x, y in 
+                [(0, 1), (2, 3), (4, 5)]
+            ]
         )
+        # cell_size = (
+            # max([bb[1] - bb[0], bb[3] - bb[2], bb[5] - bb[4]])
+            # / self.cellCount()
+        # )
 
         for idx, pt in enumerate(points):
             cell = (
-                int(pt.x // cell_size),
-                int(pt.y // cell_size),
-                int(pt.z // cell_size)
+                int(pt.x // cell_size.x),
+                int(pt.y // cell_size.y),
+                int(pt.z // cell_size.z)
             )
             grid[cell].append((idx, pt))
         return grid, cell_size
@@ -99,9 +104,9 @@ class ClosestVertexFinder(object):
         min_dist_sq = float('inf')
         closest_idx = None
         cell = (
-            int(pt.x // cell_size),
-            int(pt.y // cell_size),
-            int(pt.z // cell_size)
+            int(pt.x // cellSize.x),
+            int(pt.y // cellSize.y),
+            int(pt.z // cellSize.z)
         )
         for neighbor_cell in self.getNeighboringCells(cell):
             for idx, pt_b in grid.get(neighbor_cell, []):
@@ -116,19 +121,23 @@ class ClosestVertexFinder(object):
         pairs = []
         grid_data = {x: self.buildSpatialGrid(x) for x in self.__sourcelist}
         for i, pt_a in enumerate(self.getPoints(self.__target)):
-            closest_data_list =  []
-            for src, g_c in grid_data:
-                c_id_dist = self.findClosestPoint(pt_a, g_c[0], g_c[1])
-                closest_id_list.append(c_id_dist)
+            closest_data_list = {}
+            for src, g_c in grid_data.items():
+                b_id, dist = self.findClosestPoint(pt_a, g_c[0], g_c[1])
+                closest_data_list.setdefault(dist, []).append([src, b_id])
             pairs.append(closest_data_list)
 
-        results = []
+        results = {}
+        vtx_fmt = '{}.vtx[{}]'
         for a_id, c_data in enumerate(pairs):
-            print(a_id)
-            print(c_data)
-            print()
-        
-            
+            min_key = min(c_data.keys())
+            src_min = c_data[min_key][0]
+            results[vtx_fmt.format(self.__target, a_id)] = vtx_fmt.format(
+                src_min[0], src_min[1]
+            )
+        return results
+
+
 def positionCenter(positions):
     r"""
         与えられた座標リストの中心点を求める

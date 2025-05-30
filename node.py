@@ -1854,7 +1854,7 @@ class AbstractNode(AbstractNodeStr):
         else:
             return nodetype == types
 
-    def listSubTypes(self):
+    def listInheritedTypes(self):
         r"""
             継承元の基底クラスまでのリストを返す。
             
@@ -1874,7 +1874,7 @@ class AbstractNode(AbstractNodeStr):
             Returns:
                 bool:
         """
-        return type in self.listSubTypes()
+        return type in self.listInheritedTypes()
 
     def namespace(self):
         r"""

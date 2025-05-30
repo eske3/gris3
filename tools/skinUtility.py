@@ -17,7 +17,7 @@ import re
 from maya.api import OpenMaya
 
 from .. import node, mathlib, verutil
-from . import modelingSupporter
+from . import modelingSupporter, util
 cmds = node.cmds
 
 def findSkinCluster(skinObject):
@@ -263,24 +263,6 @@ def transferObjectsWeights(sourceNodes=None, target=None):
             sourceNodes (list):ウェイト転送元となるオブジェクト
             target (str):ウェイト転送先のオブジェクト名
     """
-    def closestPoint(vec, veclist):
-        r"""
-            最も近い頂点を探してくるローカル関数
-            
-            Args:
-                vec (MVector):入力ベクトル
-                veclist (list):頂点名とその位置ベクトルを持つリスト
-                
-            Returns:
-                tuple:(頂点名, そこまでの長さ)
-        """
-        shortest = (veclist[0][0], (vec-veclist[0][1]).length())
-        for vtx, vec2 in veclist[1:]:
-            l = (vec - vec2).length()
-            if l < shortest[1]:
-                shortest = (vtx, l)
-        return shortest
-
     if not sourceNodes or not target:
         selected = [
             x for x in node.selected(dag=True, type='mesh') if not x('io')
@@ -290,38 +272,12 @@ def transferObjectsWeights(sourceNodes=None, target=None):
         if not sourceNodes:
             sourceNodes = selected[:-1]
 
-    # ターゲットの頂点座標をキャッシュする
     target = node.asObject(target)
-    msel = OpenMaya.MSelectionList()
-    msel.add(target())
-    dagpath = msel.getDagPath(0)
-    mit_vtx = OpenMaya.MItMeshVertex(dagpath)
-    vtx_fmt = target() + '.vtx[{}]'
-    tgt_vts_info = []
-    for vtx in mit_vtx:
-        vec = node.MVector(list(vtx.position(OpenMaya.MSpace.kWorld))[:3])
-        tgt_vts_info.append((vtx_fmt.format(vtx.index()), vec))
-    for vtx in cmds.ls(target+'.vtx[*]', fl=True):
-        vec = node.MVector(cmds.pointPosition(vtx))
-        tgt_vts_info.append((vtx, vec))
-
     for src in sourceNodes:
-        selectionlist = []
-        verts = []
-        vtx_fmt = src() + '.vtx[{}]'
-        msel = OpenMaya.MSelectionList()
-        msel.add(src())
-        dagpath = msel.getDagPath(0)
-        mit_vtx = OpenMaya.MItMeshVertex(dagpath)
-        for vtx in mit_vtx:
-            verts.append(vtx_fmt.format(vtx.index()))
-            vec = node.MVector(
-                list(vtx.position(OpenMaya.MSpace.kWorld))[:3]
-            )
-            t_vtx, length = closestPoint(vec, tgt_vts_info)
-            selectionlist.append(t_vtx)
-        cmds.select(verts)
-        cmds.select(selectionlist, add=True)
+        cvf = util.ClosestVertexFinder(target, src)
+        pairs = cvf.listClosestVertexPairs()
+        cmds.select(list(pairs.keys()))
+        cmds.select(list(pairs.values()), add=True)
         cmds.copySkinWeights(
             noMirror=True, surfaceAssociation='closestPoint', 
             influenceAssociation='closestJoint'

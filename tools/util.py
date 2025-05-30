@@ -6,17 +6,137 @@ r"""
     
     Dates:
         date:2017/01/22 0:00[Eske](eske3g@gmail.com)
-        update:2020/12/22 19:41 eske yoshinob[eske3g@gmail.com]
+        update:2025/05/29 11:59 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
+from maya.api import OpenMaya
 from gris3 import node, mathlib
 cmds = node.cmds
 
 ComponentMask = [28, 30, 31, 32, 34]
+class ClosestVertexFinder(object):
+    def __init__(self, *polygons):
+        r"""
+            引数polygonsには操作対象となるポリゴンの名前を2つ以上渡す。
+            最後に指定したポリゴンの各頂点から最も近い頂点を、それ以外の
+            ポリゴンから探してくる。
+
+            Args:
+                *polygons (str): 操作対象となるポリゴン名のリスト
+        """
+        if len(polygons) < 2:
+            raise ValueError(
+                'The argument "polygons" needs to be specified '
+                'more than 2 polygonal objects.'
+            )
+        self.__sourcelist = list(polygons[:-1])
+        self.__target = polygons[-1]
+        self.__points_list = {}
+        self.__cell_count = 10
+
+    def setup(self):
+        self.__points_list = {}
+        self.__bb = []
+        sel = OpenMaya.MSelectionList()
+        for i, p in enumerate(self.__sourcelist + [self.__target]):
+            sel.add(p)
+            dagpath = sel.getDagPath(i)
+            mesh = OpenMaya.MFnMesh(dagpath)
+            self.__points_list[p] = mesh.getPoints(OpenMaya.MSpace.kWorld)
+    
+    def getPoints(self, name):
+        return self.__points_list.get(name, [])
+
+    def setCellCount(self, count):
+        self.__cell_count = count
+
+    def cellCount(self):
+        return self.__cell_count
+
+    def buildSpatialGrid(self, name):
+        from collections import defaultdict
+        grid = defaultdict(list)
+        points = self.getPoints(name)
+        # バウンディングボックスを取得。
+        xlist, ylist, zlist = set(), set(), set()
+        for pt in points:
+            xlist.add(pt.x)
+            ylist.add(pt.y)
+            zlist.add(pt.z)
+        bb = [f(x) for x in [xlist, ylist, zlist] for f in [min, max]]
+        cell_size = OpenMaya.MPoint(
+            [
+                (bb[y] - bb[x]) / self.cellCount() for x, y in 
+                [(0, 1), (2, 3), (4, 5)]
+            ]
+        )
+        # cell_size = (
+            # max([bb[1] - bb[0], bb[3] - bb[2], bb[5] - bb[4]])
+            # / self.cellCount()
+        # )
+
+        for idx, pt in enumerate(points):
+            cell = (
+                int(pt.x // cell_size.x),
+                int(pt.y // cell_size.y),
+                int(pt.z // cell_size.z)
+            )
+            grid[cell].append((idx, pt))
+        return grid, cell_size
+
+    @staticmethod
+    def getNeighboringCells(cell):
+        x, y, z = cell
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                for dz in [-1, 0, 1]:
+                    yield (x + dx, y + dy, z + dz)
+
+    def findClosestPoint(self, pt, grid, cellSize):
+        def sq_dist(a, b):
+            delta = a - b
+            return delta.x**2 + delta.y**2 + delta.z**2
+
+        min_dist_sq = float('inf')
+        closest_idx = None
+        cell = (
+            int(pt.x // cellSize.x),
+            int(pt.y // cellSize.y),
+            int(pt.z // cellSize.z)
+        )
+        for neighbor_cell in self.getNeighboringCells(cell):
+            for idx, pt_b in grid.get(neighbor_cell, []):
+                dist_sq = sq_dist(pt, pt_b)
+                if dist_sq < min_dist_sq:
+                    min_dist_sq = dist_sq
+                    closest_idx = idx
+        return closest_idx, min_dist_sq
+
+    def listClosestVertexPairs(self):
+        self.setup()
+        pairs = []
+        grid_data = {x: self.buildSpatialGrid(x) for x in self.__sourcelist}
+        for i, pt_a in enumerate(self.getPoints(self.__target)):
+            closest_data_list = {}
+            for src, g_c in grid_data.items():
+                b_id, dist = self.findClosestPoint(pt_a, g_c[0], g_c[1])
+                closest_data_list.setdefault(dist, []).append([src, b_id])
+            pairs.append(closest_data_list)
+
+        results = {}
+        vtx_fmt = '{}.vtx[{}]'
+        for a_id, c_data in enumerate(pairs):
+            min_key = min(c_data.keys())
+            src_min = c_data[min_key][0]
+            results[vtx_fmt.format(self.__target, a_id)] = vtx_fmt.format(
+                src_min[0], src_min[1]
+            )
+        return results
+
 
 def positionCenter(positions):
     r"""
@@ -36,6 +156,7 @@ def positionCenter(positions):
     center = [(min(x)+max(x))*0.5 for x in (xlist, ylist, zlist)]
     size = [max(x)-min(x) for x in (xlist, ylist, zlist)]
     return center, size
+
 
 def getComponentCenter(components=None):
     r"""
@@ -63,38 +184,6 @@ def getComponentCenter(components=None):
     positions = [cmds.pointPosition(x, w=True) for x in points]
     return positionCenter(positions)
 
-    '''
-    # 法線の平均値をとり、向きを求める。
-    # 不確定のため現在はロック中。
-    vector = None
-    xlist, ylist, zlist = [], [], []
-    if withDirection and len(pos) > 2:
-        vec_a = mathlib.Vector(poslist[0])
-        vec_b = mathlib.Vector(poslist[1])
-        a = vec_a - vec_b
-        for pos in poslist[2:]:
-            vec_a = vec_b
-            vec_b = mathlib.Vector(pos)
-            b = vec_a - vec_b
-
-            vec_c = a ** b
-            vec_c.normalize()
-            xlist.append(vec_c.x)
-            ylist.append(vec_c.y)
-            zlist.append(vec_c.z)
-
-            a = b
-
-        x_ = sum(xlist)
-        y_ = sum(ylist)
-        z_ = sum(zlist)
-        d = mathlib.math.sqrt(sum([x*x for x in (x_, y_, z_)]))
-        vector = mathlib.Vector(
-            [x/d for x in (x_, y_, z_)]
-        )
-        vector.normalize()
-    return center, vector
-    '''
     
 def getFaceNormal(faceId):
     r"""
@@ -106,7 +195,6 @@ def getFaceNormal(faceId):
         Returns:
             any:(OpenMaya.MVector):
     """
-    print(faceId)
     normal_data = cmds.polyInfo(faceId, fn=True)[0]
     n = [float(x) for x in normal_data .rsplit(':', 1)[-1].split()]
     shape = cmds.listRelatives(faceId, p=True, pa=True)
@@ -121,6 +209,7 @@ def getFaceNormal(faceId):
     ).normalize()
     return normal
 
+
 def mirror(sel=None, axis='X'):
     r"""
         任意のオブジェクトをミラーリング（Behavior）する。
@@ -128,9 +217,6 @@ def mirror(sel=None, axis='X'):
         Args:
             sel (list):対象ノードのリスト
             axis (str):X、YまたはZ
-            
-        Returns:
-            any:None
     """
     sel = node.selected(sel)
     num = len(sel)
@@ -222,6 +308,7 @@ class Transform(object):
             if flags & 0b000001:
                 n.setScalePivot(self.__data[i][2])
 
+
 def listSingleChain(topNode):
     r"""
         任意のノード下にある、最初の子の階層チェーンを返すメソッド。
@@ -241,6 +328,7 @@ def listSingleChain(topNode):
         result.append(children[0])
         parent = children[0]
 
+
 def detectAimAxis(mainNode, comparedNode):
     r"""
         mainNodeのX,Y,Zのうち、どの軸がcomparedNodeの方向を向いているかを
@@ -250,13 +338,13 @@ def detectAimAxis(mainNode, comparedNode):
             軸がプラス方向かどうかの補正値(1 or -1)
             サブの軸(X=0, Y=1, Z=2)
         が格納されている。
-
+        
         Args:
             mainNode (node.Transform):
             comparedNode (node.Transform):
-
+            
         Returns:
-            list: 向いている軸、軸がプラス方向かどうか、サブの軸
+            list:向いている軸、軸がプラス方向かどうか、サブの軸
     """
     mtx = mainNode.matrix()
     vec = (
@@ -341,7 +429,7 @@ def listNamespaces():
     r"""
         シーン中のリファレンスファイルとネームスペースのリストを返す。
         戻り値はOrderedDictのため、読み込み順序も保証されたものを返す。
-    
+        
         Returns:
             OrderedDict:ネームスペースをキーとし対応したファイルパス
     """
@@ -356,10 +444,10 @@ def analyzeHierarchy(nodelist=None):
     r"""
         任意のノードの階層構造を解析し、枝分かれしている箇所ごとに分解した
         シングルチェーンのリストを返す。
-
+        
         Args:
             nodelist (list):
-        
+            
         Returns:
             list:
     """
@@ -386,3 +474,5 @@ def analyzeHierarchy(nodelist=None):
     for n in nodelist:
         get_hierarchy(n, add_newlist())
     return [global_list[x] for x in sorted(global_list.keys())]
+
+

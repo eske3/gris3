@@ -15,12 +15,19 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '1.1.4.1'
-LastModified = 20250527
+Version = '1.1.4.5'
+LastModified = 20250530
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('1.1.4.5',
+(
+    'node.AbstractNodeにlistInheritedTypesを追加。',
+    'nodeRenamerにライト用の命名規則を追加',
+)
+),
+
 ('1.1.4.1',
 (
     'facialExpressionManagerの登録ボタンを押した際にGUIが更新されないバグを修正。',

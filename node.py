@@ -1840,7 +1840,7 @@ class AbstractNode(AbstractNodeStr):
 
     def isType(self, types):
         r"""
-            与えられた文字列のタイプかどうかを返すメソッド。
+            与えられた文字列のタイプかどうかを返す。
             
             Args:
                 types (str or list or tuple):
@@ -1853,14 +1853,28 @@ class AbstractNode(AbstractNodeStr):
             return nodetype in types
         else:
             return nodetype == types
+
+    def listInheritedTypes(self):
+        r"""
+            継承元の基底クラスまでのリストを返す。
+            
+            Returns:
+                list:
+        """
+        return cmds.nodeType(self(), i=True)
     
     def isSubType(self, type):
         r"""
+            与えられた文字列のタイプかどうかを、継承元のクラスも含めて
+            判断する。
+
             Args:
                 type (str):
+            
+            Returns:
+                bool:
         """
-        typelist = cmds.nodeType(self(), i=True)
-        return type in typelist
+        return type in self.listInheritedTypes()
 
     def namespace(self):
         r"""
@@ -2099,6 +2113,7 @@ class BlendShape(AbstractNode):
                 new.rename(name)
                 created.append(asObject(new()))
         return created
+
 
 class SkinCluster(AbstractNode):
     r"""

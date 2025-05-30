@@ -173,6 +173,7 @@ BasicDataTable = OrderedDict({
     'lambert': OrderedDict({
         'mat':[], 'png': ['phong'], 'bln':['blinn'], 'lbt':['lambert'], 
     }),
+    'light': OrderedDict({'lgt':[]}),
     'sets': OrderedDict({'sg': ['shadingEngine']}),
 })
 
@@ -230,7 +231,12 @@ class BasicProductionEngine(BasicRenamerEngine):
                 return basename, suffix, 'grp'
             # ジオメトリと推察される場合。
             shape = shapes[0]
-            return basename, suffix, getNodeType(shape.type(), 'geometry')
+            typelist = shape.listInheritedTypes()
+            if 'light' in typelist:
+                key = 'light'
+            else:
+                key = 'geometry'
+            return basename, suffix, getNodeType(shape.type(), key)
             
         super(BasicProductionEngine, self).analyzeName(nodeName, fullPathName)
         from ... import node

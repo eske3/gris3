@@ -17,7 +17,6 @@ from ..tools import facialMemoryManager
 from ..uilib import mayaUIlib
 from .. import uilib, node, style
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (48, 85, 150)
 
 
 class ManagerEngine(object):
@@ -138,7 +137,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         self.__param_range = []
         self.__current_ratio = -1
         self.slider_gradient = QtGui.QLinearGradient()
-        color = QtGui.QColor(*Exec_Color)
+        color = QtGui.QColor(*uilib.Color.ExecColor)
         self.slider_gradient.setColorAt(0, color)
         self.slider_gradient.setColorAt(1, color.lighter())
 
@@ -390,7 +389,7 @@ class ExpressionEditor(QtWidgets.QWidget):
         cancel_btn.clicked.connect(self.cancelEditing)
         ok_btn = uilib.OButton(uilib.IconPath('uiBtn_save'))
         ok_btn.setSize(48)
-        ok_btn.setBgColor(*Exec_Color)
+        ok_btn.setBgColor(*uilib.Color.ExecColor)
         ok_btn.clicked.connect(self.saveEditting)
 
         layout = QtWidgets.QGridLayout(self)

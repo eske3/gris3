@@ -17,7 +17,7 @@ from gris3 import uilib, lib, node
 from gris3.uilib import colorPicker
 from gris3.tools import curvePrimitives
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
+
 
 class CurveView(QtWidgets.QListView):
     r"""

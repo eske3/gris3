@@ -20,7 +20,7 @@ import re, os
 from gris3 import lib, uilib, node
 from gris3.uilib import factoryUI
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
+
 
 def coordinateFiles(files, extensions, format):
     # type: (list,list,str) -> dict

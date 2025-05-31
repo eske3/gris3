@@ -15,7 +15,7 @@ r'''
 from gris3.tools import drivenUtilities
 from gris3 import uilib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
+
 
 class DrivenUtility(uilib.ClosableGroup):
     r'''

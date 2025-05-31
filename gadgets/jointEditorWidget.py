@@ -13,13 +13,10 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3.tools import jointEditor
-from gris3.uilib import directionPlane
-from gris3 import lib, uilib, node
-from gris3.uilib import mayaUIlib
-from gris3.tools import nameUtility
+from ..tools import jointEditor, nameUtility
+from ..uilib import directionPlane, mayaUIlib
+from .. import lib, uilib, node
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
 
 class CameraBasedParentWidget(directionPlane.DirectionScreen):
     def __init__(self, parent=None):
@@ -60,7 +57,7 @@ class ParentTools(uilib.ClosableGroup):
 
         buttons = []
         for icon, color, cmd in (
-            ('uiBtn_parentChain', Exec_Color, self.parentChain),
+            ('uiBtn_parentChain', uilib.Color.ExecColor, self.parentChain),
             ('uiBtn_parentChainInv', (87, 48, 172), self.parentChainInv),
             ('uiBtn_parentChainInv', (32, 181, 172), self.showParentTool),
         ):
@@ -164,7 +161,7 @@ class JointSplitter(uilib.ClosableGroup):
 
         self.__exec_slider = sliders[1]
         exec_btn = uilib.OButton(uilib.IconPath('uiBtn_plus'))
-        exec_btn.setBgColor(*Exec_Color)
+        exec_btn.setBgColor(*uilib.Color.ExecColor)
         exec_btn.clicked.connect(self.splitSelectedJoints)
         layout.addWidget(exec_btn, 1, 3, 1, 1)
         # =====================================================================
@@ -354,7 +351,7 @@ class JointAxisEditor(uilib.ClosableGroup):
         set_btn = uilib.OButton()
         set_btn.setIcon(uilib.IconPath('uiBtn_play'))
         set_btn.setSize(36)
-        set_btn.setBgColor(*Exec_Color)
+        set_btn.setBgColor(*uilib.Color.ExecColor)
         set_btn.setToolTip('Edit joint axis.')
         set_btn.clicked.connect(self.setAxis)
         layout.addWidget(set_btn, 0, 1, 2, 1)
@@ -541,7 +538,7 @@ class JointMirror(uilib.ClosableGroup):
         mrr_btn = uilib.OButton()
         mrr_btn.setIcon(uilib.IconPath('uiBtn_play'))
         mrr_btn.setSize(36)
-        mrr_btn.setBgColor(*Exec_Color)
+        mrr_btn.setBgColor(*uilib.Color.ExecColor)
         mrr_btn.setToolTip('Mirror selected joints.')
         mrr_btn.clicked.connect(self.mirroring)
         # =====================================================================
@@ -654,14 +651,14 @@ class JointBuilder(uilib.FlatScrollArea):
 
         # ジョインt作成UI。====================================================
         create_btn = uilib.OButton(uilib.IconPath('uiBtn_plus'))
-        create_btn.setBgColor(*Exec_Color)
+        create_btn.setBgColor(*uilib.Color.ExecColor)
         create_btn.setSize(32)
         create_btn.setToolTip('Create a new joint under the selected node.')
         create_btn.clicked.connect(self.createJoint)
         create_label = QtWidgets.QLabel('Create new joint')
 
         rad_btn = uilib.OButton(uilib.IconPath('uiBtn_arrangeRadius'))
-        rad_btn.setBgColor(*Exec_Color)
+        rad_btn.setBgColor(*uilib.Color.ExecColor)
         rad_btn.setSize(32)
         rad_btn.setToolTip(
             'Arrange joint radius between 2 joints.\n'

@@ -17,7 +17,7 @@ from gris3.tools import hardsurfaceModeler
 from gris3.uilib import mayaUIlib
 from gris3 import lib, uilib, node
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
+
 
 class BridgePipeGroup(uilib.ClosableGroup):
     def __init__(self, parent=None):

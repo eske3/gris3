@@ -18,7 +18,6 @@ from ..uilib import mayaUIlib
 from .. import node, uilib, lib
 from importlib import reload
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
 
 
 class RebuildModeOption(QtWidgets.QGroupBox):

@@ -18,7 +18,6 @@ from ..tools import mirrorUtil
 from .. import lib, uilib, node
 from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
 
 
 class IkFkMatcher(uilib.ClosableGroup):
@@ -38,7 +37,7 @@ class IkFkMatcher(uilib.ClosableGroup):
         # Ik fk matching.=====================================================
         switch_btn = uilib.OButton(uilib.IconPath('uiBtn_reset'))
         switch_btn.setSize(32)
-        switch_btn.setBgColor(*Exec_Color)
+        switch_btn.setBgColor(*uilib.Color.ExecColor)
         switch_btn.clicked.connect(self.switch_ik_fk)
         switch_label = QtWidgets.QLabel('Switch Ik / Fk with matching')
         # ====================================================================

@@ -16,7 +16,7 @@ r"""
 from gris3.tools import modelChecker
 from gris3 import uilib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
+
 
 class CleanupPlugins(QtWidgets.QGroupBox):
     r"""

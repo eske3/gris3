@@ -302,6 +302,13 @@ class AbstractDepartmentGUI(QtWidgets.QWidget):
             必要な処理を行った後に、このメソッドが呼び出される。
         """
         pass
+    
+    def refreshState(self):
+        r"""
+            タブが選択された際に呼ばれる更新用の上書き専用メソッド。
+            GUIの更新などに使用可能。
+        """
+        pass
 
 
 class AbstractDepartment(object):
@@ -464,8 +471,6 @@ class FactoryModuleManager(object):
         ]
         pathlist += p.listFactoryModules()
         for mod_name, root in pathlist:
-            print(mod_name)
-            print('    -> %s' % root)
             for module in lib.loadPythonModules(root, mod_name, 1):
                 if not 'Department' in dir(module):
                     continue

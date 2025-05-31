@@ -26,6 +26,7 @@ from .. import globalpath, style, verutil
 
 class Color(object):
     ExecColor = (64, 72, 150)
+    DebugColor = (130, 105, 150)
 
 FocusedColor = QtGui.QColor(60, 140, 220)
 

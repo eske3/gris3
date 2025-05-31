@@ -17,7 +17,6 @@ from gris3.tools import modelingSupporter
 from gris3.uilib import mayaUIlib
 from gris3 import lib, uilib, node
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
 
 
 class AllGroupCreator(QtWidgets.QWidget):
@@ -34,7 +33,7 @@ class AllGroupCreator(QtWidgets.QWidget):
         add_btn = uilib.OButton()
         add_btn.setToolTip('Create all_grp for model')
         add_btn.setIcon(uilib.IconPath('uiBtn_plus'))
-        add_btn.setBgColor(*Exec_Color)
+        add_btn.setBgColor(*uilib.Color.ExecColor)
         add_btn.setSize(32)
         add_btn.clicked.connect(self.createAllGroup)
 

@@ -17,7 +17,6 @@ from gris3.tools import skinUtility, paintSkinUtility
 from gris3 import lib, uilib, node
 from gris3.uilib import extendedUI
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
 
 
 class BindUtility(uilib.ClosableGroup):

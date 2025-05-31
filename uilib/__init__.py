@@ -23,6 +23,10 @@ from abc import ABCMeta, abstractmethod
 from ..pyside2 import *
 
 from .. import globalpath, style, verutil
+
+class Color(object):
+    ExecColor = (64, 72, 150)
+
 FocusedColor = QtGui.QColor(60, 140, 220)
 
 # デスクトップの大きさに関わる情報の収集。=====================================

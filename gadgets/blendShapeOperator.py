@@ -15,10 +15,8 @@ from .. import lib, uilib, node
 from ..tools import blendShapeUtil
 from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-Exec_Color = (64, 72, 150)
 
-# from importlib import reload
-# reload(blendShapeUtil)
+
 DefaultBlendShapeName = 'facial_bs'
 
 

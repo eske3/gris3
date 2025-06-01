@@ -15,6 +15,7 @@ r"""
 """
 import os
 from ... import factoryModules, uilib, core, lib, system
+from ...tools import extraJoint
 from ...gadgets import extraJointEditor
 from ...exporter import extraJointExporter
 from ...uilib import factoryUI
@@ -171,10 +172,10 @@ class ExtraJointManager(factoryModules.AbstractDepartmentGUI):
     """
     def init(self):
         tab = factoryUI.ToolTabWidget()
-        editor = extraJointEditor.ExtraJointEditor()
-        editor.setPositionList()
+        self.editor = extraJointEditor.ExtraJointEditor()
+        self.editor.setPositionList()
         btn = tab.addTab(
-            editor, uilib.IconPath('uiBtn_toolBox.png'),
+            self.editor, uilib.IconPath('uiBtn_toolBox.png'),
             'Extra Joint Creator'
         )
         btn.setBgColor(*tab.ToolColor)
@@ -189,6 +190,9 @@ class ExtraJointManager(factoryModules.AbstractDepartmentGUI):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(tab)
+
+    def refreshState(self):
+        self.editor.updateTagList()
 
 
 class Department(factoryModules.AbstractDepartment):

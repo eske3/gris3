@@ -13,12 +13,14 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import node, system, mathlib, verutil
+from .. import node, system, mathlib, verutil
 
 class ExtraJoint(node.Transform):
     r"""
         ExtraJointを取扱う機能を提供するクラス。
     """
+    NodeType = 'implicitSphere'
+
     def __init__(self, nodeName):
         r"""
             初期化を行う。
@@ -33,8 +35,8 @@ class ExtraJoint(node.Transform):
         self.__shape = None
         typ = self.type()
         if typ == 'transform':
-            spheres = self.children(type='implicitSphere')
-        elif typ == 'implicitSphere':
+            spheres = self.children(type=self.NodeType)
+        elif typ == self.NodeType:
             spheres = [self]
         else:
             return
@@ -200,7 +202,7 @@ def create(
 
     space = node.createNode('transform', n=name(), p=parent())
     space_shape = node.createNode(
-        'implicitSphere', n=space+'Shape', p=space
+        ExtraJoint.NodeType, n=space+'Shape', p=space
     )
     space_shape('radius', radius)
     space_shape.addMessageAttr('extraJointOffsets', m=True, im=False)
@@ -246,6 +248,7 @@ def create(
     return {
         'space':space, 'offsets':offset_nodes, 'ctrl':ctrl
     }
+
     
 def listExtraJoints(nodelist=None, tag=''):
     r"""
@@ -258,16 +261,32 @@ def listExtraJoints(nodelist=None, tag=''):
         Returns:
             list:
     """
-    node_type = 'implicitSphere'
     nodelist = [
         ExtraJoint(x())
-        for x in node.selected(nodelist, type=['transform', 'implicitSphere'])
+        for x in node.selected(
+            nodelist, type=['transform', ExtraJoint.NodeType]
+        )
     ]
     extra_joints = [x for x in nodelist if x.isValid()]
     if tag:
         extra_joints = [x for x in extra_joints if x.tag() == tag]
     return extra_joints
-    
+
+
+def listExtraJointsInScene(tag=''):
+    r"""
+        シーン中にあるすべてのExtraJointをリストする。
+        
+        Args:
+            tag (str):
+            
+        Returns:
+            list:
+    """
+    all_targets = node.cmds.ls(type=ExtraJoint.NodeType)
+    return listExtraJoints(all_targets, tag=tag)
+
+
 def selectExtraJoint(topNodes=None, tag=''):
     r"""
         任意のノード下にあるエクストラジョイントを選択する。
@@ -280,22 +299,25 @@ def selectExtraJoint(topNodes=None, tag=''):
             list:
     """
     cmds = node.cmds
-    node_type = 'implicitSphere'
     if not topNodes:
         topNodes = node.cmds.ls(sl=True, type='transform')
 
-    all_nodes = cmds.listRelatives(topNodes, ad=True, type=node_type)
+    all_nodes = cmds.listRelatives(topNodes, ad=True, type=ExtraJoint.NodeType)
     if not all_nodes:
         return
     ej = []
     for n in all_nodes:
         if not cmds.attributeQuery('extraJoint', ex=True, n=n):
             continue
-        ej.append(cmds.listRelatives(n, p=True, pa=True)[0])
+        extra_joint = ExtraJoint(cmds.listRelatives(n, p=True, pa=True)[0])
+        if tag and extra_joint.tag() != tag:
+            continue
+        ej.append(extra_joint)
     if not ej:
         return
     cmds.select(ej, r=True)
-    return [ExtraJoint(x) for x in ej]
+    return ej
+
 
 def createMirroredJoint(targetJoints=None):
     r"""
@@ -341,3 +363,4 @@ def createMirroredJoint(targetJoints=None):
         exj['space'].setMatrix(matrix)
         result.append(exj)
     return result
+

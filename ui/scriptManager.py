@@ -550,13 +550,13 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         exec_commands = QtWidgets.QGroupBox('Operations')
         exe_btn = uilib.OButton(uilib.IconPath('uiBtn_play'))
         exe_btn.clicked.connect(self.executeScript)
-        exe_btn.setSize(32)
+        exe_btn.setSize(40)
         exe_btn.setBgColor(*uilib.Color.ExecColor)
         exe_label = QtWidgets.QLabel('Start to build')
 
         dbg_btn = uilib.OButton(uilib.IconPath('uiBtn_next'))
         dbg_btn.clicked.connect(self.debugScript)
-        dbg_btn.setSize(32)
+        dbg_btn.setSize(40)
         dbg_btn.setBgColor(*uilib.Color.DebugColor)
         
         self.__debug_level = QtWidgets.QComboBox()
@@ -573,6 +573,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         exec_gui.addWidget(self.__view)
         exec_gui.addWidget(exec_commands)
         exec_gui.setStretchFactor(0, 1)
+        exec_gui.setSizes([300, 300])
         # =====================================================================
 
         # スクリプトファイルとコマンドヘルパーの作成。=========================

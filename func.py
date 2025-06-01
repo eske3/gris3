@@ -2571,7 +2571,7 @@ def createAngleDriverNode(targetNode, name='angleDriver#', parent=None):
 
 
 def createDistanceDriverNode(
-    startNode, endNode, name='distanceDriver#', parent=None
+    startNode, endNode, name='distanceDriver#', parent=None, asLocal=False
 ):
     r"""
         ２つのマトリクス間の距離ベースの伸縮率を返すdistanceDriverノードを
@@ -2587,10 +2587,24 @@ def createDistanceDriverNode(
             node.Transform:
     """
     from gris3.tools import drivers
-    inputs = [
-        x if '.' in x else x+'.worldMatrix' for x in (startNode, endNode)
-    ]
+    inputs = []
+    if asLocal:
+        mtx_list = listMatrixPath(endNode, startNode)
+        if mtx_list:
+            mltmtx = node.createUtil('multMatrix', n=name+'_posMltMtx')
+            print(mltmtx)
+            for index, n in enumerate(mtx_list[0]):
+                n.attr('m') >> '{}.matrixIn[{}]'.format(mltmtx, index)
+            for n in mtx_list[1]:
+                index += 1
+                n.attr('im') >> '{}.matrixIn[{}]'.format(mltmtx, index)
+            inputs = [startNode+'.m', mltmtx/'matrixSum']
+    if not inputs:
+        inputs = [
+            x if '.' in x else x+'.worldMatrix' for x in (startNode, endNode)
+        ]
     return drivers.createDistanceDriver(inputs[0], inputs[1], name, parent)
+
 
 
 class SurfaceFitter(object):

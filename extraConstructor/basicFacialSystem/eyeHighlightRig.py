@@ -20,8 +20,9 @@ r"""
         Proprietary and confidential
 """
 from collections import OrderedDict
-from ... import node, func
+from ... import node, func, core
 from ...tools import jointEditor
+cmds = node.cmds
 
 
 class EyeHighlightSetup(object):
@@ -39,34 +40,48 @@ class EyeHighlightSetup(object):
                 constructor (constructors.BasicConstructor):
                 parentCtrlName (str):
         """
-        grp = node.asObject(highlightGroup)
+        self.__grp = highlightGroup
         self.highlights = OrderedDict()
-        self.__parent_joint = node.asObject(parentJoint)
+        self.__parent_joint = parentJoint
         self.__eye_joints = {}
         self.parent_ctrl_name = parentCtrlName
         self.constructor = constructor
         self.isValid = False
-        if not grp or not self.__parent_joint:
+    
+    def initialize(self):
+        grp = node.asObject(self.__grp)
+        self.isValid = False
+        if not grp:
             return
         self.isValid = True
         for geo in grp.children():
-            self.highlights[geo] = {}
+            self.highlights[geo] = {}        
 
-    def parentJoint(self):
+    def parentJoint(self, asName=False):
         r"""
-            目のリグの親おとなるジョイント。
+            目のリグの親となるジョイント。
 
             Returns:
                 node.Joint:
         """
-        return self.__parent_joint
+        if asName:
+            return self.__parent_joint
+        return node.asObject(self.__parent_joint)
 
     def preSetup(self):
+        if not self.isValid:
+            return
         for s in func.SuffixIter():
             if not cmds.objExists('eye_jnt'*s):
                 return
 
         head_jnt = self.parentJoint()
+        if not head_jnt:
+            raise RuntimeError(
+                'No parent joint detected : "{}".'.format(
+                    self.parentJoint(True)
+                )
+            )
         end_jnt = head_jnt.children()[0]
         head_len = (
             node.MVector(end_jnt.position()) - node.MVector(head_jnt.position())
@@ -123,7 +138,11 @@ class EyeHighlightSetup(object):
             jnt.attr('m') >> p
 
         self.__eye_joints = parents
-
+        print('*' * 80)
+        print('*' * 80)
+        print(self.highlights)
+        print('*' * 80)
+        print('*' * 80)
         for hl, data in self.highlights.items():
             with node.editFreezedShape(hl) as fhl:
                 bb = cmds.polyEvaluate(fhl(), b=True)

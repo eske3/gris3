@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/02/25 13:10[Eske](eske3g@gmail.com)
-        update:2025/06/01 17:24 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/06/01 22:27 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -185,12 +185,16 @@ class LayerManager(object):
     DefaultCageGroup = 'faceCage_grp'
     BaseGroupName = 'FacialSetup_grp'
 
-    def __init__(self, *layerOperators):
+    def __init__(self, constructor, extraConstrcutor, *layerOperators):
         r"""
             Args:
+                constructor (constructors.BasicConstructor):
+                extraConstrcutor (basicfacialSystem.core.ExtraConstructor):
                 *layerOperators (LayerOperator):
         """
         super(LayerManager, self).__init__()
+        self.__constructor = constructor
+        self.__extCst = extraConstrcutor
         self.__layers = list(layerOperators)
         self.__process_objects = []
 
@@ -231,17 +235,17 @@ class LayerManager(object):
         """
         return self.__layers
 
-    def createSetupParts(self, constructor, extraConstructor, rootGroup):
+    def createSetupParts(self, rootGroup):
         r"""
             layerOperatorごとに必要なノード郡を作成するための便利メソッド。
             
             Args:
-                constructor (constructors.BasicConstructor):
-                extraConstructor (basicfacialSystem.core.ExtraConstructor):
                 rootGroup (node.Transform):
         """
         for l in self.layers():
-            l(cst, self, None, None).createSetupParts(rootGroup)
+            l(self.__constructor, self.__extCst, None, None).createSetupParts(
+                rootGroup
+            )
 
     def processObjects(self):
         r"""
@@ -307,12 +311,14 @@ class LayerManager(object):
             r.extend(copyNode(child, prefix, r[1]))
         return r
 
-    def setup(self, rootGroup, cageGroup, ctrlParent):
+    def setup(self, facialGrp, rootGroup, cageGroup, ctrlParent, animSet):
         r"""
             Args:
-                rootGroup (any):
-                cageGroup (any):
+                facialGrp (node.Transform):コピー元となる顔メッシュのグループ
+                rootGroup (node.Transform):フェイシャルをまとめるためのグループ
+                cageGroup (node.Transform):ケージを格納するためのグループ
                 ctrlParent (any):
+                animSet (grisNode.AnimSet): コントローラを登録するanimSet
         """
         copied_list = []
         self.__process_objects = []
@@ -324,28 +330,30 @@ class LayerManager(object):
         parentlist[-1] = cageGroup
         facial_targets = []
         for l_operator, parent in zip(layers, parentlist):
-            if isinstance(p, str_type):
+            if isinstance(l_operator, str_type):
                 pfx = None
                 lo_obj = None
             else:
-                lo_obj = l_operator(cst, self, anim_set, rootGroup)
+                lo_obj = l_operator(
+                    self.__constructor, self.__extCst, animSet, rootGroup
+                )
                 lo_obj.setCtrlParent(ctrlParent)
                 self.__process_objects.append(lo_obj)
                 pfx = lo_obj.prefix()
             copied = self.copyFacialGroup(
-                facial_grp, parent, pfx, facial_targets
+                facialGrp, parent, pfx, facial_targets
             )
             if lo_obj:
                 lo_obj.setTargetObjects(copied[1:])
                 lo_obj.setRootGroup(copied[0])
+            copied_list.append(copied)
             if not pre_copied:
                 pre_copied = copied
                 continue
             for s, d in zip(pre_copied[2:], copied[2:]):
                 s.attr('outMesh') >> d.attr('inMesh')
             pre_copied = copied
-            copied_list.append(copied)
-        return copied_list
+        return facial_targets, copied_list
 
     def preSetupLayers(self):
         r"""
@@ -367,3 +375,15 @@ class LayerManager(object):
         """
         for lo_obj in self.processObjects():
             lo_obj.postProcess()
+
+    def connectVisibility(self, visibl_plug):
+        r"""
+            各レイヤーのコントローラを、表示制御アトリビュートに接続する。
+            
+            Args:
+                visibl_plug (node.Attribute):表示・非表示を制御するアトリビュート
+        """
+        for lo_obj in self.processObjects():
+            for ctrl in [x for x in node.toObjects(lo_obj.hiddenCtrls()) if x]:
+                visibl_plug >> ctrl/'v'
+

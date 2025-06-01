@@ -221,6 +221,8 @@ class FactoryTab(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
                 index (int):
         """
         self.__tab.moveTo(index)
+        w = self.__tab.widgetFromIndex(index)
+        w.refreshState()
 
 
 class AdvancedTabPage(QtWidgets.QWidget):

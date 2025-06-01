@@ -28,7 +28,6 @@ HELP_DOCUMENT_STYLE = '''
 <style type="text/css">
 .syntax{
     color:#5096f0;
-    font-weight:bold;
 }
 .var{
     color:#5096f0;
@@ -36,6 +35,7 @@ HELP_DOCUMENT_STYLE = '''
 h3{
     color:#d09820;
     margin-bottom:0;
+    font-weight:normal;
 }
 ul{
     margin-top:0;
@@ -112,7 +112,7 @@ def parsePydoc(docstring):
             pre = '\n'.join([fmt % x for x in patterns[cat][1]])
             if not pre:
                 continue
-            lines.append('<h3>%s</h3><ul>%s</ul>' % (label, pre))
+            lines.append('<h3>{}</h3><ul>{}</ul>'.format(label, pre))
         # =====================================================================
         # その他。=============================================================
         if other:
@@ -419,6 +419,7 @@ class ScriptHelper(QtWidgets.QSplitter):
         text = self.analyzeDocument(method)
         self.__doc_field.setText(text)
 
+
 class ConstructionOrderView(QtWidgets.QWidget):
     r"""
         Construtorの実行メソッドを実行順に表示するビューワー
@@ -525,7 +526,6 @@ class ContextOption(factoryUI.ContextOption):
         self.hideContext()
 
 
-
 class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
     r"""
         メインGUI。
@@ -538,16 +538,46 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         super(ScriptManager, self).__init__(parent)
         self.customInit()
 
-        # スクリプトファイルとコマンドヘルパーの作成。=========================
-        # ファイルの一覧とコンストラクタの実行メソッドの順序を表示するビュー
+        # ビルド実行用のモジュール一覧と、実行用のGUIを作成。==================
         self.__view = factoryUI.ModuleBrowserWidget()
         self.__view.setExtensions('py')
         self.__view.setCoordinator(coordinateFiles)
         self.__view.setVersionFormat('^(.*?)(\.|)(v\d+|)\.(%s)$')
         self.__view.setExtraContext(ContextOption)
-        self.__view.clicked.connect(self.listConstructorMethods)
+        self.__view.clicked.connect(self.updateConstructorStats)
+        self.__view.browser().setRootIsDecorated(False)
 
-        from gris3 import func, node
+        exec_commands = QtWidgets.QGroupBox('Operations')
+        exe_btn = uilib.OButton(uilib.IconPath('uiBtn_play'))
+        exe_btn.clicked.connect(self.executeScript)
+        exe_btn.setSize(32)
+        exe_btn.setBgColor(*uilib.Color.ExecColor)
+        exe_label = QtWidgets.QLabel('Start to build')
+
+        dbg_btn = uilib.OButton(uilib.IconPath('uiBtn_next'))
+        dbg_btn.clicked.connect(self.debugScript)
+        dbg_btn.setSize(32)
+        dbg_btn.setBgColor(*uilib.Color.DebugColor)
+        
+        self.__debug_level = QtWidgets.QComboBox()
+        # self.__debug_level.addItem('*Debug')
+
+        layout = QtWidgets.QGridLayout(exec_commands)
+        layout.addWidget(exe_btn, 0, 0, 1, 1)
+        layout.addWidget(exe_label, 0, 1, 1, 1)
+        layout.addWidget(dbg_btn, 1, 0, 1, 1)
+        layout.addWidget(self.__debug_level, 1, 1, 1, 1)
+        layout.setRowStretch(2, 1)
+
+        exec_gui = QtWidgets.QSplitter()
+        exec_gui.addWidget(self.__view)
+        exec_gui.addWidget(exec_commands)
+        exec_gui.setStretchFactor(0, 1)
+        # =====================================================================
+
+        # スクリプトファイルとコマンドヘルパーの作成。=========================
+        # ファイルの一覧とコンストラクタの実行メソッドの順序を表示するビュー
+        from .. import func, node
         # コンストラクタのコマンドヘルプ
         self.__script_helper = ScriptHelper()
         # コンストラクタの実行順ビューワー
@@ -559,7 +589,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         node_helper = ScriptHelper()
         node_helper.setObject(node)
         # 選択ノードをPythonのリストに書式化するウィンドウ。
-        from gris3.gadgets import selectedNodeList
+        from ..gadgets import selectedNodeList
         node_list = selectedNodeList.MainGUI()
 
         helper_tab = QtWidgets.QTabWidget()
@@ -568,26 +598,17 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         helper_tab.addTab(func_helper, 'func Commands')
         helper_tab.addTab(node_helper, 'Node Classes')
         helper_tab.addTab(node_list, 'Node List')
+        # =====================================================================
 
         splitter = QtWidgets.QSplitter()
         splitter.setOrientation(QtCore.Qt.Vertical)
-        splitter.addWidget(self.__view)
+        splitter.addWidget(exec_gui)
         splitter.addWidget(helper_tab)
         splitter.setSizes((200, 200))
         splitter.setStretchFactor(1, 1)
-        # =====================================================================
-
-        exec_btn = QtWidgets.QPushButton('Execute')
-        exec_btn.clicked.connect(self.executeScript)
-        debug_btn = QtWidgets.QPushButton('Debug')
-        debug_btn.clicked.connect(self.debugScript)
-
-        layout = QtWidgets.QGridLayout(self)
-        layout.setSpacing(2)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(splitter, 1, 0, 1, 2)
-        layout.addWidget(exec_btn, 0, 0, 1, 1)
-        layout.addWidget(debug_btn, 0, 1, 1, 1)
+        
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(splitter)
 
     def view(self):
         r"""
@@ -687,26 +708,35 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
             return
         self.__script_helper.setObject(constructor)
         self.__order_view.setObject(constructor)
+        return constructor
 
-    def executeModule(self, moduleName, isDubgMode):
+    def updateConstructorStats(self, index):
+        cst = self.listConstructorMethods(index)
+        self.__debug_level.clear()
+        if not cst or not getattr(cst, 'listDebugModes'):
+            return
+        self.__debug_level.addItems(cst.listDebugModes())
+
+    def executeModule(self, moduleName, debugMode):
         r"""
             モジュール(Constructor)を実行する。
             
             Args:
                 moduleName (str):モジュール名
-                isDubgMode (bool):デバッグモードで実行するかどうか。
+                debugMode (str):デバッグモードの内容。
         """
         c =self.getConstructor(moduleName, True)
-        c.IsDebugMode = isDubgMode
+        c.IsDebugMode = debugMode is not None
+        c.DebugMode = debugMode
         c.execute()
 
-    def execute(self, isDubgMode=False):
+    def execute(self, debugMode=None):
         r"""
             モジュール(Constructor)の実行準備を行い、その後executeModuleを
             呼び出す。
             
             Args:
-                isDubgMode (bool):デバッグモードで実行するかどうか。
+                debugMode (str):デバッグモードの内容。
         """
         top_module, module = self.setup()
         if not top_module:
@@ -714,7 +744,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         try:
             print('[Execute Module] : {}.{}'.format(top_module, module))
             self.executeModule(
-                '{}.{}'.format(top_module, module), isDubgMode
+                '{}.{}'.format(top_module, module), debugMode
             )
         except:
             lib.errorout()
@@ -723,10 +753,12 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         r"""
             選択されたスクリプトを実行するメソッド。
         """
-        self.execute(False)
+        self.execute()
 
     def debugScript(self):
         r"""
             選択されたスクリプトをデバッグモードで実行するメソッド。
         """
-        self.execute(True)
+        debug_level = self.__debug_level.currentText()
+        self.execute(debug_level)
+

@@ -66,6 +66,7 @@ def createRoot():
     grisNode.nodeSetup(root)
     return root
 
+
 def createRootCtrl(root, size=100):
     r"""
         標準設定のルートコントローラを作成する。
@@ -166,6 +167,7 @@ def createRootCtrl(root, size=100):
     
     ctrl_grp._setCtrls(controllers[0], controllers[-1], disp_ctrl)
     return controllers
+
 
 def createConstructionScript(factorySet, module):
     r"""
@@ -539,6 +541,7 @@ class ExtraConstructorManager(object):
             if hasattr(cst, method):
                 getattr(cst, method)()
 
+
 class BasicConstructor(rigScripts.BaseCreator):
     r"""
         Constructorモジュールを定義する際に使用する基底クラス。
@@ -548,6 +551,9 @@ class BasicConstructor(rigScripts.BaseCreator):
         メンバー変数ProcessListは、このコンストラクタが要求する
     """
     IsDebugMode = False
+    DefaultDebugMode = 'Debug'
+    DebugMode = ''
+    DebugModeList = []
     FactoryModules = (
         ModuleInfo('jointBuilder', None, None),
         ModuleInfo('cageManager', None, None),
@@ -828,11 +834,30 @@ class BasicConstructor(rigScripts.BaseCreator):
     def isDebugMode(self):
         r"""
             デバッグモードかどうかを返す。
-            
+            こちらは古い仕様のため、基本的にはdebugModeメソッドの仕様を推奨。
+
             Returns:
                 bool:
         """
         return self.IsDebugMode
+
+    def debugMode(self):
+        r"""
+            デバッグモードの種類を返す。
+
+            Returns:
+                str:
+        """
+        return self.DebugMode
+
+    def listDebugModes(self):
+        r"""
+            デバッグモードの種類を返す。
+
+            Returns:
+                list:
+        """
+        return [self.DefaultDebugMode] + self.DebugModeList
 
     def printDebug(self, message):
         r"""
@@ -1437,7 +1462,9 @@ class BasicConstructor(rigScripts.BaseCreator):
         driver.fitTo(target)
         return driver
 
-    def createDistanceDriver(self, startNode, endNode, name=None, position=0):
+    def createDistanceDriver(
+        self, startNode, endNode, name=None, position=0, asLocal=False
+    ):
         r"""
             startNodeとendNode間の伸縮率を図るdistanceDriverを作成する。
             
@@ -1471,7 +1498,7 @@ class BasicConstructor(rigScripts.BaseCreator):
         name_obj.setPosition(position)
 
         driver = func.createDistanceDriverNode(
-            startNode, endNode, name_obj(), p
+            startNode, endNode, name_obj(), p, asLocal
         )
         return driver
 
@@ -2188,6 +2215,7 @@ class BasicConstructor(rigScripts.BaseCreator):
         print('/' * 80)    
         return
 
+
 class McpConstructor(BasicConstructor):
     r"""
         MCP用のアセットを作成するためのコンストラクタ。
@@ -2276,6 +2304,7 @@ class McpConstructor(BasicConstructor):
                 cmds.listRelatives(references, ad=True), references,
                 r=True
             )
+
 
 def currentConstructor(isReload=False, name=None):
     r"""

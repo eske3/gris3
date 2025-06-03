@@ -118,7 +118,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
 
     def listExpressionData(self, useCache=False):
         r"""
-            このノードが保持する表情データノートのリストを返す。
+            このノードが保持する表情データノードのリストを返す。
             戻り値は辞書型で、表情名をキーとし、それに対応するblendShapeの
             アトリビュート名と値の辞書を値としたデータ。
             
@@ -235,6 +235,39 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             new_data[exp] = datalist.get(exp, None)
         self.setExpressionFromDataList(new_data)
         return 1
+
+    def renameExpressionFromDataList(self, expressionlist):
+        r"""
+            引数expressionlistで指定された表情名のリストで更新を行う。
+            expressionlist内に既存の表情があった場合、その値は保持する。
+            既存の表情リストとexpressionlistが順番も含めて全く同じだった場合は
+            何もせずに0を返す。
+            それ以外の場合は1を返す。
+            
+            Args:
+                expressionlist (list): 表情名のリスト
+            
+            Returns:
+                int: 更新の必要がなかった場合は0を、更新された場合は1を返す。
+        """
+        datalist = self.listExpressions()
+        if not datalist:
+            return 0
+
+        if len(expressionlist) != len(datalist):
+            raise ValueError(
+                'The number of new expression name list '
+                'does not match the number of existing expression data.'
+            )
+
+        cnt = 0
+        for n_exp, o_exp_data in zip(expressionlist, datalist.items()):
+            if n_exp == o_exp_data[0]:
+                continue
+            o_exp_data[1].setExpression(n_exp)
+            cnt = 1
+        return cnt
+
         
     def applyExpression(self, expression):
         r"""

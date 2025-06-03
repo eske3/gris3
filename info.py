@@ -15,12 +15,19 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '1.1.5.0'
-LastModified = 20250531
+Version = '1.1.5.2'
+LastModified = 20250603
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('1.1.5.2',
+(
+    'gadgets.facialExpressionManagerに表情一覧のリネーム機能を追加。',
+    'tools.facialMemoryManagerに表情一覧のリネーム機能を追加。',
+)
+),
+
 ('1.1.5.0',
 (
     'scriptManagerのGUI更新と、デバッグモードまわりの仕様変更。',

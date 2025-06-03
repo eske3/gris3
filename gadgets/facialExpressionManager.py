@@ -376,7 +376,7 @@ class FacialExpressionView(QtWidgets.QScrollArea):
 
 
 class ExpressionEditor(QtWidgets.QWidget):
-    editingFinished = QtCore.Signal(list)
+    editingFinished = QtCore.Signal(int, list)
 
     def __init__(self, parent=None):
         r"""
@@ -390,13 +390,20 @@ class ExpressionEditor(QtWidgets.QWidget):
         ok_btn = uilib.OButton(uilib.IconPath('uiBtn_save'))
         ok_btn.setSize(48)
         ok_btn.setBgColor(*uilib.Color.ExecColor)
+        ok_btn.setToolTip('Finish to edit expression list.')
         ok_btn.clicked.connect(self.saveEditting)
+        rem_btn = uilib.OButton(uilib.IconPath('uiBtn_rename'))
+        rem_btn.setSize(48)
+        rem_btn.setBgColor(168, 50, 68)
+        rem_btn.setToolTip('Finish to rename expression list.')
+        rem_btn.clicked.connect(self.rename)
 
         layout = QtWidgets.QGridLayout(self)
         layout.setColumnStretch(0, 1)
-        layout.addWidget(self.__editor, 0, 0, 1, 3)
+        layout.addWidget(self.__editor, 0, 0, 1, 4)
         layout.addWidget(cancel_btn, 1, 1, 1, 1)
-        layout.addWidget(ok_btn, 1, 2, 1, 1)
+        layout.addWidget(rem_btn, 1, 2, 1, 1)
+        layout.addWidget(ok_btn, 1, 3, 1, 1)
 
     def setExpressionList(self, expList):
         r"""
@@ -405,13 +412,19 @@ class ExpressionEditor(QtWidgets.QWidget):
         """
         text = '\n'.join([x.strip() for x in expList])
         self.__editor.setPlainText(text)
+
+    def getExpressionList(self):
+        textlist = self.__editor.toPlainText()
+        return [x.strip() for x in textlist.split()]
     
     def saveEditting(self):
-        textlist = self.__editor.toPlainText()
-        self.editingFinished.emit([x.strip() for x in textlist.split()])
+        self.editingFinished.emit(1, self.getExpressionList())
+    
+    def rename(self):
+        self.editingFinished.emit(2, self.getExpressionList())
 
     def cancelEditing(self):
-        self.editingFinished.emit([])
+        self.editingFinished.emit(0, [])
 
 
 class FacialExpressionManager(QtWidgets.QWidget):
@@ -461,7 +474,6 @@ class FacialExpressionManager(QtWidgets.QWidget):
         """
         if not managerEngine:
             managerEngine = ManagerEngine()
-        print('Install manager engine : %s' % managerEngine)
         self.__manager_engine = managerEngine
 
     def managerEngine(self):
@@ -519,18 +531,27 @@ class FacialExpressionManager(QtWidgets.QWidget):
         explist = list(root.listExpressions().keys())
         self.expressionEditor().setExpressionList(explist)
     
-    def expressionListMode(self, textlist):
+    def expressionListMode(self, mode, textlist):
         r"""
             Args:
                 textlist (list):
         """
-        tab = self.tab().moveTo(0)
         result = 0
-        if not textlist:
+        if mode == 0:
+            self.tab().moveTo(0)
             return
+
+        from importlib import reload
+        reload(facialMemoryManager)
         root = self.managerEngine().getManagerNode()
+        if mode == 1:
+            method = root.updateExpressionFromDataList
+        else:
+            method = root.renameExpressionFromDataList
+               
         with node.DoCommand():
-            result = root.updateExpressionFromDataList(textlist)
+            result = method(textlist)
+        self.tab().moveTo(0)
         if result:
             self.reloadView()
 

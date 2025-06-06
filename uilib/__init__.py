@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/01/21 23:57[Eske](eske3g@gmail.com)
-        update:2022/08/19 04:46 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/06/06 14:01 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -51,6 +51,24 @@ def accelarate(ratio, power):
             float:
     """
     return 1 - pow((1 - math.sin(math.pi * 0.5 * ratio)), power)
+    
+
+def clearLayout(layout):
+    r"""
+        引数layout無いのアイテムを削除して、QLayoutをクリアする便利関数。
+
+        Args:
+            layout (QtWidgets.QLayout):
+    """
+    for i in range(layout.count()):
+        item = layout.itemAt(i)
+        if item.isEmpty():
+            layout.removeItem(item)
+            continue
+        widget = item.widget()
+        if widget:
+            widget.deleteLater()
+
 
 IsMac = True if platform.system() == 'Darwin' else False
 
@@ -1312,7 +1330,7 @@ class ImageViewerWidget(QtWidgets.QWidget):
     def setImage(self, pixmap):
         r"""
             表示するイメージを設定する。
-
+            
             Args:
                 pixmap (QtGui.QPixmap or str):
         """
@@ -1325,13 +1343,17 @@ class ImageViewerWidget(QtWidgets.QWidget):
     def image(self):
         r"""
             設定された表示イメージのPixmapを返す。
-
+            
             Returns:
                 QtGui.QPixmap:
         """
         return self.__pixmap
 
     def paintEvent(self, event):
+        r"""
+            Args:
+                event (any):
+        """
         pixmap = self.image()
         if not pixmap or pixmap.isNull():
             return

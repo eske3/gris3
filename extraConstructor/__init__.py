@@ -6,10 +6,10 @@ r"""
     
     Dates:
         date:2017/01/21 23:55[Eske](eske3g@gmail.com)
-        update:2021/08/16 17:43 eske yoshinob[eske3g@gmail.com]
+        update:2025/06/06 13:36 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
@@ -47,3 +47,17 @@ class ExtraConstructor(object):
             上書き専用メソッド。
         """
         pass
+
+    def setupUtil(self):
+        r"""
+            このExtraConstrutorを実行するにあたって必要なノードなどを作成
+            するためのGUIを返す。
+            必要に応じてQtWidgetsを基底クラスとするサブクラスの
+            クラスオブジェクトを返す。
+            （インスタンスではない点に注意）
+
+            Returns:
+                QtWidgets.QWidget: 
+        """
+        return
+

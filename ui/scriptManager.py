@@ -526,6 +526,76 @@ class ContextOption(factoryUI.ContextOption):
         self.hideContext()
 
 
+class ConstructorOperator(QtWidgets.QTabWidget):
+    r"""
+        ビルド実行用のGUIを作成。
+    """
+    def __init__(self, parent=None):
+        super(ConstructorOperator, self).__init__(parent)
+        self.__ext_cst_utils = []
+
+        # ビルド実行、デバッグモード実行用のGUI。==============================
+        exec_commands = QtWidgets.QGroupBox('Operations')
+        exe_btn = uilib.OButton(uilib.IconPath('uiBtn_play'))
+        exe_btn.setSize(40)
+        exe_btn.setBgColor(*uilib.Color.ExecColor)
+        exe_label = QtWidgets.QLabel('Start to build')
+
+        dbg_btn = uilib.OButton(uilib.IconPath('uiBtn_next'))
+        dbg_btn.setSize(40)
+        dbg_btn.setBgColor(*uilib.Color.DebugColor)
+        
+        self.__debug_level = QtWidgets.QComboBox()
+
+        layout = QtWidgets.QGridLayout(exec_commands)
+        layout.addWidget(exe_btn, 0, 0, 1, 1)
+        layout.addWidget(exe_label, 0, 1, 1, 1)
+        layout.addWidget(dbg_btn, 1, 0, 1, 1)
+        layout.addWidget(self.__debug_level, 1, 1, 1, 1)
+        layout.setRowStretch(2, 1)
+
+        self.execButtonClicked = exe_btn.clicked
+        self.debugButtonClicked = dbg_btn.clicked
+
+        self.addTab(exec_commands, 'Build Operator')
+        # =====================================================================
+        
+        # Extra Constructor Utility.===========================================
+        ext_cst_util = QtWidgets.QScrollArea()
+        ext_cst_util.setWidgetResizable(True)
+        
+        w = QtWidgets.QWidget()
+        w.setObjectName('extCstOpWidget')
+        w.setStyleSheet(
+            'QWidget#extCstOpWidget{background-color: transparent;}'
+        )
+        self.__ext_cst_layout = QtWidgets.QVBoxLayout(w)
+
+        ext_cst_util.setWidget(w)
+        self.addTab(ext_cst_util, 'Extra Const Util')
+        # =====================================================================
+        
+        self.currentChanged.connect(self.updateExtraConstUtil)
+
+    def updateGui(self, debugModeList, extraConstructorUtils):
+        self.__debug_level.clear()
+        uilib.clearLayout(self.__ext_cst_layout)
+        if debugModeList:
+            self.__debug_level.addItems(debugModeList)
+        self.__ext_cst_utils = extraConstructorUtils
+        self.updateExtraConstUtil(self.currentIndex())
+
+    def updateExtraConstUtil(self, index):
+        if index != 1:
+            return
+        if not self.__ext_cst_utils:
+            return
+        for gui_class in self.__ext_cst_utils:
+            w = gui_class()
+            self.__ext_cst_layout.addWidget(w)
+        self.__ext_cst_utils = []
+
+
 class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
     r"""
         メインGUI。
@@ -547,33 +617,15 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         self.__view.clicked.connect(self.updateConstructorStats)
         self.__view.browser().setRootIsDecorated(False)
 
-        exec_commands = QtWidgets.QGroupBox('Operations')
-        exe_btn = uilib.OButton(uilib.IconPath('uiBtn_play'))
-        exe_btn.clicked.connect(self.executeScript)
-        exe_btn.setSize(40)
-        exe_btn.setBgColor(*uilib.Color.ExecColor)
-        exe_label = QtWidgets.QLabel('Start to build')
-
-        dbg_btn = uilib.OButton(uilib.IconPath('uiBtn_next'))
-        dbg_btn.clicked.connect(self.debugScript)
-        dbg_btn.setSize(40)
-        dbg_btn.setBgColor(*uilib.Color.DebugColor)
-        
-        self.__debug_level = QtWidgets.QComboBox()
-        # self.__debug_level.addItem('*Debug')
-
-        layout = QtWidgets.QGridLayout(exec_commands)
-        layout.addWidget(exe_btn, 0, 0, 1, 1)
-        layout.addWidget(exe_label, 0, 1, 1, 1)
-        layout.addWidget(dbg_btn, 1, 0, 1, 1)
-        layout.addWidget(self.__debug_level, 1, 1, 1, 1)
-        layout.setRowStretch(2, 1)
+        self.__cst_op = ConstructorOperator()
+        self.__cst_op.execButtonClicked.connect(self.debugScript)
+        self.__cst_op.debugButtonClicked.connect(self.executeScript)
 
         exec_gui = QtWidgets.QSplitter()
         exec_gui.addWidget(self.__view)
-        exec_gui.addWidget(exec_commands)
-        exec_gui.setStretchFactor(0, 1)
-        exec_gui.setSizes([300, 300])
+        exec_gui.addWidget(self.__cst_op)
+        exec_gui.setStretchFactor(1, 1)
+        exec_gui.setSizes([300, 300])    
         # =====================================================================
 
         # スクリプトファイルとコマンドヘルパーの作成。=========================
@@ -713,10 +765,13 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
 
     def updateConstructorStats(self, index):
         cst = self.listConstructorMethods(index)
-        self.__debug_level.clear()
-        if not cst or not getattr(cst, 'listDebugModes'):
-            return
-        self.__debug_level.addItems(cst.listDebugModes())
+        debug_mode_list = []
+        ext_cst_utils = []
+        if cst:
+            if getattr(cst, 'listDebugModes'):
+                debug_mode_list = cst.listDebugModes()
+            ext_cst_utils = cst.extraConstructorUtilities()
+        self.__cst_op.updateGui(debug_mode_list, ext_cst_utils)
 
     def executeModule(self, moduleName, debugMode):
         r"""

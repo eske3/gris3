@@ -590,9 +590,9 @@ class ConstructorOperator(QtWidgets.QTabWidget):
             return
         if not self.__ext_cst_utils:
             return
-        for gui_class in self.__ext_cst_utils:
-            w = gui_class()
-            self.__ext_cst_layout.addWidget(w)
+        for widget in self.__ext_cst_utils:
+            self.__ext_cst_layout.addWidget(widget)
+            widget.initialize()
         self.__ext_cst_utils = []
 
 

@@ -530,6 +530,22 @@ class ExtraConstructorManager(object):
         for cst in self.extraConstructors():
             cst.createSetupParts()
 
+    def extraConstructorUtilities(self):
+        r"""
+            ExstraConstructorの作成補助用GUIをリストする。
+            戻り値はui作成用のクラス。
+            
+            Returns:
+                list:
+        """
+        results = []
+        for cst in self.extraConstructors():
+            ui_class = cst.setupUtil()
+            if not ui_class:
+                continue
+            results.append(ui_class)
+        return results
+
     def executeMethod(self, method):
         r"""
             引数で与えられたメソッドを、各ExtraConstructorで実行する。
@@ -627,12 +643,13 @@ class BasicConstructor(rigScripts.BaseCreator):
         self.__jointbbsize = (100, 100, 30)
         self.setCtrlTagAttached(True)
         self.__extraConstructor = ExtraConstructorManager(self)
-        self.installExtraConstructor = (
-            self.__extraConstructor.installExtraConstructor
-        )
-        self.addExtraConstructor = self.__extraConstructor.addExtraConstructor
+        for method in (
+            'installExtraConstructor', 'addExtraConstructor',
+            'extraConstructorUtilities', 
+        ):
+            setattr(self, method, getattr(self.__extraConstructor, method))
         self.createExtraSetupParts = self.__extraConstructor.createSetupParts
-        
+
         self.init()
 
     def lod(self):

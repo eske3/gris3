@@ -377,8 +377,9 @@ QTabWidget::tab-bar {
 QTabBar::tab {
     border: 1px solid #000000;
     border-bottom : none;
-    min-width: 25ex;
-    padding: 2px;
+    padding: 12px;
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 QTabBar::tab:selected, QTabBar::tab:hover{

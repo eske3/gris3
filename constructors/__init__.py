@@ -531,6 +531,13 @@ class ExtraConstructorManager(object):
             cst.createSetupParts()
 
     def extraConstructorUtilities(self):
+        r"""
+            ExstraConstructorの作成補助用GUIをリストする。
+            戻り値はui作成用のクラス。
+            
+            Returns:
+                list:
+        """
         results = []
         for cst in self.extraConstructors():
             ui_class = cst.setupUtil()

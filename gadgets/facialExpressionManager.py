@@ -352,14 +352,7 @@ class FacialExpressionView(QtWidgets.QScrollArea):
 
     def clear(self):
         layout = self.widget().layout()
-        for i in range(layout.count()):
-            item = layout.itemAt(i)
-            if item.isEmpty():
-                layout.removeItem(item)
-                continue
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
+        uilib.clearLayout(layout)
         return layout
 
     def reload(self, managerEngine):

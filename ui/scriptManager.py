@@ -595,6 +595,9 @@ class ConstructorOperator(QtWidgets.QTabWidget):
             widget.initialize()
         self.__ext_cst_utils = []
 
+    def debugLevel(self):
+        return self.__debug_level.currentText()
+
 
 class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
     r"""
@@ -618,8 +621,8 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         self.__view.browser().setRootIsDecorated(False)
 
         self.__cst_op = ConstructorOperator()
-        self.__cst_op.execButtonClicked.connect(self.debugScript)
-        self.__cst_op.debugButtonClicked.connect(self.executeScript)
+        self.__cst_op.execButtonClicked.connect(self.executeScript)
+        self.__cst_op.debugButtonClicked.connect(self.debugScript)
 
         exec_gui = QtWidgets.QSplitter()
         exec_gui.addWidget(self.__view)
@@ -815,6 +818,6 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
         r"""
             選択されたスクリプトをデバッグモードで実行するメソッド。
         """
-        debug_level = self.__debug_level.currentText()
+        debug_level = self.__cst_op.debugLevel()
         self.execute(debug_level)
 

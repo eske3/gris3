@@ -1885,6 +1885,25 @@ class AbstractNode(AbstractNodeStr):
         """
         return self._node().parentNamespace()
 
+    def noNamespace(self, path=False):
+        r"""
+            ネームスペースを除いたシンプルな名前を返す。
+            pathがTrueで、名前がシーン中で重複していた場合、ユニークパスとして
+            返す。
+            ユニークパスは各階層で全てネームスペースが除かれた状態になっている。
+            Falseの場合（デフォルト）は名前のみを返す。
+
+            Args:
+                path (bool): 
+            
+            Returns:
+                str:
+        """
+        hirlist = self().split('|')
+        if not path:
+            return hirlist[-1].rsplit(':', 1)[-1]
+        '|'.join([x.rsplit(':', 1)[-1] for x in hirlist])
+
     def listConnections(self, plug=None, **keywords):
         r"""
             引数はlistConnectionsに使用するものと同じものが使える。
@@ -2005,9 +2024,17 @@ class BlendShape(AbstractNode):
             Returns:
                 int:
         """
-        attrlist = self.listAttrNames()
-        if text in attrlist:
-            return attrlist.index(text)
+        aliaslist = cmds.aliasAttr(self(), q=True)
+        aliasmap = {
+            aliaslist[x]: aliaslist[x+1] for x in range(0, len(aliaslist), 2)
+        }
+        weight_attr = aliasmap.get(text)
+        if weight_attr is None:
+            return
+        result = index_reobj.search(weight_attr)
+        if not result:
+            return
+        return int(result.group(2))
 
     def setWeight(self, index, value):
         r"""
@@ -2056,7 +2083,7 @@ class BlendShape(AbstractNode):
             Returns:
                 list:
         """
-        return [x.aliasName() for x in self.listWeightAttr()]
+        return cmds.listAttr(self/'w', m=True)
 
     def addInbetween(
         self, baseNode, targetList, name=None, o='local'

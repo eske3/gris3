@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    aiToolsのマスターモデルと連動したフェイシャルセットアップを行うための
+    任意の構造のフェイシャルデータを元に、フェイシャルセットアップを行うための
     ExtraConstructor。
     
     Dates:
@@ -16,15 +16,58 @@ r"""
 """
 import re
 from collections import OrderedDict
-from ... import extraConstructor, node, func
+from ... import extraConstructor, node, func, uilib
+from ...extraConstructor import ui
 from . import layer, layerOperators, eyeHighlightRig
 cmds = node.cmds
+QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 from . import tweakData, bodyCombiner
 class ColorData(object):
     L = (0.044, 0.011, 0.88)
     R = (0.973, 0.02, 0.115)
     C = (0.7, 0.873, 0.207)
+
+
+class FacialPartsMaker(ui.ExtraConstructorUtil):
+    construtor = None
+    extraConstructor = None
+    def __init__(self, groupName, extraConstructor, parent=None):
+        super(FacialPartsMaker, self).__init__(parent)
+        self.__ext_const = extraConstructor
+        self.__grp_name = groupName
+        self.__layers = []
+
+    def extraConstructor(self):
+        return self.__ext_const
+
+    def label(self):
+        return 'Facial Parts Maker'
+
+    def setGroupName(self, groupName):
+        self.__grp_name = groupName
+
+    def groupName(self):
+        return self.__grp_name
+
+    def buildUI(self):
+        btn = QtWidgets.QPushButton('Create facial parts')
+        btn.clicked.connect(self.createFacialParts)
+        
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(btn)
+    
+    def createFacialParts(self):
+        ext_cst = self.extraConstructor()
+        cst = ext_cst.constructor()
+
+        with node.DoCommand():
+            grp = node.createNode('transform', n=self.groupName())
+            grp.lockTransform()
+            for l in ext_cst.layerManager().layers():
+                lo = l(cst, ext_cst, None, None)
+                lo.createSetupParts(grp)
+            cmds.select(grp, r=True)
 
 
 class ExtraConstructor(extraConstructor.ExtraConstructor):
@@ -34,12 +77,13 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
     FacialGroup = 'face_grp'
     FaceGeo = 'face_geo'
     FaceCage = 'face_cage'
+    PartsGroup = 'facialSetupParts_grp'
     FacialCategoryPattern = '(.*?)FacialTarget_grp'
     Parent = 'head_ctrl_C'
     ParentJoint = 'head_jnt_C'
     EyeHighlightGeoGroup = 'eyeHighLight_grp'
-    DefaultLayerOperators = layerOperators.listAllLayerOperators()
     IsSetup = False
+    DefaultLayerOperatorList = ['BlendShape', 'JawOpener', 'Tweaked']
 
     def __init__(self, const):
         r"""
@@ -56,6 +100,10 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         self.__combined_cages = []
         self.disp_ctrl = None
         const.combineBody = self.combineBody
+
+    def defaultLayerOperators(self):
+        layers = layerOperators.listAllLayerOperators()
+        return [layers[x] for x in self.DefaultLayerOperatorList]
 
     def layerManager(self):
         r"""
@@ -203,3 +251,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
             'facialCtrlVis', default=False, cb=True, k=False
         )
         self.layerManager().connectVisibility(plug)
+
+    def setupUtil(self):
+        w = FacialPartsMaker(self.PartsGroup, self)
+        return w

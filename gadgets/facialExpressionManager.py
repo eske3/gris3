@@ -64,7 +64,7 @@ class ManagerEngine(object):
                 autoCreation (bool): 
                 
             Returns:
-                tools.facialMemoryManager.FacialMemoryManagerRoot
+                tools.facialMemoryManager.FacialMemoryManagerRoot:
         """
         if not self.blendShapeName():
             raise RuntimeError(
@@ -78,6 +78,20 @@ class ManagerEngine(object):
         if not autoCreation:
             return
         return self.createManagerNode()
+
+    def update(self):
+        r"""
+            管理ノードのブレンドシェイプ名などの情報を、このオブジェクトの
+            情報に基づいて更新する。
+            
+            Returns:
+                bool: 更新した場合はTrueを返す。
+        """
+        manager = self.getManagerNode(False)
+        if not manager:
+            return False
+        manager.setBlendShapeName(self.blendShapeName())
+        return True
 
 
 class Settings(QtWidgets.QGroupBox):
@@ -506,6 +520,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
         bs = self.settings().blendShape()
         me = self.managerEngine()
         me.setBlendShapeName(bs)
+        me.update()
         self.facialView().reload(me)
 
     def setBlendShape(self, blendShapeName):
@@ -516,6 +531,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
         self.settings().setBlendShape(blendShapeName)
         me = self.managerEngine()
         me.setBlendShapeName(blendShapeName)
+        me.update()
         self.facialView().reload(me)
 
     def editExpressionMode(self):
@@ -534,14 +550,12 @@ class FacialExpressionManager(QtWidgets.QWidget):
             self.tab().moveTo(0)
             return
 
-        from importlib import reload
-        reload(facialMemoryManager)
         root = self.managerEngine().getManagerNode()
         if mode == 1:
             method = root.updateExpressionFromDataList
         else:
             method = root.renameExpressionFromDataList
-               
+
         with node.DoCommand():
             result = method(textlist)
         self.tab().moveTo(0)

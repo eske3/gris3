@@ -15,12 +15,27 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '1.1.5.2'
-LastModified = 20250603
+Version = '1.1.5.4'
+LastModified = 20250617
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('1.1.5.4',
+(
+    'node.BlendShape.listAttrNamesのアルゴリズムを変更。状況によって一覧に漏れが発生するバグに対応。',
+    '上記変更に伴い、node.BlendShape.indexFromTextのアルゴリズムも正しく動作するよう修正。',
+)
+),
+
+
+('1.1.5.3',
+(
+    'facialExpressionManager.ManagerEngineに管理ノードの更新機能を追加。',
+    '合わせてGUIからも更新がかかるように一部修正。',
+)
+),
+
 ('1.1.5.2',
 (
     'gadgets.facialExpressionManagerに表情一覧のリネーム機能を追加。',

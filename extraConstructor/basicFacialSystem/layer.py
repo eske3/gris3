@@ -17,6 +17,13 @@ from ... import node, func
 cmds = node.cmds
 
 
+ColorData = {
+    'L': (0.044, 0.011, 0.88),
+    'R': (0.973, 0.02, 0.115),
+    'C': (0.7, 0.873, 0.207),
+}
+
+
 class LayerOperator(object):
     r"""
         フェイシャルの構造をレイヤー化するための機能を提供するためのクラス。

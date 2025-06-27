@@ -26,6 +26,22 @@ sutil = OpenMaya.MScriptUtil()
 from . import mayaCmds, colorUtil, mathlib, verutil
 index_reobj = re.compile('(^.*[^\]])\[(\d+)\]$')
 
+
+# DoubleLinear用に変換されたDL系ノードの名前補完テーブル。
+DL_CONV_TABLE = {}
+try:
+    over_2026 = int(cmds.about(mjv=True)) >= 2026
+except:
+    over_2026 = False
+if over_2026:
+    DL_CONV_TABLE = {
+        'addDoubleLinear': 'addDL',
+        'multDoubleLinear': 'multDL',
+        'pointMatrixMult': 'pointMatrixMultDL',
+    }
+
+
+
 # /////////////////////////////////////////////////////////////////////////////
 # ポインタ用クラス及び関数。                                                 //
 # /////////////////////////////////////////////////////////////////////////////
@@ -3841,7 +3857,9 @@ def createNode(nodeType, **keywords):
         Returns:
             AbstractNode:
     """
-    return asObject(cmds.createNode(nodeType, **keywords))
+    return asObject(
+        cmds.createNode(DL_CONV_TABLE.get(nodeType, nodeType), **keywords)
+    )
 
 
 def createUtil(nodeType, **keywords):

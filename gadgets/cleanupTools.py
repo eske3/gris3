@@ -130,8 +130,10 @@ class BasicNameLister(QtWidgets.QWidget):
         self.__view.setModel(model)
         self.__view.setSelectionModel(sel_model)
         self.__view.setAlternatingRowColors(True)
-        self.__view.setEditTriggers(self.__view.NoEditTriggers)
-        self.__view.setSelectionMode(self.__view.ExtendedSelection)
+        self.__view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.__view.setSelectionMode(
+            QtWidgets.QAbstractItemView.ExtendedSelection
+        )
         
         rel_btn = uilib.OButton()
         rel_btn.setSize(28)

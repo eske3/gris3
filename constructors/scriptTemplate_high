@@ -1,9 +1,18 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     scriptTemplate
-    @brief    ハイモデルを構築するための処理を記述したモジュール。
-    @class    Constructor : ハイモデルのリグを構築するクラス。
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    ハイモデルを構築するための処理を記述したモジュール。
+    
+    Dates:
+        date:2025/06/01 22:07 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/06/01 22:07 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2025 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from gris3 import constructors, func, node
 mainModule = constructors.mainModule(__name__, True)
 cmds = func.cmds
@@ -26,15 +35,13 @@ ParentList = {
 # /////////////////////////////////////////////////////////////////////////////
 
 class Constructor(mainModule.Constructor):
-    r'''
-        @brief       ハイモデルのリグを構築するクラス。
-        @inheritance mainModule.Constructor
-    '''
+    r"""
+        ハイモデルのリグを構築するクラス。
+    """
     def preSetupForLOD(self):
-        r'''
-            @brief  setupメソッド前に実行される事前準備用のメソッド。
-            @return None
-        '''
+        r"""
+            setupメソッド前に実行される事前準備用のメソッド。
+        """
         # バインドジョイントを作成する。
         # self.createBindJoint('hip_jnt_C')
 
@@ -44,10 +51,9 @@ class Constructor(mainModule.Constructor):
         self.loadSkinWeights()
 
     def wrapObjects(self):
-        r'''
-            @brief  WrapList(LR)で定義されたオブジェクトをラップする。
-            @return None
-        '''
+        r"""
+            WrapList(LR)で定義されたオブジェクトをラップする。
+        """
         for s in func.SuffixIter():
             for cage in WrapListLR:
                 self.localWrap([x*s for x in WrapListLR[cage]], cage*s)
@@ -55,18 +61,21 @@ class Constructor(mainModule.Constructor):
             self.localWrap(WrapList[cage], cage)
 
     def parent(self):
-        r'''
-            @brief  ParentList(LR)で定義されたオブジェクトを親子付する。
-            @return None
-        '''
+        r"""
+            ParentList(LR)で定義されたオブジェクトを親子付する。
+        """
         def matrixConstraint(parent, target, mtx_nodes=None):
-            r'''
-                @brief  matrixを仕様して親子付を行う。
-                @param  parent : [str]
-                @param  target : [str]
-                @param  mtx_nodes(None) : [list]
-                @return list
-            '''
+            r"""
+                matrixを仕様して親子付を行う。
+                
+                Args:
+                    parent (str):
+                    target (str):
+                    mtx_nodes (list):
+                    
+                Returns:
+                    list:
+            """
             if not mtx_nodes:
                 mtx_nodes = self.createMatrixConstraint(parent, target)
             else:
@@ -85,10 +94,9 @@ class Constructor(mainModule.Constructor):
                 mtx_nodes = matrixConstraint(parent, target, mtx_nodes)
 
     def setup(self):
-        r'''
-            @brief  コントローラのセットアップを行う。
-            @return None
-        '''
+        r"""
+            コントローラのセットアップを行う。
+        """
         super(Constructor, self).setup()
 
         # ドリブンキーをロードする。
@@ -99,8 +107,7 @@ class Constructor(mainModule.Constructor):
         self.parent()
 
     def postProcessForLOD(self):
-        r'''
-            @brief  処理終了後の後処理を行う。
-            @return None
-        '''
+        r"""
+            処理終了後の後処理を行う。
+        """
         pass

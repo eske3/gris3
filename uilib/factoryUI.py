@@ -451,15 +451,15 @@ class ModuleBrowser(QtWidgets.QTreeView):
         """
         icon_size = uilib.hires(28)
         super(ModuleBrowser, self).__init__(parent)
-        self.setVerticalScrollMode(self.ScrollPerPixel)
-        self.setHorizontalScrollMode(self.ScrollPerPixel)
+        self.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         self.setAlternatingRowColors(True)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.setSelectionMode(QtWidgets.QTreeView.ExtendedSelection)
         self.setDragEnabled(True)
         self.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.clicked.connect(self.setPathToChild)
         self.doubleClicked.connect(self.openInExplorer)
-        self.setEditTriggers(self.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.__child = None
         self.__path = ''
         self.__customFilters = []
@@ -641,7 +641,9 @@ class ModuleBrowser(QtWidgets.QTreeView):
                 filelist = filedatalist[filename]
                 icon = QtGui.QIcon(
                     provider.icon(
-                        os.path.join(parent_path, filelist[0]['name'])
+                        QtCore.QFileInfo(
+                            os.path.join(parent_path, filelist[0]['name'])
+                        )
                     )
                 )
                 item = QtGui.QStandardItem()
@@ -1160,7 +1162,7 @@ class ToolBar(QtWidgets.QScrollArea):
 
         if isButtonGrouped:
             self.__btn_grp = QtWidgets.QButtonGroup()
-            self.buttonClicked = self.__btn_grp.buttonClicked[int]
+            self.buttonClicked = self.__btn_grp.buttonClicked
         else:
             self.__btn_grp = None
             self.buttonClicked = QtCore.Signal(int)

@@ -23,11 +23,13 @@ from . import directionPlane, paintApp
 from .. import uilib, mathlib, node, lib, verutil
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 if uilib.Package == 'PySide':
-    import shiboken as shiboken2
+    import shiboken
+elif uilib.Package == 'PySide2':
+    import shiboken2 as shiboken
 else:
-    import shiboken2
+    import shiboken6 as shiboken
 
-MainWindow = shiboken2.wrapInstance(
+MainWindow = shiboken.wrapInstance(
     verutil.Long(MQtUtil.mainWindow()), QtWidgets.QWidget
 )
 
@@ -540,7 +542,7 @@ class DrawerOnCamera(paintApp.DesktopCanvas):
 
     def viewWidget(self):
         view = self.view()
-        return shiboken2.wrapInstance(
+        return shiboken.wrapInstance(
             verutil.Long(view.widget()), QtWidgets.QWidget
         )        
 

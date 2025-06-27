@@ -322,8 +322,8 @@ class Toolbar(QtWidgets.QWidget):
         separator.setFrameShape(QtWidgets.QFrame.VLine)
         separator.setLineWidth(1)
         p = separator.palette()
-        p.setColor(QtGui.QPalette.Foreground, QtGui.QColor(255, 255, 255))
-        p.setColor(QtGui.QPalette.Background, QtGui.QColor(255, 255, 255))
+        p.setColor(QtGui.QPalette.WindowText, QtGui.QColor(255, 255, 255))
+        p.setColor(QtGui.QPalette.Window, QtGui.QColor(255, 255, 255))
         separator.setPalette(p)
         self.layout().insertWidget(self.layout().count()-1, separator)
 

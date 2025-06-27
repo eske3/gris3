@@ -58,7 +58,7 @@ class StartupView(QtWidgets.QTreeView):
         self.setRootIsDecorated(False)
         self.setAlternatingRowColors(True)
         self.setIconSize(QtCore.QSize(24, 24))
-        self.setSelectionMode(self.ExtendedSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         model = StartupItemModel()
         sel_model = QtCore.QItemSelectionModel(model)
         self.setModel(model)
@@ -264,10 +264,10 @@ class ConstructorList(QtWidgets.QGroupBox):
         return True
 
 
-class StartupManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
+class StartupManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
     r"""
         ui.factory.のadvancedTabWidgetに使用するタブの一つ。
-        AbstractFactoryTabクラスを継承し、advancedTabWidgetからの信号を受け
+        AbstractFactoryTabMixinクラスを継承し、advancedTabWidgetからの信号を受け
         取れるようになっている。
     """
     DirectoryList = {

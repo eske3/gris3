@@ -1,35 +1,40 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     scriptTemplate
-    @brief    ローモデルを構築するための処理を記述したモジュール。
-    @class    Constructor : ローモデルのリグを構築するクラス。
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    ローモデルを構築するための処理を記述したモジュール。
+    
+    Dates:
+        date:2025/06/01 22:08 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/06/01 22:08 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2025 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from gris3 import constructors, func, node
 mainModule = constructors.mainModule(__name__, True)
 cmds = func.cmds
 
 class Constructor(mainModule.Constructor):
-    r'''
-        @brief       ローモデルのリグを構築するクラス。
-        @inheritance mainModule.Constructor
-    '''
+    r"""
+        ローモデルのリグを構築するクラス。
+    """
     def preSetupForLOD(self):
-        r'''
-            @brief  setupメソッド前に実行される事前準備用のメソッド。
-            @return None
-        '''
+        r"""
+            setupメソッド前に実行される事前準備用のメソッド。
+        """
         pass
 
     def setup(self):
-        r'''
-            @brief  コントローラのセットアップを行う。
-            @return None
-        '''
+        r"""
+            コントローラのセットアップを行う。
+        """
         super(Constructor, self).setup()
 
     def postProcessForLOD(self):
-        r'''
-            @brief  処理終了後の後処理を行う。
-            @return None
-        '''
+        r"""
+            処理終了後の後処理を行う。
+        """
         pass

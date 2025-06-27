@@ -219,7 +219,7 @@ class LineOfSightEditor(QtWidgets.QWidget):
                 angle_ui = QtWidgets.QDoubleSpinBox()
                 angle_ui.setRange(1, 90)
                 angle_ui.setValue(20)
-                angle_ui.setButtonSymbols(angle_ui.NoButtons)
+                angle_ui.setButtonSymbols(QtWidgets.QDoubleSpinBox.NoButtons)
                 angle_ui.setMinimumWidth(5)
                 layout.addWidget(l, i, j*2, 1, 1)
                 layout.addWidget(angle_ui, i, j*2+1, 1, 1)

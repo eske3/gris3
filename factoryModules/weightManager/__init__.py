@@ -41,7 +41,9 @@ class ContextOption(factoryUI.ContextOption):
 
         self.__influences = QtWidgets.QTreeView()
         self.__influences.setAlternatingRowColors(True)
-        self.__influences.setEditTriggers(self.__influences.NoEditTriggers)
+        self.__influences.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
         self.__influences.setRootIsDecorated(False)
         self.__influences.setModel(model)
         # ---------------------------------------------------------------------

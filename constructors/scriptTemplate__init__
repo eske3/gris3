@@ -1,14 +1,18 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     __init__.py
-    @brief    全てのLODの基礎モジュール。
-    @date        2017/03/01 8:48[Eske](eske3g@gmail.com)
-    @update      2017/03/01 8:48[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    全てのLODの基礎モジュール。
+    
+    Dates:
+        date:2017/03/01 8:48[Eske](eske3g@gmail.com)
+        update:2025/06/01 22:06 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from gris3 import constructors, func, node
 cmds = func.cmds
 
@@ -16,17 +20,15 @@ LOD_LIST = ['high', 'low']
 
 class Constructor(constructors.currentConstructor()):
     def init(self):
-        r'''
-            @brief  主にExtraConstructorのインストールなどを行う。
-            @return None
-        '''
+        r"""
+            主にExtraConstructorのインストールなどを行う。
+        """
         # self.installExtraConstructor('constructorName')
         pass
 
     def createController(self):
-        r'''
-            @brief  コントローラ作成の記述を行うメソッド。
-            @return None
-        '''
+        r"""
+            コントローラ作成の記述を行うメソッド。
+        """
         # self.toController('ジョイント名', 'セット名')
         pass

@@ -52,7 +52,7 @@ class UnitTester(QtWidgets.QGroupBox):
         with core.Do:
             core.createRigForAllUnit()
 
-class MiscWidget(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
+class MiscWidget(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
     r"""
         メインGUI。
     """

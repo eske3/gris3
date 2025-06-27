@@ -102,7 +102,7 @@ class WorldCtrlSizeModifier(QtWidgets.QSlider):
         self.setValue(0)
         
 
-#class Generator(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
+#class Generator(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
 class Generator(QtWidgets.QWidget):
     r'''
         @brief       メインGUI。

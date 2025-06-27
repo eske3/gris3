@@ -242,7 +242,7 @@ class MainGUI(QtWidgets.QWidget):
         self.indent_space_num.setValue(4)
         self.indent_space_num.setRange(1, 9999)
         for widget in (self.indent_space_num, self.indent_space_num_label):
-            self.indent_type_group.buttonClicked[int].connect(widget.setHidden)
+            self.indent_type_group.buttonClicked.connect(widget.setHidden)
 
         indent_group = QtWidgets.QGroupBox('Indent Settings')
         indent_layout = QtWidgets.QFormLayout(indent_group)

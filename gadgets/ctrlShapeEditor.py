@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ジョイントの編集機能を提供するGUI。
+    コントローラ用カーブシェイプの形状を作成、編集する機能を提供する。
     
     Dates:
         date:2017/06/15 16:35[Eske](eske3g@gmail.com)
@@ -13,9 +13,9 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import uilib, lib, node
-from gris3.uilib import colorPicker
-from gris3.tools import curvePrimitives
+from .. import uilib, lib, node
+from ..uilib import colorPicker
+from ..tools import curvePrimitives
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -29,7 +29,7 @@ class CurveView(QtWidgets.QListView):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(CurveView, self).__init__(parent)
-        self.setEditTriggers(self.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setAlternatingRowColors(True)
         self.setIconSize(QtCore.QSize(uilib.hires(48), uilib.hires(48)))
 
@@ -150,7 +150,7 @@ class CtrlCurveToolWidget(QtWidgets.QSplitter):
                 b = QtWidgets.QDoubleSpinBox()
                 b.setRange(-1000000000, 1000000000)
                 b.setValue(i)
-                b.setButtonSymbols(b.NoButtons)
+                b.setButtonSymbols(QtWidgets.QDoubleSpinBox.NoButtons)
                 b.setMinimumSize(
                     40, b.minimumSize().height()
                 )

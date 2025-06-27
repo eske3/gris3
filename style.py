@@ -2,37 +2,66 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ここに説明文を記入
+    表示にまつわる情報を提供するモジュール。
+    主にStylesheetまわりの情報提供を目的としている。
     
     Dates:
         date:2017/01/22 0:00[Eske](eske3g@gmail.com)
-        update:2021/06/01 12:04 eske yoshinob[eske3g@gmail.com]
+        update:2025/06/27 10:32 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import globalpath
-from gris3.pyside2 import *
+from . import globalpath
+from .pyside_module import *
+
 
 # デスクトップの大きさに関わる情報の収集。=====================================
 if NoGui:
     DesktopLongestEdge = 1920
 else:
-    desktop = QtWidgets.QApplication.desktop()
     sizelist = []
-    for i in range(desktop.screenCount()):
-        rect = desktop.screenGeometry(i)
-        sizelist.extend([rect.width(), rect.height()])
+    if Package == 'PySide6':
+        for screen in QtWidgets.QApplication.screens():
+            sizes = screen.availableSize()
+            sizelist.extend([sizes.width(), sizes.height()])
+    else:
+        desktop = QtWidgets.QApplication.desktop()
+        for i in range(desktop.screenCount()):
+            rect = desktop.screenGeometry(i)
+            sizelist.extend([rect.width(), rect.height()])
     DesktopLongestEdge = max(sizelist)
 UiScale = 1+((DesktopLongestEdge / 1920.0)-1)*0.5
 # =============================================================================
 
 
-def screenRect(position):
-    d = QtWidgets.QApplication.desktop()
-    return d.screenGeometry(d.screenNumber(position))
+if Package == 'PySide6':
+    def screenRect(position):
+        r"""
+            位置情報から、その座標上にあるスクリーンの矩形情報を返す。
+
+            Args:
+                position (QtCore.QPoint):
+            
+            Returns:
+                QtCore.QRect:
+        """
+        return QtWidgets.QApplication.screenAt(position).availableGeometry()
+else:
+    def screenRect(position):
+        r"""
+            位置情報から、その座標上にあるスクリーンの矩形情報を返す。
+
+            Args:
+                position (QtCore.QPoint):
+            
+            Returns:
+                QtCore.QRect:
+        """
+        d = QtWidgets.QApplication.desktop()
+        return d.screenGeometry(d.screenNumber(position))
 
 
 def scaled(size):
@@ -62,7 +91,7 @@ class HiRes(object):
         r"""
             Args:
                 other (int):
-
+                
             Returns:
                 int:
         """
@@ -72,7 +101,7 @@ class HiRes(object):
         r"""
             Args:
                 other (int):
-
+                
             Returns:
                 int:
         """
@@ -82,7 +111,7 @@ class HiRes(object):
         r"""
             Args:
                 other (int):
-
+                
             Returns:
                 int:
         """

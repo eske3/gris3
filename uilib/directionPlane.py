@@ -86,7 +86,8 @@ class Operator(QtCore.QObject):
         ここに説明文を記入
     """
     directionChanged = QtCore.Signal(
-        list, QtCore.QPoint, QtCore.QPoint, int, int
+        list, QtCore.QPoint, QtCore.QPoint,
+        QtCore.Qt.MouseButton, QtCore.Qt.KeyboardModifiers
     )
     StartMarkerSize = 12
     def __init__(self, view):
@@ -148,8 +149,8 @@ class Operator(QtCore.QObject):
             self.__lineItems['marker'].setBrush(Line.Color)
             self.scene().addItem(self.__lineItems['marker'])
             
-            self.__mouse_button = int(event.button())
-            self.__mod = int(event.modifiers())
+            self.__mouse_button = event.button()
+            self.__mod = event.modifiers()
             return True
         elif eventType == QtCore.QEvent.GraphicsSceneMouseMove:
             if self.__lineItems:
@@ -183,7 +184,8 @@ class DirectionView(QtWidgets.QGraphicsView):
         方向指示を行うためのビューを提供するクラス。
     """
     directionChanged = QtCore.Signal(
-        list, QtCore.QPoint, QtCore.QPoint, int, int
+        list, QtCore.QPoint, QtCore.QPoint,
+        QtCore.Qt.MouseButton, QtCore.Qt.KeyboardModifiers
     )
     XYPlane = (0, 1, 2)
     ZYPlane = (2, 1, 0)
@@ -239,8 +241,8 @@ class DirectionView(QtWidgets.QGraphicsView):
                 vector (list):入力ベクトル
                 start (QtCore.QPoint):
                 end (QtCore.QPoint):
-                mouseButton (int):押されているマウスのボタン
-                modifiers (int):押されている修飾キー
+                mouseButton (QtCore.Qt.MouseButton):押されているマウスのボタン
+                modifiers (QtCore.Qt.KeyboardModifiers):押されている修飾キー
         """
         newVector = [vector[x] for x in self.__basePlane]
         self.directionChanged.emit(
@@ -289,7 +291,7 @@ class DirectionScreen(DirectionView):
                 newVector (list):
                 start (QtCore.QPoint):
                 end (QtCore.QPoint):
-                mouseButton (int):
+                mouseButton (QtCore.Qt.MouseButton):
                 modifiers (int):
         """
         self.close()
@@ -308,7 +310,7 @@ class DirectionScreen(DirectionView):
                 newVector (list):
                 start (QtCore.QPoint):
                 end (QtCore.QPoint):
-                mouseButton (int):
+                mouseButton (QtCore.Qt.MouseButton):
                 modifiers (int):
         """
         pass

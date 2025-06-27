@@ -431,7 +431,10 @@ class DirectionPlaneWidget(directionPlane.DirectionView):
         ビュー上で指示した方向を、Mayaのアクティブなビュー空間
         に変換したベクトルを渡すUIをを提供するクラス。
     """
-    directionDecided = QtCore.Signal(mathlib.Axis, mathlib.Axis, int, int)
+    directionDecided = QtCore.Signal(
+        mathlib.Axis, mathlib.Axis,
+        QtCore.Qt.MouseButton, QtCore.Qt.KeyboardModifiers
+    )
     def __init__(self, parent=None):
         r"""
             Args:

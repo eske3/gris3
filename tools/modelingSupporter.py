@@ -1177,8 +1177,8 @@ def removePolyFaceOnHalf(axis=None, baseAxis='world'):
     def localized_point(pos, inverse_mtx):
         r"""
             Args:
-                pos (any):
-                inverse_mtx (any):
+                pos (OpenMaya.MPoint):
+                inverse_mtx (list):
         """
         if not inverse_mtx:
             return pos

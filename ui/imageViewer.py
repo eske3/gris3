@@ -67,7 +67,7 @@ class ImageViewer(QtWidgets.QListView):
             Args:
                 index (QtCore.QModelIndex):
         """
-        if self.selectionMode() != self.NoSelection:
+        if self.selectionMode() != QtWidgets.QListView.NoSelection:
             return
         self.itemIsClicked.emit(
             index.model().itemFromIndex(index).data()
@@ -124,6 +124,8 @@ class ImageViewer(QtWidgets.QListView):
                 event (QtCore.QEvent):
         """
         def is_starting_daragging():
+            if self.__start_pos is None:
+                return False
             return (self.__start_pos - cur_pos).manhattanLength() <= 10
         cur_pos = event.pos()
         if self.__oldpos:

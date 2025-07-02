@@ -1123,6 +1123,8 @@ class ToolBar(QtWidgets.QScrollArea):
     r"""
         ドラッグによるスクロール可能なツールバー機能を提供する
     """
+    buttonClicked = QtCore.Signal(int)
+
     def __init__(self, parent=None, isButtonGrouped=False):
         r"""
             Args:
@@ -1160,12 +1162,10 @@ class ToolBar(QtWidgets.QScrollArea):
         self.setWidget(widget)
         self.setButtonSize(32)
 
+        self.__btn_grp = None
         if isButtonGrouped:
             self.__btn_grp = QtWidgets.QButtonGroup()
-            self.buttonClicked = self.__btn_grp.buttonClicked
-        else:
-            self.__btn_grp = None
-            self.buttonClicked = QtCore.Signal(int)
+            self.__btn_grp.buttonClicked.connect(self.emitButtonGroupClicking)
 
     def setAlighment(self, alignment):
         r"""
@@ -1261,6 +1261,10 @@ class ToolBar(QtWidgets.QScrollArea):
             ボタンをクリックされた時に呼ばれるコールバック
         """
         index = self.__layout.indexOf(self.sender())
+        self.buttonClicked.emit(index)
+
+    def emitButtonGroupClicking(self, button):
+        index = self.__btn_grp.id(button)
         self.buttonClicked.emit(index)
 
     def eventFilter(self, object, event):

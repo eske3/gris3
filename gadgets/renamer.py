@@ -393,7 +393,9 @@ class MultiRenamer(QtWidgets.QWidget):
         self.__numbering_mode = QtWidgets.QButtonGroup(opt_widget)
         self.__numbering_mode.addButton(int_box, 0)
         self.__numbering_mode.addButton(alp_box, 1)
-        self.__numbering_mode.buttonClicked.connect(self.changeNumberingMode)
+        self.__numbering_mode.buttonClicked.connect(
+            self.changeNumberingModeByButton
+        )
         
         layout.addRow(label, opt_widget)
         # ---------------------------------------------------------------------
@@ -519,6 +521,10 @@ class MultiRenamer(QtWidgets.QWidget):
         self.__preview.setColumnWidth(
             0, self.__preview.rect().width() * 0.5
         )
+
+    def changeNumberingModeByButton(self, button):
+        index = self.__numbering_mode.id(button)
+        self.changeNumberingMode(index)
 
     def changeNumberingMode(self, id):
         r"""

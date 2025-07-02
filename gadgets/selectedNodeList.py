@@ -1,35 +1,27 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     selectedNodeList.py
-    @brief    Mayaの選択ノードをPythonのリスト形式で書式化する機能を提供するモジュール。
-    @class    TextMaker : ここに説明文を記入
-    @class    MainGUI : メインウィンドウ機能を提供するウィジェット。
-    @function showWindow : ウィンドウを表示する関数。基本的にはこれを呼び出す。
-    @date        2017/01/22 0:01[Eske](eske3g@gmail.com)
-    @update      2017/01/22 0:01[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    Mayaの選択ノードをPythonのリスト形式で書式化する機能を提供するモジュール。
+    
+    Dates:
+        date:2017/01/22 0:01[Eske](eske3g@gmail.com)
+        update:2025/07/02 20:57 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from gris3 import uilib
 from gris3.uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 from maya import cmds, OpenMayaUI
 
+
 class TextMaker(object):
-    r'''
-        @brief       ここに説明文を記入
-        @inheritance object
-        @date        2017/01/22 0:01[Eske](eske3g@gmail.com)
-        @update      2017/01/22 0:01[Eske](eske3g@gmail.com)
-    '''
     AsSpace, AsTab = range(2)
     def __init__(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
         self.__number_of_indent = 1
         self.__indent_type = self.AsSpace
         self.__number_of_spaces = 4
@@ -40,92 +32,112 @@ class TextMaker(object):
         self.__limit = 80
 
     def setLimit(self, numberOfLimit):
-        r'''
-            @brief  ここに説明文を記入
-            @param  numberOfLimit : [edit]
-            @return None
-        '''
+        r"""
+            限界値を設定する。
+            
+            Args:
+                numberOfLimit (int):
+        """
         self.__limit = int(numberOfLimit)
 
     def limit(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            設定された限界値を返す。
+            
+            Returns:
+                int:
+        """
         return self.__limit
 
     def setStartQuote(self, quote):
-        r'''
-            @brief  ここに説明文を記入
-            @param  quote : [edit]
-            @return None
-        '''
+        r"""
+            文字列を囲むクオートの開始文字を指定する。
+            
+            Args:
+                quote (str):
+        """
         self.__startquote = quote
 
     def startQuote(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            設定された文字列を囲むクオートの開始文字を返す。
+            
+            Returns:
+                str:
+        """
         return self.__startquote
 
     def setEndQuote(self, quote):
-        r'''
-            @brief  ここに説明文を記入
-            @param  quote : [edit]
-            @return None
-        '''
+        r"""
+            文字列を囲むクオートの終了文字を指定する。
+            
+            Args:
+                quote (str):
+        """
         self.__endquote = quote
 
     def endQuote(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            設定された文字列を囲むクオートの終了文字を返す。
+            
+            Returns:
+                str:
+        """
         return self.__endquote
 
     def spacer(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            区切りに使用する文字を返す。
+            
+            Returns:
+                str:
+        """
         return self.__spacer
 
     def space(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            スペーサーに該当する文字を返す。
+            
+            Returns:
+                str:
+        """
         return self.__space
 
     def listed(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            選択されているオブジェクトの一覧を返す。
+            
+            Returns:
+                list:
+        """
         return cmds.ls(sl=True)
 
     def setNumberOfIndent(self, num):
-        r'''
-            @brief  ここに説明文を記入
-            @param  num : [edit]
-            @return None
-        '''
+        r"""
+            インデント数を設定する。
+            
+            Args:
+                num (int):
+        """
         self.__number_of_indent = int(num)
 
     def numberOfIndent(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            設定されてインデント数を返す。
+            
+            Returns:
+                int:
+        """
         return self.__number_of_indent
 
     def setIndentType(self, indentType):
-        r'''
-            @brief  ここに説明文を記入
-            @param  indentType : [edit]
-            @return None
-        '''
+        r"""
+            インデントのタイプをスペースにするかタブにするかを設定する。
+            引数はTextMaker.AsSpace, TextMaker.AsTabを渡す。
+
+            Args:
+                indentType (int):
+        """
         if not indentType in (self.AsSpace, self.AsTab):
             raise ValueError(
                 'The argument must be a following value : '
@@ -135,33 +147,39 @@ class TextMaker(object):
             )
         self.__indent_type = indentType
     def indentType(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            設定されたインデントのタイプを返す。
+            
+            Returns:
+                int:
+        """
         return self.__indent_type
 
     def setNumberOfSpaces(self, num):
-        r'''
-            @brief  ここに説明文を記入
-            @param  num : [edit]
-            @return None
-        '''
+        r"""
+            スペースの数を設定する。
+            
+            Args:
+                num (int):
+        """
         self.__number_of_spaces = int(num)
 
     def numberOfSpaces(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            設定されたスペースの数を返す。
+            
+            Returns:
+                int:
+        """
         return self.__number_of_spaces
 
     def makeText(self):
-        # インデントのテンプレートを作成する。
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            インデントのテンプレートを作成する。
+            
+            Returns:
+                str:
+        """
         if self.indentType() == self.AsSpace:
             indent = ' ' * self.numberOfSpaces()
         else:
@@ -196,33 +214,31 @@ class TextMaker(object):
 
 
 class MainGUI(QtWidgets.QWidget):
-    r'''
-        @brief       メインウィンドウ機能を提供するウィジェット。
-        @inheritance QtWidgets.QWidget
-        @date        2017/01/22 0:01[Eske](eske3g@gmail.com)
-        @update      2017/01/22 0:01[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        メインウィンドウ機能を提供するウィジェット。
+    """
+    indentTypeChanged = QtCore.Signal(int)
+
     def __init__(self, parent=None):
-        r'''
-            @brief  初期化関数。
-            @param  parent(None) : [QWidget]親ウィジェット。
-            @return None
-        '''
+        r"""
+            Args:
+                parent (QtWidgets.QWidget):親ウィジェット。
+        """
         super(MainGUI, self).__init__(parent)
         self.__setting = TextMaker()
 
-        # オプションのGUI。=========================================================
+        # オプションのGUI。====================================================
         option_group = QtWidgets.QGroupBox('Settings')
         
-        # インデント設定。//////////////////////////////////////////////////////////
-        # インデント数の設定。=======================================================
+        # インデント設定。/////////////////////////////////////////////////////
+        # インデント数の設定。=================================================
         indent_label = QtWidgets.QLabel('Number of Indent')
         self.indent_field = QtWidgets.QSpinBox()
         self.indent_field.setValue(1)
         self.indent_field.setRange(0, 100)
         # =====================================================================
 
-        # インデントタイプの設定。=====================================================
+        # インデントタイプの設定。=============================================
         indent_type_label = QtWidgets.QLabel('Indent Type')
         indent_type_settings = QtWidgets.QWidget()
         indent_type_layout = QtWidgets.QHBoxLayout(indent_type_settings)
@@ -236,23 +252,28 @@ class MainGUI(QtWidgets.QWidget):
         self.indent_type_group = QtWidgets.QButtonGroup(indent_type_settings)
         self.indent_type_group.addButton(indent_space, 0)
         self.indent_type_group.addButton(indent_tab, 1)
+        self.indent_type_group.buttonClicked.connect(
+            self.emitIndentTypeSelection
+        )
 
         self.indent_space_num_label = QtWidgets.QLabel('Number of Spaces')
         self.indent_space_num = QtWidgets.QSpinBox()
         self.indent_space_num.setValue(4)
         self.indent_space_num.setRange(1, 9999)
         for widget in (self.indent_space_num, self.indent_space_num_label):
-            self.indent_type_group.buttonClicked.connect(widget.setHidden)
+            self.indentTypeChanged.connect(widget.setHidden)
 
         indent_group = QtWidgets.QGroupBox('Indent Settings')
         indent_layout = QtWidgets.QFormLayout(indent_group)
         indent_layout.addRow(indent_label, self.indent_field)
         indent_layout.addRow(indent_type_label, indent_type_settings)
-        indent_layout.addRow(self.indent_space_num_label, self.indent_space_num)
+        indent_layout.addRow(
+            self.indent_space_num_label, self.indent_space_num
+        )
         # =====================================================================
         # /////////////////////////////////////////////////////////////////////
         
-        # 引用符の設定。//////////////////////////////////////////////////////////
+        # 引用符の設定。///////////////////////////////////////////////////////
         quote_group = QtWidgets.QGroupBox('Quote setting')
         start_quote_label = QtWidgets.QLabel('Start Quote')
         self.start_quote = QtWidgets.QLineEdit("'")
@@ -279,11 +300,18 @@ class MainGUI(QtWidgets.QWidget):
         layout.addWidget(exec_btn)
         layout.addWidget(self.result_field)
 
+    def emitIndentTypeSelection(self, button):
+        r"""
+            Args:
+                button (QtWidgets.QAbstractButton):
+        """
+        index = self.indent_type_group.id(button)
+        self.indentTypeChanged.emit(index)
+
     def execute(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+            テキストをプレビューに表示し、クリップボードに書き込む。
+        """
         self.__setting.setNumberOfIndent(self.indent_field.value())
         self.__setting.setNumberOfSpaces(self.indent_space_num.value())
         self.__setting.setIndentType(
@@ -298,12 +326,15 @@ class MainGUI(QtWidgets.QWidget):
 
 
 def showWindow():
-    r'''
-        @brief  ウィンドウを表示する関数。基本的にはこれを呼び出す。
-        @return MainGUI
-    '''
+    r"""
+        ウィンドウを表示する関数。基本的にはこれを呼び出す。
+        
+        Returns:
+            MainGUI:
+    """
     win = MainGUI(mayaUIlib.MainWindow)
     win.setWindowFlags(QtCore.Qt.Window)
     win.resize(600, 600)
     win.show()
     return win
+

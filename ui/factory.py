@@ -119,7 +119,7 @@ class TabDock(QtWidgets.QListView):
         sel_model.select(index, QtCore.QItemSelectionModel.ClearAndSelect)
     
 
-class FactoryTab(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
+class FactoryTab(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
     r"""
         factoryModuleで提供されるUIを配置するタブを提供するクラス。
     """

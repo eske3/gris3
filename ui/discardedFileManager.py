@@ -38,7 +38,9 @@ class DiscardedFileManager(QtWidgets.QWidget):
         self.__view = QtWidgets.QTreeView()
         self.__view.setAlternatingRowColors(True)
         self.__view.setRootIsDecorated(False)
-        self.__view.setSelectionMode(self.__view.ExtendedSelection)
+        self.__view.setSelectionMode(
+            QtWidgets.QAbstractItemView.ExtendedSelection
+        )
         
         model = QtGui.QStandardItemModel(0, 2)
         model.setHeaderData(0, QtCore.Qt.Horizontal, 'File Name')

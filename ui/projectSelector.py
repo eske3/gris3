@@ -29,7 +29,7 @@ class FileHistoryView(QtWidgets.QTreeView):
         """
         super(FileHistoryView, self).__init__(parent)
         self.setAlternatingRowColors(True)
-        self.setEditTriggers(self.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setRootIsDecorated(False)
 
         model = QtGui.QStandardItemModel(0, 4)

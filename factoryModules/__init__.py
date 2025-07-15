@@ -213,7 +213,7 @@ def createFactoryDirectory():
 # /////////////////////////////////////////////////////////////////////////////
 
 
-class AbstractFactoryTab(QtCore.QObject):
+class AbstractFactoryTabMixin(object):
     r"""
         Factory内のタブを定義する際に使用する、多重継承専用クラス。
         基本的に何らかのQWidgetとセットで継承する事。

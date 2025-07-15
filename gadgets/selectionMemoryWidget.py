@@ -18,8 +18,8 @@ class SelectionMemoryWidget(QtWidgets.QWidget):
 
         view = QtWidgets.QTreeView()
         view.setAlternatingRowColors(True)
-        view.setEditTriggers(view.NoEditTriggers)
-        view.setSelectionMode(view.ExtendedSelection)
+        view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        view.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         view.setModel(model)
         view.setSelectionModel(sel_model)
         view.setHeaderHidden(True)

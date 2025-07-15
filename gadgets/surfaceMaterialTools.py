@@ -41,11 +41,9 @@ class MaterialLister(QtWidgets.QWidget):
 
         self.__material_list = QtWidgets.QListView()
         self.__material_list.setVerticalScrollMode(
-            self.__material_list.ScrollPerPixel
+            QtWidgets.QListView.ScrollPerPixel
         )
-        self.__material_list.setEditTriggers(
-            self.__material_list.NoEditTriggers
-        )
+        self.__material_list.setEditTriggers(QtWidgets.QListView.NoEditTriggers)
         self.__material_list.setAlternatingRowColors(True)
         self.__material_list.setModel(model)
         self.__material_list.setSelectionModel(sel_model)

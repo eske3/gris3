@@ -281,7 +281,9 @@ class MultiRenamer(QtWidgets.QWidget):
         model.setHeaderData(1, QtCore.Qt.Horizontal, 'After')
 
         self.__preview = QtWidgets.QTreeView()
-        self.__preview.setEditTriggers(self.__preview.NoEditTriggers)
+        self.__preview.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
         self.__preview.installEventFilter(self)
         self.__preview.setRootIsDecorated(False)
         self.__preview.setAlternatingRowColors(True)
@@ -391,8 +393,8 @@ class MultiRenamer(QtWidgets.QWidget):
         self.__numbering_mode = QtWidgets.QButtonGroup(opt_widget)
         self.__numbering_mode.addButton(int_box, 0)
         self.__numbering_mode.addButton(alp_box, 1)
-        self.__numbering_mode.buttonClicked[int].connect(
-            self.changeNumberingMode
+        self.__numbering_mode.buttonClicked.connect(
+            self.changeNumberingModeByButton
         )
         
         layout.addRow(label, opt_widget)
@@ -519,6 +521,10 @@ class MultiRenamer(QtWidgets.QWidget):
         self.__preview.setColumnWidth(
             0, self.__preview.rect().width() * 0.5
         )
+
+    def changeNumberingModeByButton(self, button):
+        index = self.__numbering_mode.id(button)
+        self.changeNumberingMode(index)
 
     def changeNumberingMode(self, id):
         r"""
@@ -834,7 +840,7 @@ class StandardAutoRename(QtWidgets.QWidget):
                 w = QtWidgets.QSpinBox()
                 w.setRange(0, 8)
                 w.setMinimumWidth(100)
-                w.setButtonSymbols(w.NoButtons)
+                w.setButtonSymbols(QtWidgets.QSpinBox.NoButtons)
             elif isinstance(val, (list, tuple)):
                 w = QtWidgets.QComboBox()
                 w.addItems(val)

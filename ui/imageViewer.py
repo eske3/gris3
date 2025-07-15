@@ -38,10 +38,10 @@ class ImageViewer(QtWidgets.QListView):
         self.__start_pos = None
         self.__pressed_button = None
         self.setAlternatingRowColors(True)
-        self.setViewMode(self.IconMode)
-        self.setSelectionMode(self.NoSelection)
+        self.setViewMode(QtWidgets.QListView.IconMode)
+        self.setSelectionMode(QtWidgets.QListView.NoSelection)
         self.setSpacing(5)
-        self.setResizeMode(self.Adjust)
+        self.setResizeMode(QtWidgets.QListView.Adjust)
         self.setDragEnabled(False)
         self.setIconSize(iconsize)
         self.setGridSize(iconsize+self.GridOffset)
@@ -67,7 +67,7 @@ class ImageViewer(QtWidgets.QListView):
             Args:
                 index (QtCore.QModelIndex):
         """
-        if self.selectionMode() != self.NoSelection:
+        if self.selectionMode() != QtWidgets.QListView.NoSelection:
             return
         self.itemIsClicked.emit(
             index.model().itemFromIndex(index).data()
@@ -79,7 +79,8 @@ class ImageViewer(QtWidgets.QListView):
                 state (bool):
         """
         self.setSelectionMode(
-            self.ExtendedSelection if state else self.NoSelection
+            QtWidgets.QAbstractItemView.ExtendedSelection
+            if state else QtWidgets.QAbstractItemView.NoSelection
         )
         if not state:
             self.clearSelection()
@@ -90,7 +91,7 @@ class ImageViewer(QtWidgets.QListView):
             このメソッド内ではアイテムの削除だけを行い、削除したデータ名の一覧を
             itemIsDeletedシグナルにのせて送出する。
         """
-        if self.selectionMode() == self.NoSelection:
+        if self.selectionMode() == QtWidgets.QAbstractItemView.NoSelection:
             return
         selmodel = self.selectionModel()
         model = self.model()
@@ -123,6 +124,8 @@ class ImageViewer(QtWidgets.QListView):
                 event (QtCore.QEvent):
         """
         def is_starting_daragging():
+            if self.__start_pos is None:
+                return False
             return (self.__start_pos - cur_pos).manhattanLength() <= 10
         cur_pos = event.pos()
         if self.__oldpos:

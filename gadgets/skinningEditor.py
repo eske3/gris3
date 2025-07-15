@@ -392,10 +392,10 @@ class JointEditorView(QtWidgets.QTreeView):
     def __init__(self, parent=None):
         super(JointEditorView, self).__init__(parent)
         self.__index = None
-        self.setEditTriggers(self.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setAlternatingRowColors(True)
         self.setRootIsDecorated(False)
-        self.setSelectionMode(self.ExtendedSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.setItemDelegate(JointEditorStyle())
 
     def mousePressEvent(self, event):

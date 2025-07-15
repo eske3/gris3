@@ -34,9 +34,9 @@ class ObjectList(QtWidgets.QTreeView):
         super(ObjectList, self).__init__(parent)
         self.setSortingEnabled(True)
         self.setRootIsDecorated(False)
-        self.setVerticalScrollMode(self.ScrollPerPixel)
-        self.setHorizontalScrollMode(self.ScrollPerPixel)
-        self.setEditTriggers(self.NoEditTriggers)
+        self.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
 
         model = QtGui.QStandardItemModel(0, 2)
         model.setHeaderData(0, QtCore.Qt.Horizontal, 'Polygon Name')

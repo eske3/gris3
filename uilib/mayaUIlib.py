@@ -23,11 +23,13 @@ from . import directionPlane, paintApp
 from .. import uilib, mathlib, node, lib, verutil
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 if uilib.Package == 'PySide':
-    import shiboken as shiboken2
+    import shiboken
+elif uilib.Package == 'PySide2':
+    import shiboken2 as shiboken
 else:
-    import shiboken2
+    import shiboken6 as shiboken
 
-MainWindow = shiboken2.wrapInstance(
+MainWindow = shiboken.wrapInstance(
     verutil.Long(MQtUtil.mainWindow()), QtWidgets.QWidget
 )
 
@@ -429,7 +431,10 @@ class DirectionPlaneWidget(directionPlane.DirectionView):
         ビュー上で指示した方向を、Mayaのアクティブなビュー空間
         に変換したベクトルを渡すUIをを提供するクラス。
     """
-    directionDecided = QtCore.Signal(mathlib.Axis, mathlib.Axis, int, int)
+    directionDecided = QtCore.Signal(
+        mathlib.Axis, mathlib.Axis,
+        QtCore.Qt.MouseButton, QtCore.Qt.KeyboardModifiers
+    )
     def __init__(self, parent=None):
         r"""
             Args:
@@ -540,7 +545,7 @@ class DrawerOnCamera(paintApp.DesktopCanvas):
 
     def viewWidget(self):
         view = self.view()
-        return shiboken2.wrapInstance(
+        return shiboken.wrapInstance(
             verutil.Long(view.widget()), QtWidgets.QWidget
         )        
 

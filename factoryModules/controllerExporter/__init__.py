@@ -36,9 +36,11 @@ class ContextOption(factoryUI.ContextOption):
         sel_model.selectionChanged.connect(self.selectNodesFromView)
         self.__view = QtWidgets.QTreeView()
         self.__view.setAlternatingRowColors(True)
-        self.__view.setEditTriggers(self.__view.NoEditTriggers)
+        self.__view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.__view.setRootIsDecorated(False)
-        self.__view.setSelectionMode(self.__view.ExtendedSelection)
+        self.__view.setSelectionMode(
+            QtWidgets.QAbstractItemView.ExtendedSelection
+        )
         self.__view.setModel(model)
         self.__view.setSelectionModel(sel_model)
 

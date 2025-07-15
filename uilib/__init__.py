@@ -20,7 +20,7 @@ import math
 import threading
 import platform
 from abc import ABCMeta, abstractmethod
-from ..pyside2 import *
+from ..pyside_module import *
 
 from .. import globalpath, style, verutil
 
@@ -376,24 +376,21 @@ class ConstantWidget(QtWidgets.QDialog):
             ウィジェトをマウスカーソル上に移動する
         """
         # Move the window automaticaly to position pinted by mouse cursor.=====
-        pos       = QtGui.QCursor.pos()
-        desktop   = QtWidgets.QApplication.desktop()
-        drect     = desktop.availableGeometry(
-            desktop.screenNumber(pos)
-       )
-        dwidth    = drect.width()
-        dheight   = drect.height()
+        pos = QtGui.QCursor.pos()
+        drect = style.screenRect(pos)
+        dwidth = drect.width()
+        dheight = drect.height()
         
-        rect      = self.geometry()
+        rect = self.geometry()
 
-        posX      = (
+        posX = (
             pos.x() - (rect.width() / 2) - drect.x() - self.WindowOffset.x()
        )
-        posY      = (
+        posY = (
             pos.y() - (rect.height() / 4) - drect.y() - self.WindowOffset.y()
        )
-        width     = rect.width()
-        height    = rect.height()
+        width = rect.width()
+        height = rect.height()
         limitMaxX = dwidth - width
         limitMaxY = dheight - height
 
@@ -578,10 +575,7 @@ class ConstantWidget(QtWidgets.QDialog):
                 tuple(QRect, QRect):
         """
         rect = self.geometry()
-        d = QtWidgets.QApplication.desktop()
-        drect = d.availableGeometry(d.screenNumber(rect.center()))
-
-        return (rect, drect)
+        return (rect, style.screenRect(rect.center()))
 
     def currentRect(self):
         r"""
@@ -1183,7 +1177,7 @@ class BlackoutPopup(QtWidgets.QWidget):
                 event (QtCore.QEvent):
         """
         painter = QtGui.QPainter(self)
-        painter.setPen(None)
+        painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(
             QtGui.QColor(0, 0, 0, self.BgOpacity * self.BgOpacityMultiplyer)
        )
@@ -1411,27 +1405,34 @@ class ListComboBox(QtWidgets.QComboBox):
         model = self.model()
         model.removeRows(0, model.rowCount())
 
+
 class StarndardSpinerObject(QtCore.QObject):
     r"""
         Max風スピナーのUI機能を持つクラス。
-        基本的にQSpinBoxと多重継承させて使用する。
+        QSpinBox内でインスタンスを作成し、_setupメソッドにQSpinBoxを渡して
+        使用する。
     """
     ButtonFactor = {
         QtCore.Qt.LeftButton : 1,
         QtCore.Qt.MiddleButton : 10,
         QtCore.Qt.RightButton  : 100,
     }
-    def _setup(self):
+    def _setup(self, spinBox):
         r"""
             初期化を行う。
         """
-        self.__Y       = 0
+        self.__Y = 0
         self.__pressed = None
         self.__moved = False
         self.__pressed_callback = None
         self.__moved_callback = None
         self.__released_callback = None
-        self.installEventFilter(self)
+        self.__target = spinBox
+        self.__target.installEventFilter(self)
+        for m in (
+            'setPressedCallback', 'setMovedCallback', 'setReleasedCallback'
+        ):
+            setattr(self.__target, m, getattr(self, m))
 
     def eventFilter(self, obj, event):
         r"""
@@ -1444,8 +1445,6 @@ class StarndardSpinerObject(QtCore.QObject):
             Returns:
                 bool:
         """
-        if obj is not self:
-            return False
         event_type = event.type()
         if event_type == QtCore.QEvent.MouseButtonPress:
             self._orMousePressEvent(event)
@@ -1543,7 +1542,7 @@ class StarndardSpinerObject(QtCore.QObject):
             abs(delta) < QtWidgets.QApplication.startDragDistance()
         ):
             return
-        movedValue = self.singleStep() * (1 if delta>0 else -1)
+        movedValue = self.__target.singleStep() * (1 if delta>0 else -1)
         self.__Y = posY
          
         # マウスの押されたボタンに応じて加算される数字に倍率をかける。
@@ -1552,9 +1551,9 @@ class StarndardSpinerObject(QtCore.QObject):
             movedValue *= self.ButtonFactor[self.__pressed]
  
         # 差分を現在のスピンボックスの値に加算してからセットする。
-        value = self.value() + movedValue
-        if self.minimum() < value < self.maximum():
-            self.setValue(value)
+        value = self.__target.value() + movedValue
+        if self.__target.minimum() < value < self.__target.maximum():
+            self.__target.setValue(value)
         self.repositionCursor(posY)
  
     def _orMouseReleaseEvent(self, event):
@@ -1567,13 +1566,12 @@ class StarndardSpinerObject(QtCore.QObject):
         if self.__released_callback:
             self.__released_callback()
         if not self.__moved:
-            self.mousePressEvent(event)
-            self.mouseReleaseEvent(event)
+            self.__target.mousePressEvent(event)
+            self.__target.mouseReleaseEvent(event)
         self.__moved = False
-        # self.mouseReleaseEvent(event)
 
 
-class Spiner(QtWidgets.QSpinBox, StarndardSpinerObject):
+class Spiner(QtWidgets.QSpinBox):
     r"""
         Max風スピナーUI(int)を提供するクラス
     """
@@ -1584,9 +1582,10 @@ class Spiner(QtWidgets.QSpinBox, StarndardSpinerObject):
                 **keywords (dict):
         """
         super(Spiner, self).__init__(*args, **keywords)
-        self._setup()
+        StarndardSpinerObject()._setup(self)
 
-class DoubleSpiner(QtWidgets.QDoubleSpinBox, StarndardSpinerObject):
+
+class DoubleSpiner(QtWidgets.QDoubleSpinBox):
     r"""
         Max風スピナーUI(double)を提供するクラス
     """
@@ -1602,7 +1601,8 @@ class DoubleSpiner(QtWidgets.QDoubleSpinBox, StarndardSpinerObject):
                 **keywords (dict):
         """
         super(DoubleSpiner, self).__init__(*args, **keywords)
-        self._setup()
+        StarndardSpinerObject()._setup(self)
+
 
 class ClosableGroup(QtWidgets.QGroupBox):
     r"""
@@ -2098,6 +2098,7 @@ class OButton(QtWidgets.QPushButton):
             self.update()
         else:
             super(OButton, self).timerEvent(event)
+
 
 class SqButton(OButton):
     r"""

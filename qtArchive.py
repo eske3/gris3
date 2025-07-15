@@ -11,7 +11,7 @@ r'''
     このソースを使用して不具合や不利益等が生じても[EskeYoshinob]
     は一切責任を負いませんのであらかじめご了承ください
 '''
-from gris3.pyside2 import QtCore
+from .pyside_module import QtCore
 import zipfile, os, datetime, re
 
 class ArchiverThread(QtCore.QThread):

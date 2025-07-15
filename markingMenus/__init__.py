@@ -1,83 +1,113 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     __init__.py
-    @brief    ここに説明文を記入
-    @function execCommand : 与えられたモジュールのMarkingMenuクラスを呼び出し実行する
-    @function selectToolCommand : ここに説明文を記入
-    @function showAttributeEditor : AttributeEditorの表示ならびにサブメニューの表示
-    @function parentAndPreference : parentの実行、もしくはプレファレンスにまつわるメニューの表示
-    @function showDisplayMenu : parentの実行、もしくはプレファレンスにまつわるメニューの表示
-    @function showModelDisplayMenu : ここに説明文を記入
-    @date        2018/03/08 1:14[Eske](eske3g@gmail.com)
-    @update      2018/04/07 3:58[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    Mayaのマーキングメニューに関するモジュール。
+    主にホットキー押しによる機能＋独自のマーキングメニューを構成する特殊
+    GUIを提供する。
+    
+    Dates:
+        date:2018/03/08 1:14[Eske](eske3g@gmail.com)
+        update:2025/06/27 12:50 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2018 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
+
+
 def execCommand(mode, module, cls='MarkingMenu'):
-    r'''
-        @brief  与えられたモジュールのMarkingMenuクラスを呼び出し実行する
-        @brief  modeは０でメニューの表示、１でコマンドの実行
-        @param  mode : [int]
-        @param  module : [str]モジュール名
-        @return None
-    '''
+    r"""
+        与えられたモジュールのMarkingMenuクラスを呼び出し実行する。
+        mode０でメニューの表示、１でコマンドの実行
+        
+        Args:
+            mode (int):
+            module (str):モジュール名
+    """
     mm = getattr(module, cls)()
     if mode == 0:
         mm.showMenu()
     else:
         mm.execute()
 
+
 def selectToolCommand(mode):
-    r'''
-        @brief  ここに説明文を記入
-        @param  mode : [int]
-        @return None
-    '''
+    r"""
+        選択ツールならびに選択にまつわるマーキングメニューの表示を行う。
+        
+        Args:
+            mode (int):
+    """
     from . import selectToolMM
     execCommand(mode, selectToolMM)
 
+
 def showAttributeEditor(mode):
-    r'''
-        @brief  AttributeEditorの表示ならびにサブメニューの表示
-        @param  mode : [int]
-        @return None
-    '''
+    r"""
+        AttributeEditorの表示ならびにサブメニューの表示を行う。
+        
+        Args:
+            mode (int):
+    """
     from . import attributeEditorMM
     execCommand(mode, attributeEditorMM)
 
+
 def parentAndPreference(mode):
-    r'''
-        @brief  parentの実行、もしくはプレファレンスにまつわるメニューの表示
-        @param  mode : [int]
-        @return None
-    '''
+    r"""
+        parentの実行、もしくはプレファレンスにまつわるメニューの表示
+        
+        Args:
+            mode (int):
+    """
     from . import parentAndPreferenceMM
     execCommand(mode, parentAndPreferenceMM)
 
+
 def showDisplayMenu(mode):
-    r'''
-        @brief  表示のリセット、もしくは表示にまつわるメニューの表示
-        @param  mode : [int]
-        @return None
-    '''
+    r"""
+        表示のリセット、もしくは表示にまつわるメニューの表示
+        
+        Args:
+            mode (int):
+    """
     from . import displayMM
     execCommand(mode, displayMM)
 
+
 def showModelDisplayMenu(mode):
-    r'''
-        @brief  isolateの実行、もしくはモデル表示にまつわるメニューの表示
-        @param  mode : [int]
-        @return None
-    '''
+    r"""
+        isolateの実行、もしくはモデル表示にまつわるメニューの表示
+        
+        Args:
+            mode (int):
+    """
     from . import modelDisplayMM
     execCommand(mode, modelDisplayMM)
 
+
 def showCopyMenu(mode):
+    r"""
+        Transform情報のコピー、ならびにその他雑多なコピー機能にまつわる
+        マーキングメニューの表示。
+
+        Args:
+            mode (int):
+    """
     from . import copyAndPasteMM
     execCommand(mode, copyAndPasteMM, 'CopyMarkingMenu')
 
+
 def showPasteMenu(mode):
+    r"""
+        Transform情報のペースト、ならびにその他雑多なペースト機能にまつわる
+        マーキングメニューの表示。
+
+        Args:
+            mode (int):
+    """
     from . import copyAndPasteMM
     execCommand(mode, copyAndPasteMM, 'PasteMarkingMenu')
+

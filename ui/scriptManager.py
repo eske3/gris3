@@ -178,9 +178,9 @@ class ScriptHelperView(extendedUI.FilteredView):
         """
         view = QtWidgets.QTreeView()
         view.setAlternatingRowColors(True)
-        view.setVerticalScrollMode(view.ScrollPerPixel)
-        view.setHorizontalScrollMode(view.ScrollPerPixel)
-        view.setEditTriggers(view.NoEditTriggers)
+        view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         return view
 
     def createModel(self):
@@ -599,7 +599,7 @@ class ConstructorOperator(QtWidgets.QTabWidget):
         return self.__debug_level.currentText()
 
 
-class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTab):
+class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
     r"""
         メインGUI。
     """

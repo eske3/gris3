@@ -13,7 +13,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import mayaCmds as cmds
+from . import mayaCmds as cmds
 
 NewColorIndex = (
     (0.184474080801, 0.184474080801, 0.184474080801),       # 0

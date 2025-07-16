@@ -15,12 +15,19 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.0.1'
-LastModified = 20250701
+Version = '2.0.1.0'
+LastModified = 20250716
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.1.0',
+(
+    'displayLayerViewerを追加。',
+)
+),
+
+
 ('2.0.0.2',
 (
     'gadgets.facialExpressionManagerのExpressionButtonを選択式に変更。最後にクリックしたボタンがアクティブカラーになる',

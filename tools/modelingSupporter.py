@@ -706,7 +706,7 @@ class RenamePostAction(AbstractPostAction):
         ノードをリネームするポストアクションを定義するクラス。
     """
     def init(self):
-        from gris3.tools import nameUtility
+        from . import nameUtility
         self.__manager = nameUtility.MultNameManager()
 
     def setSearchingText(self, text):
@@ -746,12 +746,13 @@ class RenamePostAction(AbstractPostAction):
         """
         if not self.__manager.searchingText():
             return
-        from gris3.tools import nameUtility
-        targets = object.allChildren()
-        targets.append(object)
-        self.__manager.setNameList([x.shortName() for x in targets])
+        from . import nameUtility
+        targets = object.allChildren(type='transform')
+        self.__manager.setNameList(
+            [x.shortName() for x in targets + [source]]
+        )
         nameUtility.multRename(
-            [x() for x in targets], self.__manager.result()
+            [x() for x in targets + [object]], self.__manager.result()
         )
 
 

@@ -202,7 +202,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             を持つ。
             
             Args:
-                datalist (str):
+                datalist (dict):
         """
         for exp, data in datalist.items():
             exp = self.addExpression(exp)
@@ -357,6 +357,9 @@ def createManagerNode(parent=None):
         
         Args:
             parent (str):
+
+        Returns:
+            FacialMemoryManagerRoot:
     """
     root = grisNode.createNode(FacialMemoryManagerRoot, parent=parent)
     return root

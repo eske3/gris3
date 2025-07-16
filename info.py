@@ -15,12 +15,33 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '1.1.5.4'
-LastModified = 20250617
+Version = '2.0.0.1'
+LastModified = 20250701
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.0.2',
+(
+    'gadgets.facialExpressionManagerのExpressionButtonを選択式に変更。最後にクリックしたボタンがアクティブカラーになる',
+    'gadgets.toolbarのToolbarクラスにウィジェットを追加するaddWidgetを追加',
+    'Factoryの現在のプロジェクト表示ラベルをツールバーに追加する仕様に変更',
+    'modelingSupporterのミラー機能のリネーム機能の改善',
+)
+),
+
+('2.0.0.0',
+(
+    'PySide6対応。',
+)
+),
+
+('1.1.6.0',
+(
+    '標準フェイシャル用エクストラコンストラクタの実装（ベータ版）',
+)
+),
+
 ('1.1.5.4',
 (
     'node.BlendShape.listAttrNamesのアルゴリズムを変更。状況によって一覧に漏れが発生するバグに対応。',

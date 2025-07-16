@@ -587,6 +587,7 @@ class FactoryWidget(QtWidgets.QWidget):
         self.__sub_label.setStyleSheet(
             'font-weight: bold;'
         )
+        tool_bar.addWidget(self.__sub_label)
         fs = factoryModules.FactorySettings()
         fs.isChanged.connect(self.updateSubLabel)
         # =====================================================================
@@ -607,9 +608,8 @@ class FactoryWidget(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(style.scaled(5))
         layout.addWidget(tool_bar, 0, 0, 1, 1)
-        layout.addWidget(self.__sub_label, 0, 1, 1, 1)
-        layout.addWidget(p_btn, 0, 2, 1, 1)
-        layout.addWidget(self.__maingui, 1, 0, 1, 3)
+        layout.addWidget(p_btn, 0, 1, 1, 1)
+        layout.addWidget(self.__maingui, 1, 0, 1, 2)
         layout.setColumnStretch(0, 1)
 
         self.showProjectSelector()

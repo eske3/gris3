@@ -88,6 +88,7 @@ FACTORY_TOOLBAR = [
 #                                                                            //
 # /////////////////////////////////////////////////////////////////////////////
 
+
 class ToolbarView(QtWidgets.QWidget):
     r"""
         ツールバー下部にUIを表示するための機能を提供するクラス。
@@ -222,6 +223,7 @@ class ToolbarView(QtWidgets.QWidget):
         painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0)))
         painter.drawRect(rect)
 
+
 class ToolbarButton(uilib.OButton):
     r"""
         タブ式のウィジェットを表示するためのボタン。
@@ -293,6 +295,7 @@ class ToolbarButton(uilib.OButton):
             self.killTimer(self.__signal_emission_timer)
             self.__signal_emission_timer = None
 
+
 class Toolbar(QtWidgets.QWidget):
     r"""
         ボタンが並んだツールバーを提供するウィジェット。
@@ -310,6 +313,7 @@ class Toolbar(QtWidgets.QWidget):
         layout.setSpacing(1)
         layout.addSpacing(self.ButtonSize)
         layout.addStretch()
+        self.__widget_count = 0
         self.__btnlist = []
         self.__attached_view = ToolbarView(self)
         self.__attached_view.ButtonSize = self.ButtonSize
@@ -325,7 +329,9 @@ class Toolbar(QtWidgets.QWidget):
         p.setColor(QtGui.QPalette.WindowText, QtGui.QColor(255, 255, 255))
         p.setColor(QtGui.QPalette.Window, QtGui.QColor(255, 255, 255))
         separator.setPalette(p)
-        self.layout().insertWidget(self.layout().count()-1, separator)
+        self.layout().insertWidget(
+            self.layout().count() - (1 + self.__widget_count), separator
+        )
 
     def addButton(self, widgetType, color=None, icon=None, withStretch=False):
         r"""
@@ -354,7 +360,9 @@ class Toolbar(QtWidgets.QWidget):
             tb.setIcon(icon)
         tb.mouseEntered.connect(self.setupButtons)
         tb.commandRequested.connect(self.showView)
-        self.layout().insertWidget(self.layout().count()-1, tb)
+        self.layout().insertWidget(
+            self.layout().count() - (1 + self.__widget_count), tb
+        )
         self.__btnlist.append(tb)
         
         self.__attached_view.addWidget(type_obj(), withStretch)
@@ -400,6 +408,16 @@ class Toolbar(QtWidgets.QWidget):
         for btn in self.__btnlist:
             btn.setNoDelay(True)
 
+    def addWidget(self, widget):
+        r"""
+            ツールバーの末端にウィジェットを追加する。
+            
+            Args:
+                widget (QtWidgets.QWidget):追加するウィジェット
+        """
+        self.layout().addWidget(widget)
+        self.__widget_count += 1
+
     def leaveEvent(self, event):
         r"""
             Args:
@@ -409,6 +427,7 @@ class Toolbar(QtWidgets.QWidget):
         self.__attached_view.startToHide()
         for btn in self.__btnlist:
             btn.setNoDelay(False)
+
 
 class MainGUI(uilib.AbstractSeparatedWindow):
     r"""
@@ -423,6 +442,7 @@ class MainGUI(uilib.AbstractSeparatedWindow):
         toolbar = Toolbar()
         toolbar.addPreset(STANDALONE_TOOLBAR)
         return toolbar
+
 
 def showWindow():
     r"""

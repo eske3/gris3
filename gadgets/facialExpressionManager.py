@@ -134,6 +134,7 @@ class Settings(QtWidgets.QGroupBox):
 
 class VirtualSliderButton(QtWidgets.QPushButton):
     facialChanged = QtCore.Signal(str)
+    ActiveColor = QtGui.QColor(16, 64, 140)
 
     def __init__(self, manager, expressionName, parent=None):
         r"""
@@ -154,6 +155,17 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         color = QtGui.QColor(*uilib.Color.ExecColor)
         self.slider_gradient.setColorAt(0, color)
         self.slider_gradient.setColorAt(1, color.lighter())
+        self.setStyleSheet(
+            (
+                'QPushButton::checked{{'
+                '   background-color: {};'
+                '   border: 2px solid {};'
+                '}}'
+            ).format(
+                self.ActiveColor.name(),
+                self.ActiveColor.lighter().name()
+            )
+        )
 
     def expression(self):
         return self.__expression
@@ -330,8 +342,13 @@ class ExpressionButton(QtWidgets.QWidget):
         """
         super(ExpressionButton, self).__init__(parent)
         self.__v_btn = VirtualSliderButton(root, exp)
+        self.__v_btn.setCheckable(True)
         self.__st_btn = uilib.OButton(uilib.IconPath('uiBtn_save'))
         self.__st_btn.clicked.connect(self.storeValue)
+        self.__active_color = [
+            getattr(self.__v_btn.ActiveColor, x)() for x in
+            ['red', 'green', 'blue']
+        ]
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(uilib.ZeroMargins)
@@ -344,12 +361,15 @@ class ExpressionButton(QtWidgets.QWidget):
     def refreshState(self, useCache=True):
         data = self.__v_btn.manager().listExpressionData(useCache=useCache)
         val = data.get(self.__v_btn.expression())
-        color = [] if val is None else [16, 64, 140]
+        color = [] if val is None else self.__active_color
         self.__st_btn.setBgColor(*color)
 
     def storeValue(self):
         self.__v_btn.applyValueFromCurrent()
         self.refreshState(False)
+
+    def virtualButton(self):
+        return self.__v_btn
 
 
 class FacialExpressionView(QtWidgets.QScrollArea):
@@ -359,6 +379,7 @@ class FacialExpressionView(QtWidgets.QScrollArea):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(FacialExpressionView, self).__init__(parent)
+        self.__button_col = None
         w = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(w)
         self.setWidgetResizable(True)
@@ -376,9 +397,11 @@ class FacialExpressionView(QtWidgets.QScrollArea):
         """
         layout = self.clear()
         root = managerEngine.getManagerNode()
+        self.__button_col = QtWidgets.QButtonGroup(self)
         for exp in root.listExpressions():
             btn = ExpressionButton(root, exp)
             layout.addWidget(btn)
+            self.__button_col.addButton(btn.virtualButton())
         layout.addStretch()
 
 

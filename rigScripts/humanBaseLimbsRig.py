@@ -1,18 +1,18 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     humanBaseLimbsRig.py
-    @brief    UNITY用の腕を作成するための機能を提供するモジュール。
-    @class    BlockNameRule : ベースとなる名前のルールを定義するクラス。
-    @class    Option : 作成時に表示するUI用のクラス。
-    @class    JointCreator : 腕のジョイント作成機能を提供するクラス。
-    @class    RigCreator : 四肢の共通部分を作成する機能を提供するクラス。
-    @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-    @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    UNITY用の腕を作成するための機能を提供するモジュール。
+    
+    Dates:
+        date:2017/02/01 1:01[Eske](eske3g@gmail.com)
+        update:2025/07/17 20:04 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from .. import rigScripts, func, node, verutil
 from gris3.tools import jointEditor
 cmds = func.cmds
@@ -20,24 +20,24 @@ cmds = func.cmds
 IgnoreLoad = False
 Category = 'Basic Human'
 BaseName = 'arm'
+FixRootIkFlipBehavior = True
+
 
 class BlockNameRule(object):
-    r'''
-        @brief       ベースとなる名前のルールを定義するクラス。
-        @inheritance object
-        @date        2017/02/07 20:30[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        ベースとなる名前のルールを定義するクラス。
+    """
     def __init__(self, partName, endPartName, upblock, lowblock, endblock):
-        r'''
-            @brief  初期化を行う。
-            @param  partName : [str]パーツ名
-            @param  endPartName : [str]末端のパーツ名
-            @param  upblock : [str]上部の名前
-            @param  lowblock : [str]下部の名前
-            @param  endblock : [str]末端の名前
-            @return None
-        '''
+        r"""
+            初期化を行う。
+            
+            Args:
+                partName (str):パーツ名
+                endPartName (str):末端のパーツ名
+                upblock (str):上部の名前
+                lowblock (str):下部の名前
+                endblock (str):末端の名前
+        """
         self.partname = partName
         self.endpartname = endPartName
         self.upblock = upblock
@@ -51,40 +51,35 @@ class BlockNameRule(object):
         self.numlow = 'numberOf' + self.lowblockTitle
         self.attrlist = [self.bend, self.numup, self.numlow]
 
+
 Default_Block_Name_Rule = BlockNameRule(
     'Arm', 'Hand', 'uparm', 'lowarm', 'hand'
 )
 
+
 class Option(rigScripts.Option):
-    r'''
-        @brief       作成時に表示するUI用のクラス。
-        @inheritance rigScripts.Option
-        @date        2017/02/04 18:52[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        作成時に表示するUI用のクラス。
+    """
     BlockNameRule = Default_Block_Name_Rule
     def define(self):
-        r'''
-            @brief  オプション内容を定義する
-            @return None
-        '''
+        r"""
+            オプション内容を定義する
+        """
         self.addBoolOption(self.BlockNameRule.attrlist[0], True)
         for attr in self.BlockNameRule.attrlist[1:]:
             self.addIntOption(attr, default=3, min=1, max=26)
 
+
 class JointCreator(rigScripts.JointCreator):
-    r'''
-        @brief       腕のジョイント作成機能を提供するクラス。
-        @inheritance rigScripts.JointCreator
-        @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        腕のジョイント作成機能を提供するクラス。
+    """
     BlockNameRule = Default_Block_Name_Rule
     def createUnit(self):
-        r'''
-            @brief  ユニット作成のオーバーライド。
-            @return None
-        '''
+        r"""
+            ユニット作成のオーバーライド。
+        """
         super(JointCreator, self).createUnit()
         unit = self.unit()
         options = self.options()
@@ -96,10 +91,9 @@ class JointCreator(rigScripts.JointCreator):
             attr.set(value)
 
     def finalize(self):
-        r'''
-            @brief  ジョイントのファイナライズ時にコールされる。
-            @return None
-        '''
+        r"""
+            ジョイントのファイナライズ時にコールされる。
+        """
         namerule = self.BlockNameRule
         unit = self.unit()
         name = func.Name(unit())
@@ -127,20 +121,18 @@ class JointCreator(rigScripts.JointCreator):
 
 
 class RigCreator(rigScripts.RigCreator):
-    r'''
-        @brief       四肢の共通部分を作成する機能を提供するクラス。
-        @inheritance rigScripts.RigCreator
-        @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        四肢の共通部分を作成する機能を提供するクラス。
+    """
     BlockNameRule = Default_Block_Name_Rule
     AimZFactor = 1
     def __init__(self, unit):
-        r'''
-            @brief  初期化を行う。
-            @param  unit : [grisNode.Unit]
-            @return None
-        '''
+        r"""
+            初期化を行う。
+            
+            Args:
+                unit (grisNode.Unit):
+        """
         super(RigCreator, self).__init__(unit)
         self.extrajoints = []
         self.extrajoint_proxies = []
@@ -149,23 +141,42 @@ class RigCreator(rigScripts.RigCreator):
         self.isBending = True
 
     def getXFactor(self, positonIndex):
-        r'''
-            @brief  左右で変化するX軸の値の係数を返す。
-            @param  positonIndex : [int]位置を表す数字
-            @return int
-        '''
+        r"""
+            左右で変化するX軸の値の係数を返す。
+            
+            Args:
+                positonIndex (int):位置を表す数字
+                
+            Returns:
+                int: 左側であれば1，右側であれば-1を返す。
+        """
         return 1 if positonIndex != 3 else -1
 
     def createBendSystem(self,
         unitname, basename,
         limbs_ikdmy, up_keep_attr, low_keep_attr, bend_vis_attr
     ):
-        r'''
-            @brief  ベンドコントローラを上部と下部のジョイントチェーンへ追加
-            @brief  する。
-            @brief  この処理後、結合ジョイントから代理ジョイントへ接続されている。
-            @return None
-        '''
+        r"""
+            ベンドコントローラを上部と下部のジョイントチェーンへ追加する。
+            この処理後、結合ジョイントから代理ジョイントへ接続されている。
+            戻り値は
+                bend_ctrls：ベンド用コントローラのリスト
+                bend_ctrlspace：ベンド用コントローラスペーサーのリスト
+                upblock_bend_ctrls：上部のベンドコントローラのリスト
+                lowblock_bend_ctrls：下部のベンドコントローラのリスト
+            を格納したtuple。
+            
+            Args:
+                unitname (str):
+                basename (str):
+                limbs_ikdmy (any):
+                up_keep_attr (str):
+                low_keep_attr (str):
+                bend_vis_attr (str):
+                
+            Returns:
+                any:
+        """
         namerule = self.BlockNameRule
         # 元のジョイントから代理ジョイントを作成する。=========================
         upblock_twists = func.listNodeChain(
@@ -249,7 +260,26 @@ class RigCreator(rigScripts.RigCreator):
             'matrixIn[2]',
             self.upblock_rigJnt['combJnt']('matrix'), type='matrix'
         )
-        self.upblock_rigJnt['combJnt'].attr('im') >> mltmtx/'matrixIn[3]'
+        
+        # IKルートコントローラを動かした際にフリップする現象を解消するための ++
+        # 修正パッチ（2025年07月17対応）
+        if FixRootIkFlipBehavior:
+            fbf_mtx = node.createUtil('fourByFourMatrix')
+            for ax, idx in zip('xyz', '012'):
+                (
+                    self.upblock_rigJnt['combJnt'].attr('t'+ax)
+                    >> fbf_mtx.attr('in3'+idx)
+                )
+            fbf_mtx.attr('o') >> mltmtx/'matrixIn[3]'
+            comb_jnt_pos_mtx = node.MMatrix(fbf_mtx('o'))
+            mltmtx(
+                'matrixIn[4]', list(comb_jnt_pos_mtx.inverse()), type='matrix'
+            )
+            self.upblock_rigJnt['combJnt'].attr('im') >> mltmtx/'matrixIn[5]'
+        else:
+            self.upblock_rigJnt['combJnt'].attr('im') >> mltmtx/'matrixIn[3]'
+        # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        
 
         aim = node.createNode('aimConstraint', p=upblock_bend_ctrls['topCtrl'])
         aim('aimVector', (1, 0, 0))
@@ -452,10 +482,9 @@ class RigCreator(rigScripts.RigCreator):
         return [], []
 
     def createBasicRig(self):
-        r'''
-            @brief  共有部分のリグ作成メソッド。
-            @return None
-        '''
+        r"""
+            共有部分のリグ作成メソッド。
+        """
         unit = self.unit()
         unitname = self.unitName()
         basename = unitname.name()
@@ -1104,25 +1133,22 @@ class RigCreator(rigScripts.RigCreator):
         # =====================================================================
 
     def customPreRigging(self):
-        r'''
-            @brief  ベーシックリグ作成前に呼ばれる上書き用メソッド。
-            @return None
-        '''
+        r"""
+            ベーシックリグ作成前に呼ばれる上書き用メソッド。
+        """
         pass
 
     def customRigging(self):
-        r'''
-            @brief  カスタムのリグを作成するための上書き用。
-            @brief  このクラスのサブクラスは基本的にこのメソッドを上書きする。
-            @return None
-        '''
+        r"""
+            カスタムのリグを作成するための上書き用。
+            このクラスのサブクラスは基本的にこのメソッドを上書きする。
+        """
         pass
 
     def process(self):
-        r'''
-            @brief  実処理部分。基本的にこの部分はサブクラスでは上書きしない。
-            @return None
-        '''
+        r"""
+            実処理部分。基本的にこの部分はサブクラスでは上書きしない。
+        """
         self.customPreRigging()
         self.createBasicRig()
         self.customRigging()

@@ -1,17 +1,18 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     unityLegRig.py
-    @brief    標準的な人の足を作成するための機能を提供するモジュール。
-    @class    Option : 作成時に表示するUI用のクラス。
-    @class    JointCreator : 足のジョイント作成機能を提供するクラス。
-    @class    RigCreator : ここに説明文を記入
-    @date        2017/02/01 1:27[Eske](eske3g@gmail.com)
-    @update      2017/02/04 20:09[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    標準的な人の足を作成するための機能を提供するモジュール。
+    
+    Dates:
+        date:2017/02/01 1:27[Eske](eske3g@gmail.com)
+        update:2025/07/17 20:01 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 import string
 
 from gris3.rigScripts import humanBaseLimbsRig
@@ -27,29 +28,23 @@ NAMERULEOBJ = humanBaseLimbsRig.BlockNameRule(
     'Leg', 'Foot', 'thigh', 'lowleg', 'foot'
 )
 
+
 class Option(humanBaseLimbsRig.Option):
-    r'''
-        @brief       作成時に表示するUI用のクラス。
-        @inheritance humanBaseLimbsRig.Option
-        @date        2017/02/04 18:52[Eske](eske3g@gmail.com)
-        @update      2017/02/04 20:09[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        作成時に表示するUI用のクラス。
+    """
     BlockNameRule = NAMERULEOBJ
 
 
 class JointCreator(humanBaseLimbsRig.JointCreator):
-    r'''
-        @brief       足のジョイント作成機能を提供するクラス。
-        @inheritance humanBaseLimbsRig.JointCreator
-        @date        2017/02/01 1:27[Eske](eske3g@gmail.com)
-        @update      2017/02/04 20:09[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        足のジョイント作成機能を提供するクラス。
+    """
     BlockNameRule = NAMERULEOBJ
     def process(self):
-        r'''
-            @brief  ジョイント作成プロセスとしてコールされる。
-            @return None
-        '''
+        r"""
+            ジョイント作成プロセスとしてコールされる。
+        """
         namerule = self.BlockNameRule
         name = self.basenameObject()
         parent = self.parent()
@@ -134,19 +129,20 @@ class JointCreator(humanBaseLimbsRig.JointCreator):
 
 
 class RigCreator(humanBaseLimbsRig.RigCreator):
-    r'''
-        @brief       ここに説明文を記入
-        @inheritance rigScripts.RigCreator
-        @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-        @update      2017/02/04 20:09[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        足のリグを作成するためのクラス。
+    """
     BlockNameRule = NAMERULEOBJ
     def getXFactor(self, positonIndex):
-        r'''
-            @brief  左右で変化するX軸の値の係数を返す。
-            @param  positonIndex : [int]位置を表す数字
-            @return int
-        '''
+        r"""
+            左右で変化するX軸の値の係数を返す。
+            
+            Args:
+                positonIndex (int):位置を表す数字
+                
+            Returns:
+                int: 左側であれば1，右側であれば-1を返す。
+        """
         return -1 if positonIndex != 3 else 1
 
     def customPreRigging(self):

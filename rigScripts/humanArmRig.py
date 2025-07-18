@@ -1,17 +1,18 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     unityArmRig.py
-    @brief    UNITY用の腕を作成するための機能を提供するモジュール。
-    @class    Option : 作成時に表示するUI用のクラス。
-    @class    JointCreator : 腕のジョイント作成機能を提供するクラス。
-    @class    RigCreator : 腕のコントローラを作成する機能を提供するクラス。
-    @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-    @update      2017/02/07 23:56[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    標準的な人の腕を作成するための機能を提供するモジュール。
+    
+    Dates:
+        date:2017/02/01 1:01[Eske](eske3g@gmail.com)
+        update:2025/07/17 20:11 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 import string
 
 from gris3.rigScripts import humanBaseLimbsRig
@@ -21,27 +22,22 @@ cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'arm'
 
+
 class Option(humanBaseLimbsRig.Option):
-    r'''
-        @brief       作成時に表示するUI用のクラス。
-        @inheritance humanBaseLimbsRig.Option
-        @date        2017/02/04 18:52[Eske](eske3g@gmail.com)
-        @update      2017/02/07 23:56[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        作成時に表示するUI用のクラス。
+    """
     pass
 
+
 class JointCreator(humanBaseLimbsRig.JointCreator):
-    r'''
-        @brief       腕のジョイント作成機能を提供するクラス。
-        @inheritance humanBaseLimbsRig.JointCreator
-        @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-        @update      2017/02/07 23:56[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        腕のジョイント作成機能を提供するクラス。
+    """
     def process(self):
-        r'''
-            @brief  ジョイント作成プロセスとしてコールされる。
-            @return None
-        '''
+        r"""
+            ジョイント作成プロセスとしてコールされる。
+        """
         namerule = self.BlockNameRule
         name = self.basenameObject()
         parent = self.parent()
@@ -99,18 +95,11 @@ class JointCreator(humanBaseLimbsRig.JointCreator):
 
 
 class RigCreator(humanBaseLimbsRig.RigCreator):
-    r'''
-        @brief       腕のコントローラを作成する機能を提供するクラス。
-        @inheritance humanBaseLimbsRig.RigCreator
-        @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-        @update      2017/02/07 23:56[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        腕のコントローラを作成する機能を提供するクラス。
+    """
     AimZFactor = -1
     def customRigging(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
         unit = self.unit()
         unitname = self.unitName()
         basename = unitname.name()

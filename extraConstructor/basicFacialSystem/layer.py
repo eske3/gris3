@@ -318,14 +318,28 @@ class LayerManager(object):
             r.extend(copyNode(child, prefix, r[1]))
         return r
 
-    def setup(self, facialGrp, rootGroup, cageGroup, ctrlParent, animSet):
+    def setup(
+        self,
+        facialGrp, rootGroup, cageGroup, ctrlParent, animSet,
+        layerInitializer=None
+        
+    ):
         r"""
+            facialGrpに対し、登録されたlayerOperator毎に複製を作成する。
+            また、その際各layerOperatorのインスタンスを作成し後の処理のために
+            保持する処理も行う。
+            
+            引数layerInitializerは関数オブジェクトを受け取る。
+            この関数は各layerOperatorインスタン時に呼ばれ、layerOperatorの
+            インスタンスに対して初期化処理を加えたい場合に用いる。
+
             Args:
                 facialGrp (node.Transform):コピー元となる顔メッシュのグループ
                 rootGroup (node.Transform):フェイシャルをまとめるためのグループ
                 cageGroup (node.Transform):ケージを格納するためのグループ
-                ctrlParent (any):
+                ctrlParent (node.Transform):コントローラの親となるノード
                 animSet (grisNode.AnimSet): コントローラを登録するanimSet
+                layerInitializer (function): layerOperatorインスタンス編集用関数
         """
         copied_list = []
         self.__process_objects = []
@@ -344,6 +358,8 @@ class LayerManager(object):
                 lo_obj = l_operator(
                     self.__constructor, self.__extCst, animSet, rootGroup
                 )
+                if layerInitializer:
+                    layerInitializer(lo_obj)
                 lo_obj.setCtrlParent(ctrlParent)
                 self.__process_objects.append(lo_obj)
                 pfx = lo_obj.prefix()

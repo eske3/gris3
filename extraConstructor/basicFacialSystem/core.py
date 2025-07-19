@@ -82,6 +82,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
     Parent = 'head_ctrl_C'
     ParentJoint = 'head_jnt_C'
     EyeHighlightGeoGroup = 'eyeHighLight_grp'
+    LayerInitMethod = 'initFacialLayerOperator'
     IsSetup = False
     DefaultLayerOperatorList = ['BlendShape', 'JawOpener', 'Tweaked']
 
@@ -210,9 +211,14 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         anim_set = cst.createAnimSet('facial')
 
         # FacialGroupをセットアップ用にグループごと複製。======================
+        if hasattr(cst, self.LayerInitMethod):
+            init_method = getattr(cst, self.LayerInitMethod)
+        else:
+            init_method = None
         l_manager = self.layerManager()
         facial_targets, copied_list = l_manager.setup(
-            facial_grp, root_grp, cage_grp, self.Parent, anim_set
+            facial_grp, root_grp, cage_grp, self.Parent, anim_set,
+            init_method
         )
 
         print('# Copied from facial group.'.ljust(80, '='))

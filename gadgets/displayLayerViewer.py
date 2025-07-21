@@ -18,7 +18,7 @@ from collections import OrderedDict
 from maya import cmds, mel
 
 from .. import uilib, lib, node, colorUtil
-from ..uilib import mayaUIlib
+from ..uilib import mayaUIlib, extendedUI
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -30,12 +30,12 @@ ATTR_TABLE['displayType'] = (
     ('uiBtn_displayReference', 2)
 )
 
-
+        
 class LayerStatusStyle(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent=None):
         super(LayerStatusStyle, self).__init__(parent)
         self.__status_icons = [
-            [QtGui.QPixmap(uilib.IconPath(y[0])) for y in x]
+            {y[1] : QtGui.QPixmap(uilib.IconPath(y[0])) for y in x}
             for x in ATTR_TABLE.values()
         ]
 
@@ -46,10 +46,9 @@ class LayerStatusStyle(QtWidgets.QStyledItemDelegate):
                 index (QtCore.QModelIndex):
         """
         if index.parent().model():
-            height = int(option.fontMetrics.boundingRect('f').height() * 2.5)
+            height = int(option.fontMetrics.boundingRect('f').height() * 1.5)
             return QtCore.QSize(option.rect.width(), height)
         return super(LayerStatusStyle, self).sizeHint(option, index)
-
 
     def paint(self, painter, option, index):
         r"""
@@ -72,7 +71,7 @@ class LayerStatusStyle(QtWidgets.QStyledItemDelegate):
         font_m = QtGui.QFontMetrics(font)
         text_rect = font_m.boundingRect('K')
 
-        icon_size = int(rect.height() * 0.45)
+        icon_size = int(rect.height() * 0.6)
         width = int(icon_size * 1.1)
         top = rect.top() + int((rect.height() - icon_size) * 0.5)
         left = rect.left()
@@ -141,12 +140,12 @@ class DisplayerLayerView(QtWidgets.QTreeView):
         self.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         self.clicked.connect(self.updateSelectedStatus)
         self.setItemDelegate(LayerStatusStyle())
-        model = QtGui.QStandardItemModel(0, 1)
-        model.setHeaderData(0, QtCore.Qt.Horizontal, 'displayLayer')
-        sel_model = QtCore.QItemSelectionModel(model)
-        self.setSelectionModel(sel_model)
 
-        self.setModel(model)
+        # model = QtGui.QStandardItemModel(0, 1)
+        # model.setHeaderData(0, QtCore.Qt.Horizontal, 'displayLayer')
+        # sel_model = QtCore.QItemSelectionModel(model)
+        # self.setSelectionModel(sel_model)
+        # self.setModel(model)
 
     def listDisplayLayers(self):
         r"""
@@ -241,6 +240,120 @@ class DisplayerLayerView(QtWidgets.QTreeView):
         return
 
 
+class DisplayLayerFilteredView(extendedUI.FilteredView):
+    def createView(self):
+        r"""
+            再実装用メソッド。任意のViewを作成し返す。
+            
+            Returns:
+                QTreeView/QListView/QTableView:
+        """
+        return DisplayerLayerView()
+
+    def createModel(self):
+        r"""
+            再実装用メソッド。任意のItemModelを作成し返す。
+            
+            Returns:
+                QStandardItemModel:
+        """
+        model = QtGui.QStandardItemModel(0, 1)
+        model.setHeaderData(0, QtCore.Qt.Horizontal, 'displayLayer')
+        # sel_model = QtCore.QItemSelectionModel(model)
+        # self.setSelectionModel(sel_model)
+        # self.setModel(model)
+        return model
+
+    def listDisplayLayers(self):
+        r"""
+            シーン中のディスプレイレイヤーをリストする。
+            戻り値はネームスペースごとに区分けされた辞書オブジェクトとなる。
+            またdefaultのレイヤーは含まれない。
+
+            Returns:
+                dict:
+        """
+        categolized_layers = {}
+        default_layers = node.ls(type='displayLayer', ud=True)
+        for n in node.ls(type='displayLayer'):
+            if n in default_layers:
+                continue
+            categolized_layers.setdefault(n.namespace(), []).append(n)
+        return categolized_layers
+
+    def updateLayerStatus(self):
+        model = self.view().model().sourceModel()
+        for row in range(model.rowCount()):
+            namespace_item = model.item(row, 0)
+            for c_row in range(namespace_item.rowCount()):
+                item = namespace_item.child(c_row, 0)
+                l = node.asObject(item.data(QtCore.Qt.UserRole+1))
+                if not l:
+                    continue
+                for x, attr in enumerate(
+                    ATTR_TABLE.keys(), 2
+                ):
+                    item.setData(int(l(attr)), QtCore.Qt.UserRole + x)
+                
+                if l('overrideRGBColors'):
+                    color = l('overrideColorRGB')[0]
+                else:
+                    color_index = l('color')
+                    if color_index == 0:
+                        color = None
+                    else:
+                        color = colorUtil.NewColorIndex[color_index]
+                item.setData(color, QtCore.Qt.UserRole + x + 1)        
+
+    def reload(self):
+        model = self.view().model().sourceModel()
+        model.removeRows(0, model.rowCount())
+        
+        layers = self.listDisplayLayers()
+        referencelist = list(layers.keys())
+        referencelist.sort()
+        for row, ref in enumerate(referencelist):
+            # 各リファレンスのネームスペースごとのラベルアイテムを作成
+            label = 'Current Scene' if ref == '' else '+ ' + ref
+            ref_item = QtGui.QStandardItem(label)
+            ref_item.setData(ref)
+            model.setItem(row, 0, ref_item)
+
+            # レイヤーを追加する。
+            for r, l in enumerate(layers[ref]):
+                item = QtGui.QStandardItem(l.rsplit(':', 1)[-1])
+                item.setData(l())
+                ref_item.setChild(r, 0, item)
+        self.updateLayerStatus()
+
+    def updateSelectedStatus(self, index):
+        r"""
+            Args:
+                index (QtCore.QModelIndex):
+        """
+        if not index:
+            return
+        if not index.parent().model():
+            # ネームスペース階層の場合、展開・非展開の状態を更新。
+            self.setExpanded(index, self.isExpanded(index) == False)
+            return
+        
+    def listSelectedLayers(self):
+        r"""
+            現在選択されているアイテムのうち、ディスプレイレイヤの名前だけ
+            返す。
+
+            Returns:
+                list:
+        """
+        layers = []
+        for index in self.view().selectionModel().selectedIndexes():
+            if not index.parent().model():
+                continue
+            layers.append(index.data(QtCore.Qt.UserRole + 1))
+        return layers
+
+
 class DisplayLayerViewer(QtWidgets.QWidget):
     def __init__(self, parent=None):
         r"""
@@ -253,7 +366,8 @@ class DisplayLayerViewer(QtWidgets.QWidget):
         reload_btn = uilib.OButton(uilib.IconPath('uiBtn_reload'))
         reload_btn.clicked.connect(self.reload)
         
-        self.__view = DisplayerLayerView()
+        # self.__view = DisplayerLayerView()
+        self.__view = DisplayLayerFilteredView()
         editor = StatusEditor()
         editor.buttonClicked.connect(self.updateSelectedLayer)
 

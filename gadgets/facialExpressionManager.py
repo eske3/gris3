@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ここに説明文を記入
+    任意のブレンドシェイプアトリビュートの組み合わせを表情として登録、再現する
+    機能を提供するGUIモジュール。
     
     Dates:
         date:2017/07/06 5:35[Eske](eske3g@gmail.com)
@@ -95,7 +96,12 @@ class ManagerEngine(object):
 
 
 class Settings(QtWidgets.QGroupBox):
+    r"""
+        表情制御用ブレンドシェイプの設定や表情リストの編集ボタンなどの
+        各種設定用GUIを提供するクラス。
+    """
     reloadButtonClicked = QtCore.Signal(str)
+
     def __init__(self, parent=None):
         r"""
             Args:
@@ -133,8 +139,13 @@ class Settings(QtWidgets.QGroupBox):
 
 
 class VirtualSliderButton(QtWidgets.QPushButton):
+    r"""
+        表情の切り替えや、中ボタンによる表情ブレンド確認用ヴァーチャルスライダ
+        機能を有するボタン機能を提供する。
+    """
     facialChanged = QtCore.Signal(str)
     ActiveColor = QtGui.QColor(16, 64, 140)
+    ProgrammedActiveColor = QtGui.QColor(105, 72, 138)
 
     def __init__(self, manager, expressionName, parent=None):
         r"""
@@ -177,9 +188,11 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         """
         return self.__manager
 
-    def applyValueFromCurrent(self):
+    def applyValueFromCurrent(self, status=1):
         with node.DoCommand():
-            self.manager().setExpressionFromCurrentState(self.expression())
+            self.manager().setExpressionFromCurrentState(
+                self.expression(), status
+            )
 
     def __changeExpression(self):
         with node.DoCommand():
@@ -345,9 +358,13 @@ class ExpressionButton(QtWidgets.QWidget):
         self.__v_btn.setCheckable(True)
         self.__st_btn = uilib.OButton(uilib.IconPath('uiBtn_save'))
         self.__st_btn.clicked.connect(self.storeValue)
-        self.__active_color = [
-            getattr(self.__v_btn.ActiveColor, x)() for x in
-            ['red', 'green', 'blue']
+        get_color_as_list = lambda qcolor : [
+            getattr(qcolor, x)() for x in ['red', 'green', 'blue']
+        ]
+        self.__status_colors = [
+            [],
+            get_color_as_list(self.__v_btn.ActiveColor),
+            get_color_as_list(self.__v_btn.ProgrammedActiveColor),
         ]
 
         layout = QtWidgets.QHBoxLayout(self)
@@ -361,7 +378,7 @@ class ExpressionButton(QtWidgets.QWidget):
     def refreshState(self, useCache=True):
         data = self.__v_btn.manager().listExpressionData(useCache=useCache)
         val = data.get(self.__v_btn.expression())
-        color = [] if val is None else self.__active_color
+        color = self.__status_colors[val.status()]
         self.__st_btn.setBgColor(*color)
 
     def storeValue(self):
@@ -372,7 +389,10 @@ class ExpressionButton(QtWidgets.QWidget):
         return self.__v_btn
 
 
-class FacialExpressionView(QtWidgets.QScrollArea):
+class FacialExpressionView(QtWidgets.QWidget):
+    r"""
+        表情確認・登録用の一覧機能を提供するクラス。
+    """
     def __init__(self, parent=None):
         r"""
             Args:
@@ -380,15 +400,73 @@ class FacialExpressionView(QtWidgets.QScrollArea):
         """
         super(FacialExpressionView, self).__init__(parent)
         self.__button_col = None
+        self.__filter_activation = False
+        self.__buttons = {}
+        self.__scroller = QtWidgets.QScrollArea()
         w = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(w)
-        self.setWidgetResizable(True)
-        self.setWidget(w)
+        self.__view_layout = QtWidgets.QVBoxLayout(w)
+        self.__scroller.setWidgetResizable(True)
+        self.__scroller.setWidget(w)
+
+        self.__filter_grp = QtWidgets.QWidget()
+        self.__filter_edit = QtWidgets.QLineEdit()
+        self.__filter_edit.textEdited.connect(self.updateViewFilter)
+        hide_btn = uilib.OButton(uilib.IconPath('uiBtn_x'))
+        hide_btn.clicked.connect(self.disableFilter)
+        layout = QtWidgets.QHBoxLayout(self.__filter_grp)
+        layout.addWidget(self.__filter_edit)
+        layout.addWidget(hide_btn)
+        self.__filter_grp.hide()
+
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.__scroller)
+        layout.addWidget(self.__filter_grp)
+
+        self.__scroller.installEventFilter(self)
+        self.__filter_edit.installEventFilter(self)
+
+    def viewLayout(self):
+        return self.__view_layout
 
     def clear(self):
-        layout = self.widget().layout()
+        layout = self.viewLayout()
         uilib.clearLayout(layout)
         return layout
+    
+
+    def activateFilter(self, status):
+        self.__filter_grp.setHidden(status == False)
+        self.__filter_activation = True
+        if status:
+            self.__filter_edit.setFocus()
+            self.__filter_edit.selectAll()
+            self.updateViewFilter(self.__filter_edit.text())
+        else:
+            self.__scroller.setFocus()
+            self.updateViewFilter('')
+        self.__filter_activation = status
+
+    def updateViewFilter(self, text):
+        if not self.__filter_activation:
+            return
+        if not text:
+            for btn in self.__buttons.values():
+                btn.show()
+            return
+        args = text.lower().split()
+        for key, btn in self.__buttons.items():
+            s_text = key.lower()
+            hidden = True
+            for arg in args:
+                if arg in s_text:
+                    hidden = False
+                    break
+            self.__buttons[key].setHidden(hidden)
+
+    def disableFilter(self):
+        self.activateFilter(False)
 
     def reload(self, managerEngine):
         r"""
@@ -398,11 +476,26 @@ class FacialExpressionView(QtWidgets.QScrollArea):
         layout = self.clear()
         root = managerEngine.getManagerNode()
         self.__button_col = QtWidgets.QButtonGroup(self)
+        self.__buttons = {}
         for exp in root.listExpressions():
             btn = ExpressionButton(root, exp)
             layout.addWidget(btn)
             self.__button_col.addButton(btn.virtualButton())
+            self.__buttons[exp] = btn
         layout.addStretch()
+
+    def eventFilter(self, obj, event):
+        if event.type() == QtCore.QEvent.KeyPress:
+            key = event.key()
+            if key == QtCore.Qt.Key_Tab:
+                self.activateFilter(True)
+                return True
+            elif key == QtCore.Qt.Key_Escape:
+                self.activateFilter(False)
+                return True
+            
+        return super(FacialExpressionView, self).eventFilter(obj, event)
+
 
 
 class ExpressionEditor(QtWidgets.QWidget):

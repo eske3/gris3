@@ -4,7 +4,7 @@
 r"""
     Dates:
         date:2024/08/26 11:39 Eske Yoshinob[eske3g@gmail.com]
-        update:2025/04/01 13:26 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/07/22 13:35 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2024 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -16,9 +16,10 @@ import json
 from .. import node, grisNode
 
 cmds = node.cmds
-Version = '1.0.0'
+Version = '1.0.1'
 GroupPrefix = '__grsFacialMemoryGrp__'
 TagAttr = '__grsFacialName__'
+VersionAttr = 'grsFacialMemoryVersion'
 
 
 def listBlendShapeValues(blendShapeName, removeZeroValue=True):
@@ -47,6 +48,37 @@ def listBlendShapeValues(blendShapeName, removeZeroValue=True):
     return datalist
 
 
+class BlendShapeData(dict):
+    r"""
+        ブレンドシェイプの表情を持つためのカスタム辞書オブジェクト
+    """
+    def __init__(self, dic_data):
+        r"""
+            Args:
+                dic_data (dict):
+        """
+        super(BlendShapeData, self).__init__(dic_data)
+        self.__status = 0
+
+    def setStatus(self, value):
+        r"""
+            表情データの登録状態を設定する。
+
+            Args:
+                value (int):
+        """
+        self.__status = value
+        
+    def status(self):
+        r"""
+            登録された表情データの状態を返す。
+
+            Returns:
+                int:
+        """
+        return self.__status
+
+
 class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
     r"""
         セットアップデータを格納するgroupに関するクラス
@@ -55,7 +87,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
     NodeType = 'geometryVarGroup'
     BasicAttrs = [
         (
-            {'ln':'grsFacialMemoryVersion', 'dt':'string'}, {'l':True},
+            {'ln':VersionAttr, 'dt':'string'}, {'l':True},
             [Version, {'type':'string'}]
         ),
         (
@@ -68,6 +100,10 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         )
     ]
     def __init__(self, nodeName):
+        r"""
+            Args:
+                nodeName (any):
+        """
         super(FacialMemoryManagerRoot, self).__init__()
         self.__data_cache = None
 
@@ -122,6 +158,9 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             戻り値は辞書型で、表情名をキーとし、それに対応するblendShapeの
             アトリビュート名と値の辞書を値としたデータ。
             
+            Args:
+                useCache (bool):
+                
             Returns:
                 dict:
         """
@@ -130,7 +169,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         expressions = self.listExpressions()
         datalist = OrderedDict()
         for exp, data in expressions.items():
-            datalist[exp] = data.values()
+            datalist[exp] = data.data()
         if useCache:
             self.__data_cache = datalist
         else:
@@ -145,7 +184,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             
             Args:
                 expressionName (str):
-            
+                
             Returns:
                 DataTransform:
         """
@@ -158,13 +197,14 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         exp.setExpression(expressionName)
         return exp
 
-    def setExpressionFromCurrentState(self, expression):
+    def setExpressionFromCurrentState(self, expression, status=1):
         r"""
             現在のblendShapeのアトリビュート値を用いて、引数expressionで
             指定した表情データとして登録する。
             
             Args:
                 expression (str):設定したい表情名
+                status (any):
         """
         bs_name = self.blendShapeName()
         if not bs_name:
@@ -172,6 +212,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         values = listBlendShapeValues(bs_name)
         exp = self.addExpression(expression)
         exp.setValues(values)
+        exp.setStatus(status)
 
     def clearExpressions(self):
         r"""
@@ -193,7 +234,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         if removed:
             cmds.delete(removed)
 
-    def setExpressionFromDataList(self, datalist):
+    def setExpressionFromDataList(self, datalist,  status=1):
         r"""
             引数datalistで指定した辞書データを元に、表情と対応値を一括設定する。
             datalistは
@@ -203,12 +244,14 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             
             Args:
                 datalist (dict):
+                status (int):登録状態を指定する
         """
         for exp, data in datalist.items():
             exp = self.addExpression(exp)
             exp.setValues(data)
+            exp.setStatus(status)
 
-    def updateExpressionFromDataList(self, expressionlist):
+    def updateExpressionFromDataList(self, expressionlist, status=1):
         r"""
             引数expressionlistで指定された表情名のリストで更新を行う。
             expressionlist内に既存の表情があった場合、その値は保持する。
@@ -217,10 +260,11 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             それ以外の場合は1を返す。
             
             Args:
-                expressionlist (list): 表情名のリスト
-            
+                expressionlist (list):表情名のリスト
+                status (int):登録状態を指定する
+                
             Returns:
-                int: 更新の必要がなかった場合は0を、更新された場合は1を返す。
+                int:更新の必要がなかった場合は0を、更新された場合は1を返す。
         """
         datalist = self.listExpressionData()
         if datalist and len(expressionlist) == len(datalist):
@@ -232,8 +276,9 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         self.clearExpressions()
         new_data = OrderedDict()
         for exp in expressionlist:
-            new_data[exp] = datalist.get(exp, None)
-        self.setExpressionFromDataList(new_data)
+            data = datalist.get(exp, None)
+            new_data[exp] = data
+        self.setExpressionFromDataList(new_data, status)
         return 1
 
     def renameExpressionFromDataList(self, expressionlist):
@@ -245,10 +290,10 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             それ以外の場合は1を返す。
             
             Args:
-                expressionlist (list): 表情名のリスト
-            
+                expressionlist (list):表情名のリスト
+                
             Returns:
-                int: 更新の必要がなかった場合は0を、更新された場合は1を返す。
+                int:更新の必要がなかった場合は0を、更新された場合は1を返す。
         """
         datalist = self.listExpressions()
         if not datalist:
@@ -267,7 +312,6 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             o_exp_data[1].setExpression(n_exp)
             cnt = 1
         return cnt
-
         
     def applyExpression(self, expression):
         r"""
@@ -294,15 +338,18 @@ class DataTransform(node.Transform, grisNode.AbstractGrisNode):
         表情を構成するアトリビュート名と値の情報を持つデータを制御するクラス。
     """
     NodeType = 'transform'
+    StatusAttr = 'grsExpressionStat'
     BasicAttrs = [
         ({'ln':TagAttr, 'dt':'string'}, {'l':True}, None),
         ({'ln':'grsExpressionValues', 'dt':'string'}, {'l':True}, None),
+        ({'ln':StatusAttr, 'at':'long'}, {'l':True}, [0, {}]),
     ]
+    NotRegistared, Registared, RegistaredByProgram = range(3)
 
     def setExpression(self, expression):
         r"""
             表情名を設定する。
-
+            
             Args:
                 expression (str):
         """
@@ -312,7 +359,7 @@ class DataTransform(node.Transform, grisNode.AbstractGrisNode):
     def expression(self):
         r"""
             設定されている表情名を返す。
-
+            
             Returns:
                 str:
         """
@@ -325,7 +372,7 @@ class DataTransform(node.Transform, grisNode.AbstractGrisNode):
                 キー：blendShapeのアトリビュート名
                 値：対応するアトリビュートの値
             とする辞書オブジェクト。
-
+            
             Args:
                 datalist (dict):
         """
@@ -340,7 +387,7 @@ class DataTransform(node.Transform, grisNode.AbstractGrisNode):
                 キー：blendShapeのアトリビュート名
                 値：対応するアトリビュートの値
             とする辞書オブジェクト。
-
+            
             Returns:
                 dict:
         """
@@ -350,6 +397,47 @@ class DataTransform(node.Transform, grisNode.AbstractGrisNode):
         data = json.loads(data_text)
         return data
 
+    def status(self):
+        r"""
+            登録状態を返す。
+            戻り値は以下の意味を表す。
+                NotRegistared(0)：未登録
+                Registared(1)：登録済み
+                RegistaredByProgram(2)：プログラムによる登録済み
+            
+            Returns:
+                int:
+        """
+        return self(self.StatusAttr)
+
+    def setStatus(self, value):
+        r"""
+            登録状態を設定する。
+            設定する値の意味はそれぞれ。
+                NotRegistared(0)：未登録
+                Registared(1)：登録済み
+                RegistaredByProgram(2)：プログラムによる登録済み
+            
+            Args:
+                value (int):
+        """
+        self(self.StatusAttr, value)
+
+    def data(self):
+        r"""
+            表情を構成するblendShapeのアトリビュート名と値の辞書を返す。
+            内容はvaluesの戻りと同様だが、戻り値の辞書オブジェクトにstatus
+            アトリビュートが追加されている点が異なる。
+            stautsアトリビュートはstatusメソッドによって得られる値を格納した
+            変数。
+            
+            Returns:
+                dict:カスタムアトリビュートが追加された辞書オブジェクト
+        """
+        values = BlendShapeData(self.values())
+        values.setStatus(self.status())
+        return values
+
 
 def createManagerNode(parent=None):
     r"""
@@ -357,7 +445,7 @@ def createManagerNode(parent=None):
         
         Args:
             parent (str):
-
+            
         Returns:
             FacialMemoryManagerRoot:
     """
@@ -370,9 +458,40 @@ def listManagerNode():
         フェイシャル情報を保持するノードを返す。
         
         Returns:
-            FacialMemoryManagerRoot:
+            list(FacialMemoryManagerRoot):
     """
-    root = grisNode.listNodes(FacialMemoryManagerRoot)
-    if not root:
+    roots = grisNode.listNodes(FacialMemoryManagerRoot)
+    if not roots:
         return
-    return root
+    return roots
+
+
+def update_data_v1_0_1():
+    update_targets = []
+    for root in listManagerNode():
+        version_str = root(VersionAttr)
+        mjr, mnr, debug = [int(x) for x in version_str.split('.')]
+        if mjr == 1 and mnr == 0 and debug < 1:
+            update_targets.append(root)
+    if not update_targets:
+        return
+    for tgt in update_targets:
+        for trs in tgt.children():
+            if (
+                not trs.hasAttr('grsExpressionValues')
+                or trs.hasAttr(DataTransform.StatusAttr)
+            ):
+                continue
+            value = trs('grsExpressionValues')
+            plug = trs.addIntAttr(
+                DataTransform.StatusAttr, default=0, min=None, max=None, k=False
+            )
+            plug.set(1 if value else 0)
+            plug.setLock(True)
+        with tgt.attr(VersionAttr) as attr:
+            attr.set('1.0.1', type='string')
+    
+
+
+
+

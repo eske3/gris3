@@ -7,7 +7,7 @@ r"""
     
     Dates:
         date:2017/07/06 5:35[Eske](eske3g@gmail.com)
-        update:2025/05/27 14:24 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/07/22 17:59 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -62,7 +62,7 @@ class ManagerEngine(object):
             作成する。
             
             Args:
-                autoCreation (bool): 
+                autoCreation (bool):
                 
             Returns:
                 tools.facialMemoryManager.FacialMemoryManagerRoot:
@@ -86,7 +86,7 @@ class ManagerEngine(object):
             情報に基づいて更新する。
             
             Returns:
-                bool: 更新した場合はTrueを返す。
+                bool:更新した場合はTrueを返す。
         """
         manager = self.getManagerNode(False)
         if not manager:
@@ -189,6 +189,12 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         return self.__manager
 
     def applyValueFromCurrent(self, status=1):
+        r"""
+            現在のblendShapeの状態を表情として登録する。
+            
+            Args:
+                status (any):
+        """
         with node.DoCommand():
             self.manager().setExpressionFromCurrentState(
                 self.expression(), status
@@ -200,6 +206,9 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         self.facialChanged.emit(self.expression())
 
     def setup(self):
+        r"""
+            表情をヴァーチャルスライダで操作するための事前準備を行う。
+        """
         manager = self.manager()
         values = manager.listExpressionData().get(self.expression())
         bs = manager.blendShape()
@@ -225,6 +234,9 @@ class VirtualSliderButton(QtWidgets.QPushButton):
 
     def changeValue(self, ratio):
         r"""
+            任意の割合で、元表情からこのボタンの表情への変化を行う。
+            setupメソッドが事前に実行されている必要がある。
+            
             Args:
                 ratio (float):
         """
@@ -249,6 +261,15 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         self.__param_range = []
 
     def expressionToClipboard(self, selectionFlags={}):
+        r"""
+            表情名をクリップボードへ保存する。
+            また、合わせて表情データノードの選択も行なう。
+            引数selectionFlagsはノードを選択する際の引数で、cmds.selectの
+            に渡される。
+
+            Args:
+                selectionFlags (dict):
+        """
         expression = self.expression()
         data = self.manager().listExpressions().get(expression)
         if not data:
@@ -396,16 +417,31 @@ class ExpressionButton(QtWidgets.QWidget):
         self.refreshState()
 
     def refreshState(self, useCache=True):
+        r"""
+            ボタンの表示状態を表情データの状態に応じて更新する。
+
+            Args:
+                useCache (bool):表情データのキャッシュをい使用するかどうか
+        """
         data = self.__v_btn.manager().listExpressionData(useCache=useCache)
         val = data.get(self.__v_btn.expression())
         color = self.__status_colors[val.status()]
         self.__st_btn.setBgColor(*color)
 
     def storeValue(self):
+        r"""
+            現在のblendShapeの状態を表情として登録し、GUIを更新する。
+        """
         self.__v_btn.applyValueFromCurrent()
         self.refreshState(False)
 
     def virtualButton(self):
+        r"""
+            このウィジェットが持つヴァーチャルボタンを返す。
+
+            Returns:
+                VirtualSliderButton:
+        """
         return self.__v_btn
 
 
@@ -455,6 +491,12 @@ class FacialExpressionView(QtWidgets.QWidget):
         return layout
 
     def activateFilter(self, status):
+        r"""
+            表示フィルタを機能させる。
+
+            Args:
+                status (bool):
+        """
         self.__filter_grp.setHidden(status == False)
         self.__filter_activation = True
         if status:
@@ -467,6 +509,12 @@ class FacialExpressionView(QtWidgets.QWidget):
         self.__filter_activation = status
 
     def updateViewFilter(self, text):
+        r"""
+            与えられた文字列に応じてビューの表示フィルタを行なう。
+
+            Args:
+                text (str):
+        """
         if not self.__filter_activation:
             return
         if not text:
@@ -484,6 +532,9 @@ class FacialExpressionView(QtWidgets.QWidget):
             self.__buttons[key].setHidden(hidden)
 
     def disableFilter(self):
+        r"""
+            表示フィルタを無効にし、filter用テキスト入力GUIを隠す。
+        """
         self.activateFilter(False)
 
     def reload(self, managerEngine):
@@ -503,6 +554,11 @@ class FacialExpressionView(QtWidgets.QWidget):
         layout.addStretch()
 
     def eventFilter(self, obj, event):
+        r"""
+            Args:
+                obj (QtWidgets.QWidget):
+                event (QtCore.QEvent):
+        """
         if event.type() == QtCore.QEvent.KeyPress:
             key = event.key()
             if key == QtCore.Qt.Key_Tab:
@@ -511,12 +567,13 @@ class FacialExpressionView(QtWidgets.QWidget):
             elif key == QtCore.Qt.Key_Escape:
                 self.activateFilter(False)
                 return True
-            
         return super(FacialExpressionView, self).eventFilter(obj, event)
 
 
-
 class ExpressionEditor(QtWidgets.QWidget):
+    r"""
+        表情リストの編集を行なうためのGUIを提供するクラス。
+    """
     editingFinished = QtCore.Signal(int, list)
 
     def __init__(self, parent=None):
@@ -578,7 +635,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
             ManagerEngine
             のインスタンスを渡す。
             指定がない場合はデフォルトではManagerEngineクラスが使用される。
-
+            
             Args:
                 managerEngine (ManagerEngine):
                 parent (QtWidgets.QWidget):親ウィジェット
@@ -609,7 +666,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
     def setManagerEngine(self, managerEngine=None):
         r"""
             表情管理ノードを取得するためのオブジェクトを設定する。
-
+            
             Args:
                 managerEngine (ManagerEngine):
         """
@@ -620,7 +677,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
     def managerEngine(self):
         r"""
             設定された表情管理ノードを取得するためのオブジェクトを返す。
-
+            
             Returns:
                 ManagerEngine:
         """
@@ -629,7 +686,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
     def settings(self):
         r"""
             設定操作を行うためのGUIを返す。
-
+            
             Returns:
                 Settings:
         """
@@ -637,14 +694,20 @@ class FacialExpressionManager(QtWidgets.QWidget):
 
     def facialView(self):
         r"""
-            設定操作を行うためのGUIを返す。
-
+            表情登録・操作を行なうためのビューGUIを返す。
+            
             Returns:
-                Settings:
+                FacialExpressionView:
         """
         return self.__f_view
     
     def expressionEditor(self):
+        r"""
+            表情リスト編集GUIを返す。
+            
+            Returns:
+                ExpressionEditor:
+        """
         return self.__exp_editor
     
     def tab(self):
@@ -659,6 +722,8 @@ class FacialExpressionManager(QtWidgets.QWidget):
 
     def setBlendShape(self, blendShapeName):
         r"""
+            操作対象となるブレンドシェイプを設定し、GUIを更新する。
+
             Args:
                 blendShapeName (str):
         """
@@ -677,6 +742,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
     def expressionListMode(self, mode, textlist):
         r"""
             Args:
+                mode (int):
                 textlist (list):
         """
         result = 0
@@ -726,7 +792,7 @@ def showWindow():
         ウィンドウを作成するためのエントリ関数。
         
         Returns:
-            QtWidgets.QWidget:
+            MainGUI:
     """
     widget = MainGUI(mayaUIlib.MainWindow)
     widget.resize(uilib.hires(300), uilib.hires(450))

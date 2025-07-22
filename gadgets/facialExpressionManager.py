@@ -212,7 +212,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         manager = self.manager()
         values = manager.listExpressionData().get(self.expression())
         bs = manager.blendShape()
-        if not values:
+        if values is None:
             self.__param_range = {'blendShape': bs, 'values':{}}
             return
         from collections import OrderedDict
@@ -425,7 +425,8 @@ class ExpressionButton(QtWidgets.QWidget):
         """
         data = self.__v_btn.manager().listExpressionData(useCache=useCache)
         val = data.get(self.__v_btn.expression())
-        color = self.__status_colors[val.status()]
+        color_index =  0 if val is None else val.status()
+        color = self.__status_colors[color_index]
         self.__st_btn.setBgColor(*color)
 
     def storeValue(self):

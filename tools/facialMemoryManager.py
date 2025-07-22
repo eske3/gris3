@@ -448,7 +448,10 @@ class DataTransform(node.Transform, grisNode.AbstractGrisNode):
             Returns:
                 dict:カスタムアトリビュートが追加された辞書オブジェクト
         """
-        values = BlendShapeData(self.values())
+        v = self.values()
+        if v is None:
+            return v
+        values = BlendShapeData(v)
         values.setStatus(self.status())
         return values
 

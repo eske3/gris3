@@ -248,15 +248,35 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         self.__start_pos = None
         self.__param_range = []
 
+    def expressionToClipboard(self, selectionFlags={}):
+        expression = self.expression()
+        data = self.manager().listExpressions().get(expression)
+        if not data:
+            return
+        node.cmds.select(data, **selectionFlags)
+        QtWidgets.QApplication.clipboard().setText(expression)
+
     def mousePressEvent(self, event):
         r"""
             Args:
                 event (QtCore.QEvent):
         """
-        if event.button() != QtCore.Qt.MidButton:
+        button = event.button()
+        self.__start_pos = None
+        if button == QtCore.Qt.MidButton:
+            self.__start_pos = event.pos()
+        elif button == QtCore.Qt.RightButton:
+            mod = event.modifiers()
+            flags = {'ne':True}
+            if mod == QtCore.Qt.ControlModifier:
+                flags['d'] = True
+            elif mod == QtCore.Qt.ControlModifier | QtCore.Qt.ShiftModifier:
+                flags['add'] = True
+            elif mod == QtCore.Qt.ShiftModifier:
+                flags['tgl'] = True
+            self.expressionToClipboard(flags)
+        else:
             super(VirtualSliderButton, self).mousePressEvent(event)
-            return
-        self.__start_pos = event.pos()
 
     def mouseMoveEvent(self, event):
         r"""
@@ -418,7 +438,6 @@ class FacialExpressionView(QtWidgets.QWidget):
         layout.addWidget(hide_btn)
         self.__filter_grp.hide()
 
-
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.__scroller)
@@ -434,7 +453,6 @@ class FacialExpressionView(QtWidgets.QWidget):
         layout = self.viewLayout()
         uilib.clearLayout(layout)
         return layout
-    
 
     def activateFilter(self, status):
         self.__filter_grp.setHidden(status == False)

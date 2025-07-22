@@ -485,7 +485,11 @@ class FacialExpressionView(QtWidgets.QWidget):
     def viewLayout(self):
         return self.__view_layout
 
+    def isFilterActivated(self):
+        return self.__filter_grp.isVisible()
+
     def clear(self):
+        self.disableFilter()
         layout = self.viewLayout()
         uilib.clearLayout(layout)
         return layout
@@ -535,13 +539,15 @@ class FacialExpressionView(QtWidgets.QWidget):
         r"""
             表示フィルタを無効にし、filter用テキスト入力GUIを隠す。
         """
-        self.activateFilter(False)
+        if self.isFilterActivated():
+            self.activateFilter(False)
 
     def reload(self, managerEngine):
         r"""
             Args:
                 managerEngine (ManagerEngine):
         """
+        is_activated = self.isFilterActivated()
         layout = self.clear()
         root = managerEngine.getManagerNode()
         self.__button_col = QtWidgets.QButtonGroup(self)
@@ -552,6 +558,23 @@ class FacialExpressionView(QtWidgets.QWidget):
             self.__button_col.addButton(btn.virtualButton())
             self.__buttons[exp] = btn
         layout.addStretch()
+        if is_activated:
+            self.activateFilter(True)
+
+    def updateButtonStatus(self, expressionList):
+        r"""
+            任意の表情のボタンのステータスを最新の状態に更新する。
+            reloadに比べこちらの方がかなり高速なため、すでに表情リストが
+            存在する場合はこちらのメソッドの使用を推奨。
+
+            Args:
+                expressionList (list):
+        """
+        for exp in expressionList:
+            button = self.__buttons.get(exp)
+            if not button:
+                continue
+            button.refreshState(True)
 
     def eventFilter(self, obj, event):
         r"""
@@ -720,6 +743,17 @@ class FacialExpressionManager(QtWidgets.QWidget):
         me.update()
         self.facialView().reload(me)
 
+    def updateViewStatus(self, expressionList):
+        r"""
+            任意の表情のボタンのステータスを最新の状態に更新する。
+            reloadに比べこちらの方がかなり高速なため、すでに表情リストが
+            存在する場合はこちらのメソッドの使用を推奨。
+
+            Args:
+                expressionList (list):
+        """
+        self.facialView().updateButtonStatus(expressionList)
+
     def setBlendShape(self, blendShapeName):
         r"""
             操作対象となるブレンドシェイプを設定し、GUIを更新する。
@@ -728,10 +762,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
                 blendShapeName (str):
         """
         self.settings().setBlendShape(blendShapeName)
-        me = self.managerEngine()
-        me.setBlendShapeName(blendShapeName)
-        me.update()
-        self.facialView().reload(me)
+        self.reloadView()
 
     def editExpressionMode(self):
         tab = self.tab().moveTo(1)

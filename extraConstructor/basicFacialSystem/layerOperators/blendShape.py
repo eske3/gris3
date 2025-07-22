@@ -59,6 +59,42 @@ class BlendShape(layer.LayerOperator):
         ('extra', {'shape':'facialOther'}),
     ])
 
+    def __init__(self, constructor, extCst, animSet, root_group):
+        r"""
+            Args:
+                constructor (constructors.BasicConstructor):
+                extCst (basicfacialSystem.core.ExtraConstructor):
+                animSet (grisNode.AnimSet):
+                root_group (node.Transform):
+        """
+        super(BlendShape, self).__init__(
+            constructor, extCst, animSet, root_group
+        )
+        self.__connected_plugs = {}
+        if not constructor:
+            return
+        constructor.bfsGetBlendShapeAttrInfo = self.getBlendShapeAttrInfo
+
+    def getBlendShapeAttrInfo(self):
+        r"""
+            コントローラとブレンドシェイプの、どのアトリビュート同士が
+            接続されているかの情報と、そのブレンドシェイプターゲットの
+            名前の情報を返す。
+            戻り値は
+                キー：コントローラのアトリビュート名
+                値：　接続されているblendShapeのアトリビュート名と
+                　　　そのターゲットグループ名を持つ辞書オブジェクト
+            を持つ辞書オブジェクト。
+            値の辞書オブジェクトには
+                blendShapeAttr : ブレンドシェイプのアトリビュート名
+                target : ブレンドシェイプに用いられたターゲットグループ名
+            がそれぞれアクセスできるようになっている。
+            
+            Returns:
+                dict:
+        """
+        return {x: y for x, y in self.__connected_plugs.items()}
+
     def preSetup(self):
         cst = self.constructor()
         anim_set = self.animSet()
@@ -157,6 +193,10 @@ class BlendShape(layer.LayerOperator):
                             name+pos, min=-2, max=3, smn=0, smx=1, default=0
                         )
                         plug >> bs_attr
+                        self.__connected_plugs[plug.name()] = {
+                            'blendShapeAttr': bs_attr.name(),
+                            'target': target(),
+                        }
                     index += 1
 
         # 口・眉用の特殊処理。=================================================
@@ -167,7 +207,7 @@ class BlendShape(layer.LayerOperator):
             for position in self.Categories[key].get('pos', ['']):
                 p_key = key + position
                 if not p_key in specials:
-                    print('  ! Skip special process for {}'.format(p_key))
+                    self.out('  ! Skip special process for {}'.format(p_key))
                     continue
                 nodelist = specials[p_key].get('nodelist')
                 if not nodelist:
@@ -192,7 +232,7 @@ class BlendShape(layer.LayerOperator):
                             ott='linear', itt='linear'
                         )
                     limits.setdefault(attr, []).append(limit)
-                
+
                 indices = {'x':0, 'y':1, 'z':2}
                 at_lim_list = {
                     't':([0, 0, 0], [0, 0, 0]),

@@ -4,7 +4,7 @@
 r"""
     Dates:
         date:2024/08/26 11:39 Eske Yoshinob[eske3g@gmail.com]
-        update:2025/07/22 16:58 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/07/22 18:46 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2024 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -135,6 +135,22 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         """
         return node.asObject(self.blendShapeName())
 
+    @staticmethod
+    def listDataNodes(targetNodes=None):
+        r"""
+            引数targetNodesで指定したノード名のリストのうち、DataTransform
+            のみを返す。
+            戻り値は該当するDataTransformのリスト。
+            
+            Args:
+                targetNodes (list):ノード名のリスト
+                
+            Returns:
+                list:
+        """
+        targetNodes = node.selected(targetNodes, type='transform')
+        return grisNode.listNodes(DataTransform, targetNodes)
+
     def listExpressions(self):
         r"""
             このノードが保持する表情データノートのリストを返す。
@@ -144,9 +160,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             Returns:
                 OrderedDict:
         """
-        datalist = grisNode.listNodes(
-            DataTransform, self.children(type='transform')
-        )
+        datalist = self.listDataNodes(self.children(type='transform'))
         result = OrderedDict()
         for x in datalist:
             result[x.expression()] = x
@@ -496,24 +510,23 @@ def blendFacial(manager, startExpression, endExpression, inbetweens, status=2):
         適用する。
         inbetweensの数に応じて分割度合いは変更される。
         変更されたinbetweensの状態は２（RegistaredByProgram）となる。
-
+        
         Args:
             manager (FacialMemoryManagerRoot):
             startExpression (str):開始基準となる表情名
             endExpression (str):終了基準となる表情名
             inbetweens (list):中間補完される表情名のリスト
             status (int):更新後のデータのステータス
-        
-        Returns:
-            bool: 指定した各表情がmanagerから見つからなかった場合はFalseを返す。
     """
     expressions = manager.listExpressions()
     exp_datalist = []
+    error_list = []
     for explist in ([startExpression, endExpression], inbetweens):
         for exp in explist:
             data = expressions.get(exp)
             if not data:
-                return False
+                error_list.append(exp)
+                continue
             exp_datalist.append(data)
     blendFacialMemoryData(exp_datalist[0], exp_datalist[1], exp_datalist[2:])
     return True

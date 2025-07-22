@@ -458,6 +458,8 @@ class FacialExpressionView(QtWidgets.QWidget):
         self.__button_col = None
         self.__filter_activation = False
         self.__buttons = {}
+        self.__start_pos = None
+        self.__start_scroll_val = []
         self.__scroller = QtWidgets.QScrollArea()
         w = QtWidgets.QWidget()
         self.__view_layout = QtWidgets.QVBoxLayout(w)
@@ -557,6 +559,7 @@ class FacialExpressionView(QtWidgets.QWidget):
             layout.addWidget(btn)
             self.__button_col.addButton(btn.virtualButton())
             self.__buttons[exp] = btn
+            btn.virtualButton().installEventFilter(self)
         layout.addStretch()
         if is_activated:
             self.activateFilter(True)
@@ -576,13 +579,60 @@ class FacialExpressionView(QtWidgets.QWidget):
                 continue
             button.refreshState(True)
 
+    def setupMousePressEvent(self, event):
+        self.__start_scroll_val = []
+        if event.button() == QtCore.Qt.LeftButton:
+            self.__start_pos = event.globalPos()
+        else:
+            self.__start_pos = None
+        return False
+
+    def setupMouseMoveEvent(self, event):
+        if not self.__start_pos:
+            return False
+        pos = event.globalPos()
+        val = pos - self.__start_pos
+        if not self.__start_scroll_val:
+            if (
+                val.manhattanLength()
+                < QtWidgets.QApplication.startDragDistance()
+            ):
+                return False
+            self.__start_scroll_val = [
+                self.__scroller.horizontalScrollBar().value(),
+                self.__scroller.verticalScrollBar().value()
+            ]
+            QtWidgets.QApplication.setOverrideCursor(
+                QtGui.QCursor(QtCore.Qt.ClosedHandCursor)
+            )
+        
+        for idx, v, scr in zip(
+            (0, 1),
+            (val.x(), val.y()),
+            (
+                self.__scroller.horizontalScrollBar(),
+                self.__scroller.verticalScrollBar()
+            )
+        ):
+            scr.setValue(self.__start_scroll_val[idx] - v)
+        return True
+
+    def setupMouseReleaseEvent(self, event):
+        if not self.__start_scroll_val:
+            return False
+        QtWidgets.QApplication.restoreOverrideCursor()
+        self.__start_scroll_val = []
+        self.__start_pos = None
+        return False
+
     def eventFilter(self, obj, event):
         r"""
             Args:
                 obj (QtWidgets.QWidget):
                 event (QtCore.QEvent):
         """
-        if event.type() == QtCore.QEvent.KeyPress:
+        e_type = event.type()
+        if e_type == QtCore.QEvent.KeyPress:
             key = event.key()
             if key == QtCore.Qt.Key_Tab:
                 self.activateFilter(True)
@@ -590,6 +640,12 @@ class FacialExpressionView(QtWidgets.QWidget):
             elif key == QtCore.Qt.Key_Escape:
                 self.activateFilter(False)
                 return True
+        elif e_type == QtCore.QEvent.MouseButtonPress:
+            return self.setupMousePressEvent(event)
+        elif e_type == QtCore.QEvent.MouseMove:
+            return self.setupMouseMoveEvent(event)
+        elif e_type == QtCore.QEvent.MouseButtonRelease:
+            return self.setupMouseReleaseEvent(event)
         return super(FacialExpressionView, self).eventFilter(obj, event)
 
 

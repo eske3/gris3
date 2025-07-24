@@ -24,6 +24,9 @@ class Tweaked(layer.LayerOperator):
         顔のツイーク制御を行うためのフェイシャル用制御レイヤを提供するクラス。
     """
     JointData = tweakData.TweakJointData
+    JointGroupName = 'facialTweakJnt_grp'
+    CtrlGroupName = 'facialTweakCtrl_grp'
+    DisplayAttrName = 'facialTweakCtrlVis'
     StackFaceName = {
         'face':None, 'faceParts':('facialBrowJnt_grp',),
         'tongue':('facialInnerMouthJnt_grp',),
@@ -56,7 +59,7 @@ class Tweaked(layer.LayerOperator):
                     createJoint(data['children'], jnt)
 
         root_grp = node.createNode(
-            'transform', n='facialTweakJnt_grp', p=parentGrp
+            'transform', n=self.JointGroupName, p=parentGrp
         )
         root_grp.lockTransform()
         for grp_name, joint_data in self.JointData.items():
@@ -67,7 +70,7 @@ class Tweaked(layer.LayerOperator):
     def preSetup(self):
         cst = self.constructor()
         anim_set = self.animSet()
-        tweak_grp = node.asObject('facialTweakJnt_grp')
+        tweak_grp = node.asObject(self.JointGroupName)
         root_group = self.rootGroup()
         if not tweak_grp:
             return
@@ -115,7 +118,7 @@ class Tweaked(layer.LayerOperator):
         # コントローラの作成。
         ctrl_root = self.ctrlParent()
         ctrl_grp = node.createNode(
-            'transform', n='facialTweakCtrl_grp', p=ctrl_root
+            'transform', n=self.CtrlGroupName, p=ctrl_root
         )
         ctrl_grp.lockTransform()
         anim_set = cst.createAnimSet('facialTweak')
@@ -159,7 +162,7 @@ class Tweaked(layer.LayerOperator):
 
         cst = self.constructor()
         plug = self.extraConstructor().disp_ctrl.addDisplayAttr(
-            'facialTweakCtrlVis', default=False, cb=True, k=False
+            self.DisplayAttrName, default=False, cb=True, k=False
         )
         plug >> ctrl_grp/'v'
 

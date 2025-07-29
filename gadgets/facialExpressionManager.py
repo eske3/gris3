@@ -618,7 +618,6 @@ class FacialExpressionView(QtWidgets.QWidget):
             maxvalue = num
             step = 1
             pos_method = 'bottomLeft'
-        print(idx + step, maxvalue, step)
         for i in range(idx + step, maxvalue, step):
             if not 0 <= i < num:
                 return

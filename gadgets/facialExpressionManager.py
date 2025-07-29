@@ -631,7 +631,7 @@ class FacialExpressionView(QtWidgets.QWidget):
             rect = self.__scroller.geometry()
             rect.moveTop(v_scroller.value())
             if rect.contains(pos):
-                return
+                return btn
             v = pos.y()
             if direction != 'up':
                 v = (

@@ -613,16 +613,34 @@ class FacialExpressionView(QtWidgets.QWidget):
         if direction == 'up':
             maxvalue = -1
             step = -1
+            pos_method = 'topLeft'
         else:
             maxvalue = num
             step = 1
+            pos_method = 'bottomLeft'
         for i in range(idx + step, maxvalue, step):
             if not 0 <= i < num:
                 return
             btn = self.__buttons[keys[i]]
-            if btn.isVisible():
-                btn.virtualButton().setChecked(True)
-                return btn
+            if not btn.isVisible():
+                return
+            v_scroller = self.__scroller.verticalScrollBar()
+            btn.virtualButton().setChecked(True)
+            btn_rect = btn.geometry()
+            pos = getattr(btn_rect, pos_method)()
+            rect = self.__scroller.geometry()
+            rect.moveTop(v_scroller.value())
+            if rect.contains(pos):
+                return
+            v = pos.y()
+            if direction != 'up':
+                v = (
+                    btn_rect.top() - rect.height()
+                    + self.__scroller.horizontalScrollBar().geometry().height()
+                    + btn_rect.height()
+                )
+            v_scroller.setValue(v)
+            return btn
 
     def selectDown(self):
         r"""

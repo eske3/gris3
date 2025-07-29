@@ -574,11 +574,14 @@ class FacialExpressionView(QtWidgets.QWidget):
             Args:
                 expressionList (list):
         """
+        use_cache = False
         for exp in expressionList:
             button = self.__buttons.get(exp)
             if not button:
                 continue
-            button.refreshState(True)
+            button.refreshState(use_cache)
+            use_cache = True
+            button.update()
 
     def setupMousePressEvent(self, event):
         self.__start_scroll_val = []
@@ -794,11 +797,19 @@ class FacialExpressionManager(QtWidgets.QWidget):
         return self.__tab
 
     def reloadView(self):
-        bs = self.settings().blendShape()
-        me = self.managerEngine()
-        me.setBlendShapeName(bs)
-        me.update()
-        self.facialView().reload(me)
+        QtWidgets.QApplication.setOverrideCursor(
+            QtGui.QCursor(QtCore.Qt.WaitCursor)
+        )
+        try:
+            bs = self.settings().blendShape()
+            me = self.managerEngine()
+            me.setBlendShapeName(bs)
+            me.update()
+            self.facialView().reload(me)
+        except Exception as e:
+            raise(e)
+        finally:
+            QtWidgets.QApplication.restoreOverrideCursor()
 
     def updateViewStatus(self, expressionList):
         r"""

@@ -618,12 +618,13 @@ class FacialExpressionView(QtWidgets.QWidget):
             maxvalue = num
             step = 1
             pos_method = 'bottomLeft'
+        print(idx + step, maxvalue, step)
         for i in range(idx + step, maxvalue, step):
             if not 0 <= i < num:
                 return
             btn = self.__buttons[keys[i]]
             if not btn.isVisible():
-                return
+                continue
             v_scroller = self.__scroller.verticalScrollBar()
             btn.virtualButton().setChecked(True)
             btn_rect = btn.geometry()

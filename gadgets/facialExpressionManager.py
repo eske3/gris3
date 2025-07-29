@@ -7,13 +7,14 @@ r"""
     
     Dates:
         date:2017/07/06 5:35[Eske](eske3g@gmail.com)
-        update:2025/07/22 17:59 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/07/29 17:03 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
+from collections import OrderedDict
 from ..tools import facialMemoryManager
 from ..uilib import mayaUIlib
 from .. import uilib, node, style
@@ -155,7 +156,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(VirtualSliderButton, self).__init__(expressionName, parent)
-        self.clicked.connect(self.__changeExpression)
+        self.clicked.connect(self.changeExpression)
         self.__manager = manager
         self.__expression = expressionName
         self.__start_pos = None
@@ -200,7 +201,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
                 self.expression(), status
             )
 
-    def __changeExpression(self):
+    def changeExpression(self):
         with node.DoCommand():
             self.manager().applyExpression(self.expression())
         self.facialChanged.emit(self.expression())
@@ -215,7 +216,6 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         if values is None:
             self.__param_range = {'blendShape': bs, 'values':{}}
             return
-        from collections import OrderedDict
         all_values = OrderedDict()
         for attr in bs.listAttrNames():
             all_values[attr] = 0
@@ -266,7 +266,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
             また、合わせて表情データノードの選択も行なう。
             引数selectionFlagsはノードを選択する際の引数で、cmds.selectの
             に渡される。
-
+            
             Args:
                 selectionFlags (dict):
         """
@@ -419,7 +419,7 @@ class ExpressionButton(QtWidgets.QWidget):
     def refreshState(self, useCache=True):
         r"""
             ボタンの表示状態を表情データの状態に応じて更新する。
-
+            
             Args:
                 useCache (bool):表情データのキャッシュをい使用するかどうか
         """
@@ -439,7 +439,7 @@ class ExpressionButton(QtWidgets.QWidget):
     def virtualButton(self):
         r"""
             このウィジェットが持つヴァーチャルボタンを返す。
-
+            
             Returns:
                 VirtualSliderButton:
         """
@@ -500,7 +500,7 @@ class FacialExpressionView(QtWidgets.QWidget):
     def activateFilter(self, status):
         r"""
             表示フィルタを機能させる。
-
+            
             Args:
                 status (bool):
         """
@@ -518,7 +518,7 @@ class FacialExpressionView(QtWidgets.QWidget):
     def updateViewFilter(self, text):
         r"""
             与えられた文字列に応じてビューの表示フィルタを行なう。
-
+            
             Args:
                 text (str):
         """
@@ -554,7 +554,7 @@ class FacialExpressionView(QtWidgets.QWidget):
         layout = self.clear()
         root = managerEngine.getManagerNode()
         self.__button_col = QtWidgets.QButtonGroup(self)
-        self.__buttons = {}
+        self.__buttons = OrderedDict()
         for exp in root.listExpressions():
             btn = ExpressionButton(root, exp)
             layout.addWidget(btn)
@@ -565,12 +565,87 @@ class FacialExpressionView(QtWidgets.QWidget):
         if is_activated:
             self.activateFilter(True)
 
+    def getCheckedButton(self):
+        r"""
+            現在選択中のボタンを返す。
+
+            Returns:
+                ExpressionButton: 
+        """
+        if not self.__button_col:
+            return
+        btn = self.__button_col.checkedButton()
+        if not btn:
+            return
+        return btn.parent()
+
+    def applyExpressionFromSelected(self):
+        r"""
+            現在選択中のボタンの表情を適用する。
+        """
+        btn = self.getCheckedButton()
+        if not btn:
+            return
+        btn.virtualButton().changeExpression()
+
+    def selectSibling(self, direction):
+        r"""
+            現在の選択ボタンの一つ上または下のボタンを選択する。
+            上端（または下端）にいる状態で上（または下）を指定すると無効となる。
+            選択した場合、そのボタンを返す。
+            該当するものがない場合はNoneを返す。
+        
+            Args:
+                direction (str): "up" or "down"
+            
+            Returns:
+                ExpressionButton: 
+        """
+        btn = self.getCheckedButton()
+        if not btn:
+            return
+        keys = list(self.__buttons.keys())
+        cur_exp = btn.virtualButton().expression()
+        if cur_exp not in keys:
+            return
+        num = len(keys)
+        idx = keys.index(cur_exp)
+        if direction == 'up':
+            maxvalue = -1
+            step = -1
+        else:
+            maxvalue = num
+            step = 1
+        for i in range(idx + step, maxvalue, step):
+            if not 0 <= i < num:
+                return
+            btn = self.__buttons[keys[i]]
+            if btn.isVisible():
+                btn.virtualButton().setChecked(True)
+                return btn
+
+    def selectDown(self):
+        r"""
+            現在の選択ボタンの一つ下のボタンを選択し、
+            そのボタンの表情を適用する。
+        """
+        if self.selectSibling('down'):
+            self.applyExpressionFromSelected()
+        
+    def selectUp(self):
+        r"""
+            現在の選択ボタンの一つ上のボタンを選択し、
+            そのボタンの表情を適用する。
+        """
+        if self.selectSibling('up'):
+            self.applyExpressionFromSelected()
+
     def updateButtonStatus(self, expressionList):
         r"""
             任意の表情のボタンのステータスを最新の状態に更新する。
             reloadに比べこちらの方がかなり高速なため、すでに表情リストが
             存在する場合はこちらのメソッドの使用を推奨。
-
+            
             Args:
                 expressionList (list):
         """
@@ -584,6 +659,10 @@ class FacialExpressionView(QtWidgets.QWidget):
             button.update()
 
     def setupMousePressEvent(self, event):
+        r"""
+            Args:
+                event (any):
+        """
         self.__start_scroll_val = []
         if event.button() == QtCore.Qt.LeftButton:
             self.__start_pos = event.globalPos()
@@ -592,6 +671,10 @@ class FacialExpressionView(QtWidgets.QWidget):
         return False
 
     def setupMouseMoveEvent(self, event):
+        r"""
+            Args:
+                event (any):
+        """
         if not self.__start_pos:
             return False
         pos = event.globalPos()
@@ -622,6 +705,10 @@ class FacialExpressionView(QtWidgets.QWidget):
         return True
 
     def setupMouseReleaseEvent(self, event):
+        r"""
+            Args:
+                event (any):
+        """
         if not self.__start_scroll_val:
             return False
         QtWidgets.QApplication.restoreOverrideCursor()
@@ -644,6 +731,13 @@ class FacialExpressionView(QtWidgets.QWidget):
             elif key == QtCore.Qt.Key_Escape:
                 self.activateFilter(False)
                 return True
+            elif key == QtCore.Qt.Key_Down:
+                self.selectDown()
+                return True
+            elif key == QtCore.Qt.Key_Up:
+                self.selectUp()
+                return True
+                
         elif e_type == QtCore.QEvent.MouseButtonPress:
             return self.setupMousePressEvent(event)
         elif e_type == QtCore.QEvent.MouseMove:
@@ -816,7 +910,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
             任意の表情のボタンのステータスを最新の状態に更新する。
             reloadに比べこちらの方がかなり高速なため、すでに表情リストが
             存在する場合はこちらのメソッドの使用を推奨。
-
+            
             Args:
                 expressionList (list):
         """
@@ -825,7 +919,7 @@ class FacialExpressionManager(QtWidgets.QWidget):
     def setBlendShape(self, blendShapeName):
         r"""
             操作対象となるブレンドシェイプを設定し、GUIを更新する。
-
+            
             Args:
                 blendShapeName (str):
         """

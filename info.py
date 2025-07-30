@@ -15,12 +15,26 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.1.0'
-LastModified = 20250716
+Version = '2.0.2.0'
+LastModified = 20250731
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.2.3',
+(
+    'constructorに、最終ビルド時に使用したConstructorオブジェクトにアクセスする変数「LatestExecutedConstructor」を追加。',
+)
+),
+
+
+('2.0.2.0',
+(
+    'gadgets.facialExpressionManagerのGUIまわり更新。',
+)
+),
+
+
 ('2.0.1.0',
 (
     'displayLayerViewerを追加。',

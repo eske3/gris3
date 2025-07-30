@@ -28,6 +28,7 @@ cmds = func.cmds
 # /////////////////////////////////////////////////////////////////////////////
 CurrentFilePattern = '[\._]cur\.[a-z\d]+$'
 LOD_LIST = ('low', 'high')
+LatestExecutedConstructor = None
 # /////////////////////////////////////////////////////////////////////////////
 #                                                                            //
 # /////////////////////////////////////////////////////////////////////////////
@@ -2206,6 +2207,8 @@ class BasicConstructor(rigScripts.BaseCreator):
             各プロセスの実行前・実行後に同名にメソッドがextraConstructorから
             実行される。
         """
+        global LatestExecutedConstructor
+        LatestExecutedConstructor = self
         import time
         starttime = time.time()
 

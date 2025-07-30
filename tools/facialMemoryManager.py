@@ -4,7 +4,7 @@
 r"""
     Dates:
         date:2024/08/26 11:39 Eske Yoshinob[eske3g@gmail.com]
-        update:2025/07/22 13:35 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/07/22 18:46 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2024 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -63,7 +63,7 @@ class BlendShapeData(dict):
     def setStatus(self, value):
         r"""
             表情データの登録状態を設定する。
-
+            
             Args:
                 value (int):
         """
@@ -72,7 +72,7 @@ class BlendShapeData(dict):
     def status(self):
         r"""
             登録された表情データの状態を返す。
-
+            
             Returns:
                 int:
         """
@@ -135,6 +135,22 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         """
         return node.asObject(self.blendShapeName())
 
+    @staticmethod
+    def listDataNodes(targetNodes=None):
+        r"""
+            引数targetNodesで指定したノード名のリストのうち、DataTransform
+            のみを返す。
+            戻り値は該当するDataTransformのリスト。
+            
+            Args:
+                targetNodes (list):ノード名のリスト
+                
+            Returns:
+                list:
+        """
+        targetNodes = node.selected(targetNodes, type='transform')
+        return grisNode.listNodes(DataTransform, targetNodes)
+
     def listExpressions(self):
         r"""
             このノードが保持する表情データノートのリストを返す。
@@ -144,9 +160,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             Returns:
                 OrderedDict:
         """
-        datalist = grisNode.listNodes(
-            DataTransform, self.children(type='transform')
-        )
+        datalist = self.listDataNodes(self.children(type='transform'))
         result = OrderedDict()
         for x in datalist:
             result[x.expression()] = x
@@ -434,7 +448,10 @@ class DataTransform(node.Transform, grisNode.AbstractGrisNode):
             Returns:
                 dict:カスタムアトリビュートが追加された辞書オブジェクト
         """
-        values = BlendShapeData(self.values())
+        v = self.values()
+        if v is None:
+            return v
+        values = BlendShapeData(v)
         values.setStatus(self.status())
         return values
 
@@ -466,7 +483,62 @@ def listManagerNode():
     return roots
 
 
+def blendFacialMemoryData(startData, endData, inbetweens, status=2):
+    r"""
+        Args:
+            startData (DataTransform):開始基準となる表情データ
+            endData (DataTransform):終了基準となる表情データ
+            inbetweens (DataTransform):中間補完される表情データのリスト
+            status (int):更新後のデータのステータス
+    """
+    st_values = startData.values()
+    ed_values = endData.values()
+    attrs = list(set(list(st_values.keys()) + list(ed_values.keys())))
+    inc_values = {}
+    div = len(inbetweens) + 1.0
+    for attr in attrs:
+        st_v = st_values.get(attr, 0.0)
+        ed_v = ed_values.get(attr, 0.0)
+        inc_values[attr] = [st_v, (ed_v - st_v) / div]
+    for i, i_data in enumerate(inbetweens, 1):
+        values = {x: (y[0] + y[1] * i) for x, y in inc_values.items()}
+        i_data.setValues(values)
+        i_data.setStatus(status)
+   
+
+def blendFacial(manager, startExpression, endExpression, inbetweens, status=2):
+    r"""
+        任意のマネージャノードmanager内の表情において、
+        表情名startExpressionと表情名endExpressionの中間値をinbetweensに
+        適用する。
+        inbetweensの数に応じて分割度合いは変更される。
+        変更されたinbetweensの状態は２（RegistaredByProgram）となる。
+        
+        Args:
+            manager (FacialMemoryManagerRoot):
+            startExpression (str):開始基準となる表情名
+            endExpression (str):終了基準となる表情名
+            inbetweens (list):中間補完される表情名のリスト
+            status (int):更新後のデータのステータス
+    """
+    expressions = manager.listExpressions()
+    exp_datalist = []
+    error_list = []
+    for explist in ([startExpression, endExpression], inbetweens):
+        for exp in explist:
+            data = expressions.get(exp)
+            if not data:
+                error_list.append(exp)
+                continue
+            exp_datalist.append(data)
+    blendFacialMemoryData(exp_datalist[0], exp_datalist[1], exp_datalist[2:])
+    return True
+
+
 def update_data_v1_0_1():
+    r"""
+        バージョン1.0.0の古い表情データを更新するためのパッチ関数。
+    """
     update_targets = []
     for root in listManagerNode():
         version_str = root(VersionAttr)

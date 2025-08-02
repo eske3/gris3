@@ -18,6 +18,7 @@ from ..uilib import directionPlane, mayaUIlib
 from .. import lib, uilib, node
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
+
 class CameraBasedParentWidget(directionPlane.DirectionScreen):
     def __init__(self, parent=None):
         r"""
@@ -71,7 +72,6 @@ class ParentTools(uilib.ClosableGroup):
         tool_label = QtWidgets.QLabel('Show camera based parent tool')
 
         create_layout = QtWidgets.QGridLayout(self)
-        create_layout.setContentsMargins(uilib.ZeroMargins)
         create_layout.setVerticalSpacing(1)
         create_layout.addWidget(buttons[0], 0, 0, 1, 1)
         create_layout.addWidget(buttons[1], 0, 1, 1, 1)
@@ -320,6 +320,7 @@ class AxisChooser(QtWidgets.QWidget):
         return jointEditor.Axislist[self.__group.checkedId()]
 
 
+# class JointAxisEditor(uilib.ClosableGroup):
 class JointAxisEditor(uilib.ClosableGroup):
     r"""
         ジョイントの軸を編集するためのUIを低居するクラス。
@@ -378,22 +379,24 @@ class JointAxisEditor(uilib.ClosableGroup):
         ):
             label, gui_builders, gui_labels = gui_data
             group = QtWidgets.QGroupBox(label)
-            form = QtWidgets.QFormLayout(group)
-            form.setContentsMargins(thin_margin)
+            grp_layout = QtWidgets.QGridLayout(group)
 
             # メインの軸を指定するUI。
             axis = AxisChooser()
             if i != 0:
                 axis.setChecked('+Z')
-            form.addRow(QtWidgets.QLabel('Axis'), axis)
+            grp_layout.addWidget(QtWidgets.QLabel('Axis'), 0, 0, 1, 1)
+            grp_layout.addWidget(axis, 0, 1, 1, 1)
 
             # ターゲットの種類を選択するUI。==================================
             tgt_widget = QtWidgets.QWidget()
             tgt_comb = QtWidgets.QComboBox()
             tgt_layout = QtWidgets.QVBoxLayout(tgt_widget)
+            tgt_layout.addStretch()
             tgt_layout.setContentsMargins(thin_margin)
             tgt_layout.addWidget(QtWidgets.QLabel('Target'))
             tgt_layout.addWidget(tgt_comb)
+            tgt_layout.addStretch()
             # ================================================================
             
             # ターゲットを指定するGUI。
@@ -417,14 +420,16 @@ class JointAxisEditor(uilib.ClosableGroup):
             
             tgt_opt_grp = QtWidgets.QGroupBox()
             tgt_opt_layout = QtWidgets.QVBoxLayout(tgt_opt_grp)
-            tgt_opt_layout.setContentsMargins(thin_margin)
+            # tgt_opt_layout.setContentsMargins(thin_margin)
             tgt_opt_layout.addWidget(tgt_opt)
 
-            form.addRow(tgt_widget, tgt_opt_grp)
+            grp_layout.addWidget(tgt_widget, 1, 0, 1, 1)
+            grp_layout.addWidget(tgt_opt_grp, 1, 1, 1, 1)
 
             self.__uis.append(uidic)
             layout.addWidget(group, row, 0, 1, 2)
             row += 1
+        layout.setRowStretch(row, 1)
 
     def setAxis(self):
         r"""
@@ -734,6 +739,7 @@ class JointEditor(QtWidgets.QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(builder)
         layout.addWidget(finisher)
+
 
 class MainGUI(uilib.AbstractSeparatedWindow):
     r"""

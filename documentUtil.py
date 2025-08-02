@@ -57,21 +57,19 @@ def parsePydoc(docstring):
         ('return', re.compile('^Returns:')),
     ]
     results = {}
-    ptn = patterns.pop(0)
     stacked = []
     category = 'brief'
     for line in [x.strip() for x in docstring.split('\n')]:
-        if ptn[1].search(line):
-            results[category] = stacked
-            stacked = []
-            category = ptn[0]
-            if not patterns:
-                continue
-            ptn = patterns.pop(0)
-            continue
         if not line:
             continue
-        stacked.append(line)
+        for ptn in patterns:
+            if ptn[1].search(line):
+                results[category] = stacked
+                stacked = []
+                category = ptn[0]
+                continue
+        else:
+            stacked.append(line)
     if stacked:
         results[category] = stacked
     return results

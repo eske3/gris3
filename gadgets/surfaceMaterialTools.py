@@ -12,9 +12,9 @@ r'''
     このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
     は一切責任を負いませんのであらかじめご了承ください
 '''
-from gris3 import uilib
-from gris3.uilib import mayaUIlib
-from gris3.tools import surfaceMaterialUtil as smu
+from .. import uilib
+from ..uilib import mayaUIlib
+from ..tools import surfaceMaterialUtil as smu
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 class MaterialLister(QtWidgets.QWidget):

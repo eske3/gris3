@@ -53,11 +53,6 @@ STANDALONE_TOOLBAR = [
         (48, 96, 180),
         uilib.IconPath('uiBtn_skeleton')
     ),
-    (
-        'gris3.gadgets.skinningEditor.SkinningEditor',
-        (180, 96, 15),
-        uilib.IconPath('uiBtn_bindSkin')
-    ),
     None,
     (
         'gris3.gadgets.drivenManager.DrivenUtility',
@@ -74,7 +69,12 @@ STANDALONE_TOOLBAR = [
     ),
     None,
     SIM_TOOL,
-    POSE_TOOL
+    POSE_TOOL,
+    (
+        'gris3.gadgets.gadgetsLauncher.Launcher',
+        (180, 96, 15),
+        uilib.IconPath('uiBtn_view'),
+    ),
 ]
 
 FACTORY_TOOLBAR = [
@@ -118,10 +118,12 @@ class ToolbarView(QtWidgets.QWidget):
     def addWidget(self, widget, withStretch=False):
         r"""
             タブを追加する。
+            withStretchがTrueの場合、追加ウィジェットの下にストレッチ領域を
+            追加する。
             
             Args:
                 widget (QtWidgets.QWidget):
-                withStretch (bool):
+                withStretch (bool): 追加ウィジェットの下にストレッチを追加するか
         """
         p = QtWidgets.QWidget()
         p.setObjectName('scrolled_baseWidget')

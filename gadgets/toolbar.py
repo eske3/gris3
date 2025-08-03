@@ -6,10 +6,10 @@ r"""
     
     Dates:
         date:2018/01/30 18:14[eske](eske3g@gmail.com)
-        update:2021/04/23 09:46 eske yoshinob[eske3g@gmail.com]
+        update:2025/08/02 12:20 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2018 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Copyright 2018 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
@@ -94,6 +94,7 @@ class ToolbarView(QtWidgets.QWidget):
         ツールバー下部にUIを表示するための機能を提供するクラス。
     """
     ButtonSize = uilib.hires(38)
+
     def __init__(self, parent=None):
         r"""
             Args:
@@ -106,7 +107,7 @@ class ToolbarView(QtWidgets.QWidget):
         self.__lock = False
         self.__hide_timer_id = None
         self.__entered_time = None
-        self.__lock = False
+        self.__wait_time = 0.5
         self.__gradient = QtGui.QLinearGradient()
         self.__gradient.setColorAt(0, QtGui.QColor(22, 42, 68, 240))
         self.__gradient.setColorAt(1, QtGui.QColor(0, 0, 0, 175))
@@ -123,7 +124,7 @@ class ToolbarView(QtWidgets.QWidget):
             
             Args:
                 widget (QtWidgets.QWidget):
-                withStretch (bool): 追加ウィジェットの下にストレッチを追加するか
+                withStretch (bool):追加ウィジェットの下にストレッチを追加するか
         """
         p = QtWidgets.QWidget()
         p.setObjectName('scrolled_baseWidget')
@@ -159,6 +160,9 @@ class ToolbarView(QtWidgets.QWidget):
     def startToHide(self, count=100):
         r"""
             引き数count ms秒経過したら自身を非表示にするタイマーを開始する
+            
+            Args:
+                count (any):
         """
         if self.__hide_timer_id:
             self.killTimer(self.__hide_timer_id)
@@ -170,9 +174,29 @@ class ToolbarView(QtWidgets.QWidget):
         super(ToolbarView, self).show()
 
     def hide(self):
-        self.__entered_time = None
         self.__lock = False
+        self.__entered_time = None
         super(ToolbarView, self).hide()
+
+    def setWaitTime(self, t):
+        r"""
+            マウスがウィジェットに侵入してから自動非表示機能を無効にするまでの
+            ウェイト時間を設定する。
+
+            Args:
+                t (float):
+        """
+        self.__wait_time = t
+
+    def waitTime(self):
+        r"""
+            マウスがウィジェットに侵入してから自動非表示機能を無効にするまでの
+            ウェイト時間を返す。
+
+            Returns:
+                float:
+        """
+        return self.__wait_time
 
     def timerEvent(self, event):
         r"""
@@ -199,14 +223,11 @@ class ToolbarView(QtWidgets.QWidget):
                 event (QtCore.QEvent):
         """
         if (
-            self.__lock or
-            (
-                not self.__entered_time is None 
-                and  time.time() - self.__entered_time > 1
-            )
+            self.__entered_time
+            and time.time() - self.__entered_time > self.waitTime()
         ):
-            self.startToHide(1000)
             self.__lock = True
+        if self.__lock:
             return
         self.hide()
 
@@ -224,6 +245,7 @@ class ToolbarView(QtWidgets.QWidget):
         painter.setBrush(QtGui.QBrush(self.__gradient))
         painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0)))
         painter.drawRect(rect)
+
 
 
 class ToolbarButton(uilib.OButton):

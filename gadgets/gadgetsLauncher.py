@@ -13,7 +13,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from ..uilib import mayaUIlib
+from ..uilib import mayaUIlib, extendedUI
 from .. import lib, uilib, documentUtil
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
@@ -124,6 +124,20 @@ class FunctionListStyle(QtWidgets.QStyledItemDelegate):
         painter.drawLine(rect.bottomLeft(), rect.bottomRight())
 
 
+class AppViewer(extendedUI.FilteredView):
+    def createView(self):
+        view = QtWidgets.QListView()
+        view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        view.setItemDelegate(FunctionListStyle())
+        return view
+
+    def createModel(self):
+        model = QtGui.QStandardItemModel(0, 1)
+        return model
+
+
 class Launcher(QtWidgets.QWidget):
     DisabledFunctions = [
         'openGagetsLauncher', 'openToolbar', 'openPolyHalfRemover',
@@ -138,31 +152,24 @@ class Launcher(QtWidgets.QWidget):
         super(Launcher, self).__init__(parent)
         self.setWindowTitle('Gris Launcher')
         self.__functions = {}
-        
-        model = QtGui.QStandardItemModel(0, 1)
 
-        self.__view = QtWidgets.QListView()
-        self.__view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
-        self.__view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
-        self.__view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
-        self.__view.setModel(model)
-        self.__view.setItemDelegate(FunctionListStyle())
-        self.__view.clicked.connect(self.execCommand)
+        self.__view = AppViewer()
+        self.__view.view().clicked.connect(self.execCommand)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.__view)
-                
+
         self.reload()
 
     def view(self):
         return self.__view
 
     def leaveEvent(self, event):
-        self.view().clearSelection()
+        self.view().view().clearSelection()
         super(Launcher, self).leaveEvent(event)
 
     def reload(self):
-        model = self.view().model()
+        model = self.view().view().model().sourceModel()
         model.removeRows(0, model.rowCount())
         self.__functions = listFunctions(self.DisabledFunctions)
         for row, f_name in enumerate(sorted(list(self.__functions.keys()))):
@@ -175,7 +182,7 @@ class Launcher(QtWidgets.QWidget):
             item.setData(f_name, QtCore.Qt.UserRole + 2)
 
     def execCommand(self, index):
-        self.view().clearSelection()
+        self.view().view().clearSelection()
         f_name = index.data(QtCore.Qt.UserRole + 2)
         f = self.__functions.get(f_name)
         if f:

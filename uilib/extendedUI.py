@@ -70,7 +70,7 @@ class FilteredView(QtWidgets.QWidget):
     @uilib.abstractmethod
     def createModel(self):
         r"""
-            再実装用メソッド。任意のItemModeloを作成し返す。
+            再実装用メソッド。任意のItemModelを作成し返す。
             
             Returns:
                 QtGui.QStandardItemModel:

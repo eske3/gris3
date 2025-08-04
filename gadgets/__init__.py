@@ -13,23 +13,6 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-def showWindow(uiClass, execute=False):
-    r"""
-        渡されたuiClassを使用してウィンドウを表示する。
-        
-        Args:
-            uiClass (type):
-            execute (bool):
-            
-        Returns:
-            QtWidgets.QWidget:
-    """
-    from gris3.uilib import mayaUIlib
-    ui = uiClass(mayaUIlib.MainWindow)
-    ui.show()
-    return ui
-
-
 def openToolbar():
     r"""
         ツールバーを表示する
@@ -63,6 +46,18 @@ def openModelSetup():
     """
     from . import modelSetupWidget
     w = modelSetupWidget.showWindow()
+    return w
+
+
+def openSkinningEditor():
+    r"""
+        スキニング用の補助ツールを開く。
+        
+        Returns:
+            gadgets.skinningEditor.MainGUI:
+    """
+    from . import skinningEditor
+    w = skinningEditor.showWindow()
     return w
 
 
@@ -111,6 +106,18 @@ def openHardsurfacer():
     """
     from . import hardsurfacer
     w = hardsurfacer.showWindow()
+    return w
+
+
+def openDisplayLayerViewer():
+    r"""
+        ディスプレイレイヤを一括表示制御するビューワを開く。
+        
+        Returns:
+            displayLayerViewer.MainGUI:
+    """
+    from . import displayLayerViewer
+    w = displayLayerViewer.showWindow()
     return w
 
 
@@ -164,7 +171,7 @@ def showNodeRenamer():
 
 def showDisplaySettings():
     r"""
-        ディスプレイ設定を開く。
+        アクティブなパネルのカメラディスプレイ設定を開く。
         
         Returns:
             QWidget:
@@ -181,7 +188,7 @@ def showSurfaceMaterialTools():
     surfaceMaterialTools.showWindow()
 
 
-def showCheckTools(categoryFile=''):
+def openCheckTools(categoryFile=''):
     r"""
         チェックツールを開く。
 
@@ -193,4 +200,14 @@ def showCheckTools(categoryFile=''):
     w.main().setCategoryFromFile(categoryFile)
     return w
 
+
+def openGagetsLauncher():
+    r"""
+        チェックツールを開く。
+
+        Returns:
+            gadgetsLauncher.MainGUI:
+    """
+    from . import gadgetsLauncher
+    gadgetsLauncher.showWindow()
 

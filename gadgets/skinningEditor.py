@@ -13,9 +13,9 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3.tools import skinUtility, paintSkinUtility
-from gris3 import lib, uilib, node
-from gris3.uilib import extendedUI
+from ..tools import skinUtility, paintSkinUtility
+from .. import lib, uilib, node
+from ..uilib import extendedUI
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -772,6 +772,7 @@ class SkinningEditor(QtWidgets.QWidget):
         layout.addWidget(bind_util)
         layout.addWidget(skin_editor)
         layout.setStretchFactor(skin_editor, 1)
+        layout.addStretch()
 
 
 class MainGUI(uilib.AbstractSeparatedWindow):

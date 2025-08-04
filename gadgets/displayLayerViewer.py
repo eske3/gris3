@@ -76,17 +76,34 @@ class LayerStatusStyle(QtWidgets.QStyledItemDelegate):
         top = rect.top() + int((rect.height() - icon_size) * 0.5)
         left = rect.left()
 
+        # 各種ステータスアイコンの描画。
+        status_list = []
         for i, icons in enumerate(self.__status_icons, 1):
             stats = index.data(QtCore.Qt.UserRole + i + 1)
             s_rect = QtCore.QRect(
                 left + width * i, top, icon_size, icon_size
             )
+            status_list.append(stats)
             painter.drawPixmap(s_rect, icons[stats])
+        
+        # レイヤ名の描画。
+        color = d_pen.color()
+        c_pen = QtGui.QPen(d_pen)
+        if status_list[0] == 0:
+            color.setRed(int(color.red() * 0.5))
+            color.setGreen(int(color.green() * 0.5))
+            color.setBlue(int(color.blue() * 0.5))
+        if status_list[2] == 1:
+            color.setRed(int(color.red() * 1.5))
+        c_pen.setColor(color)
+        painter.setPen(c_pen)
         rect.setX(left + width * (i + 1))
         painter.drawText(
             rect, data, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
         )
-        
+        painter.setPen(d_pen)
+
+        # レイヤカラーの描画。
         color_data = index.data(QtCore.Qt.UserRole + i + 2)
         if color_data is None:
             color = QtCore.Qt.NoBrush
@@ -259,9 +276,6 @@ class DisplayLayerFilteredView(extendedUI.FilteredView):
         """
         model = QtGui.QStandardItemModel(0, 1)
         model.setHeaderData(0, QtCore.Qt.Horizontal, 'displayLayer')
-        # sel_model = QtCore.QItemSelectionModel(model)
-        # self.setSelectionModel(sel_model)
-        # self.setModel(model)
         return model
 
     def listDisplayLayers(self):

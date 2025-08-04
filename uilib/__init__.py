@@ -1624,6 +1624,7 @@ class ClosableGroup(QtWidgets.QGroupBox):
         self.__do_closing = True
         self.__start_pos = None
         self.__icon = None
+        self.__showed_size_policy = self.sizePolicy()
 
     def setIcon(self, iconPath):
         r"""
@@ -1640,7 +1641,11 @@ class ClosableGroup(QtWidgets.QGroupBox):
 
     def minimumSizeHint(self):
         s = super(ClosableGroup, self).minimumSizeHint()
-        return QtCore.QSize(style.scaled(s.width()), style.scaled(s.height()))
+        if self.__is_closed:
+            return QtCore.QSize(
+                style.scaled(s.width()), style.scaled(s.height())
+            )
+        return s
 
     def icon(self):
         r"""
@@ -1680,6 +1685,13 @@ class ClosableGroup(QtWidgets.QGroupBox):
         for child in self.children():
             if isinstance(child, QtWidgets.QWidget):
                 child.setVisible(show)
+        if show:
+            self.setSizePolicy(self.__showed_size_policy)
+        else:
+            self.__showed_size_policy = self.sizePolicy()
+            self.setSizePolicy(
+                QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+            )
         self.update()
         self.__is_closed = show == False
         self.expanded.emit(show)

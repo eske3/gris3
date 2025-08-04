@@ -475,7 +475,7 @@ class ExtraConstructorManager(object):
 
     def constructor(self):
         r"""
-            登録されてたConstructorを返す。
+            登録されたConstructorを返す。
             
             Returns:
                 list:
@@ -535,7 +535,7 @@ class ExtraConstructorManager(object):
         r"""
             ExstraConstructorの作成補助用GUIをリストする。
             戻り値はui作成用のクラス。
-            
+
             Returns:
                 list:
         """

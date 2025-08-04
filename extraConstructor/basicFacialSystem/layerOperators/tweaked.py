@@ -91,7 +91,7 @@ class Tweaked(layer.LayerOperator):
             fitter[targets] = func.SurfaceFitter(src[0])
         if not fitter:
             return
-        self.jointlist = []
+        self.jointlist = {}
         for grp in tweak_grp.children():
             grp = node.parent(grp, root_group)[0]
             joints = grp.children(type='joint')
@@ -103,7 +103,17 @@ class Tweaked(layer.LayerOperator):
                     break
             else:
                 f = fitter[None]
-            self.jointlist.extend(f.fit(joints))
+            fit_joints = f.fit(joints)
+            for jnts in fit_joints: 
+                self.jointlist[jnts] = jnts[0].matrix()
+
+    def postPreSetup(self):
+        r"""
+            コマンド実行でウェイトを読み込むと何故かジョイントの位置がずれるため
+            修正パッチとして実行。
+        """
+        for joints, matrix in self.jointlist.items():
+            joints[0].setMatrix(matrix)
 
     def setup(self):
         if not hasattr(self, 'jointlist'):
@@ -122,7 +132,7 @@ class Tweaked(layer.LayerOperator):
         )
         ctrl_grp.lockTransform()
         anim_set = cst.createAnimSet('facialTweak')
-        for jnt, spacer in self.jointlist:
+        for jnt, spacer in self.jointlist.keys():
             name = func.Name(jnt)
             ctrl = node.createNode(
                 'transform', n=name.convertType('ctrl')(), p=ctrl_grp

@@ -186,7 +186,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
 
     def _preSetup(self):
         r"""
-            セットアップ前に行う処理
+            preSetup前に行う処理
         """
         cst = self.constructor()
         self.disp_ctrl = cst.ctrlGroup().displayCtrl()
@@ -239,6 +239,12 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         # =====================================================================
 
         l_manager.preSetupLayers()
+
+    def preSetup(self):
+        r"""
+            preSetup後に行う処理
+        """
+        self.layerManager().postPreSetupLayers()
 
     def setup(self):
         self.layerManager().setupLayers()

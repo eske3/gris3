@@ -155,6 +155,12 @@ class LayerOperator(object):
         """
         pass
 
+    def postPreSetup(self):
+        r"""
+            ConstructorのpreSetup完了後に呼ばれる上書き専用メソッド。
+        """
+        pass
+
     def setup(self):
         pass
 
@@ -384,6 +390,13 @@ class LayerManager(object):
         """
         for lo_obj in self.processObjects():
             lo_obj.preSetup()
+
+    def postPreSetupLayers(self):
+        r"""
+            登録済みレイヤーのpostPreSetupを呼び出す。
+        """
+        for lo_obj in self.processObjects():
+            lo_obj.postPreSetup()
 
     def setupLayers(self):
         r"""

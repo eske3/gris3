@@ -1,19 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     skinWeightExporter.py
-    @brief    スキンウェイトの書き出し、読み込み機能を提供するモジュール。
-    @class    Exporter             : スキンウェイトの書き出し機能を提供するクラス。
-    @class    Restorer             : 書き出されたmelのウェイトファイルを復元するクラス。
-    @class    BasicTemporaryWeight : 一時的にウェイトを書き出し、復元する機能を提供するクラス。
-    @class    TemporaryWeight      : 選択オブジェクト１つのウェイトを一時的に保存、復元する。
-    @date     2017/01/21 23:55[Eske](eske3g@gmail.com)
-    @update   2020/10/07 09:16[eske3g@gmail.com]
-    このソースの版権は[EskeYoshinob]にあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[EskeYoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    スキンウェイトの書き出し、読み込み機能を提供するモジュール。
+    
+    Dates:
+        date:2017/01/21 23:55[Eske](eske3g@gmail.com)
+        update:2025/08/05 11:24 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 import os
 import re
 import datetime
@@ -28,63 +27,59 @@ Version = '1.0.0'
 # The main classes.                                                          //
 # /////////////////////////////////////////////////////////////////////////////
 class Exporter(core.AbstractExporter):
-    r'''
-        @brief    スキンウェイトの書き出し機能を提供するクラス。
-                  書き出されるウェイトファイルはmelファイルとなる。
-        @inherit  core.AbstractExporter
-        @function setIsRemapIndex : インデックス番号のりマップ処理を行うかどうかセットする。
-        @function isRemapIndex    : インデックス番号のりマップ処理を行うかどうかを返す。
-        @function checkExtension  : 拡張子のチェックを行う。
-        @function setShape        : ウェイトを書き出すシェイプ名をセットする。
-        @function shape           : ウェイトを書き出すシェイプ名を返す。
-        @function export          : ウェイトの書き出しを行う。
-        @date     2017/01/21 23:55[Eske](eske3g@gmail.com)
-        @update   2020/10/07 09:16[eske3g@gmail.com]
-    '''
+    r"""
+        スキンウェイトの書き出し機能を提供するクラス。
+        書き出されるウェイトファイルはmelファイルとなる。
+    """
     Extensions = ['mel']
     NodeType = ['mesh', 'nurbsSurface', 'nurbsCurve', 'lattice']
     def __init__(self):
-        r'''
-            @brief  初期化を行う。
-            @return (None):
-        '''
         super(Exporter, self).__init__()
         self.__shape = ''
         self.__isRemapIndex = True
 
     def setIsRemapIndex(self, state):
-        r'''
-            @brief  インデックス番号のりマップ処理を行うかどうかセットする。
-                    デフォルトはTrue。
-            @param  state(bool) : 
-            @return (None):
-        '''
+        r"""
+            インデックス番号のリマップ処理を行うかどうかセットする。
+            デフォルトはTrue。
+            
+            Args:
+                state (bool):
+        """
         self.__isRemapIndex = bool(state)
 
     def isRemapIndex(self):
-        r'''
-            @brief  インデックス番号のりマップ処理を行うかどうかを返す。
-            @return (bool):
-        '''
+        r"""
+            インデックス番号のりマップ処理を行うかどうかを返す。
+            
+            Returns:
+                bool:
+        """
         return self.__isRemapIndex
 
     def checkExtension(self, path):
-        r'''
-            @brief  拡張子のチェックを行う。
-            @param  path(str) : チェックするファイルパス。
-            @return (None):
-        '''
+        r"""
+            拡張子のチェックを行う。
+            チェック後、該当拡張子がない場合は付与したものを返す。
+            
+            Args:
+                path (str):チェックするファイルパス。
+                
+            Returns:
+                str:
+        """
         path, ext = os.path.splitext(path)
         if not ext in self.Extensions:
             path += '.' + self.Extensions[0]
         return path
 
     def setShape(self, node):
-        r'''
-            @brief  ウェイトを書き出すシェイプ名をセットする。
-            @param  node(str) : 
-            @return (None):
-        '''
+        r"""
+            ウェイトを書き出すシェイプ名をセットする。
+            
+            Args:
+                node (str):
+        """
         if not cmds.objExists(node):
             raise RuntimeError(
                 "The specified node doesn't exists : %s" % node
@@ -105,17 +100,18 @@ class Exporter(core.AbstractExporter):
             self.__shape = node
 
     def shape(self):
-        r'''
-            @brief  ウェイトを書き出すシェイプ名を返す。
-            @return (str):
-        '''
+        r"""
+            ウェイトを書き出すシェイプ名を返す。
+            
+            Returns:
+                str:
+        """
         return self.__shape
 
     def export(self):
-        r'''
-            @brief  ウェイトの書き出しを行う。
-            @return (None):
-        '''
+        r"""
+            ウェイトの書き出しを行う。
+        """
         methodTypes = ['Classic Lnear', 'Dual Quaternion', 'Weight Blended']
         modulename = __name__.split('.')[-1]
         current_time = datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')
@@ -227,29 +223,16 @@ class Exporter(core.AbstractExporter):
             f.write('}\n')
         # =====================================================================
 
+
 class Restorer(object):
-    r'''
-        @brief    書き出されたmelのウェイトファイルを復元するクラス。
-        @inherit  object
-        @function setFile              : 入力ファイルパスをセットする。
-        @function file                 : セットされた入力ファイルパスを返す。
-        @function setShape             : ターゲットとなるシェイプをセットする。
-        @function shape                : ターゲットとなるシェイプを返す。
-        @function setSkinClusterName   : 復元する時につけるskinClusterの名前をセットする。
-        @function skinClusterName      : 復元する時につけるskinClusterの名前を返す。
-        @function setInfluenceReplacer : インフルエンサーを置き換えるためのルーチンを設定する。
-        @function analyzeInfo         : 与えられたウェイトファイルを解析し、必用な情報を取得する。
-        @function restore              : 復元を開始する。
-        @date     2017/01/21 23:55[Eske](eske3g@gmail.com)
-        @update   2020/10/07 09:16[eske3g@gmail.com]
-    '''
+    r"""
+        書き出されたmelのウェイトファイルを復元するクラス。
+    """
     def __init__(self, filepath=''):
-        # type: (str) -> any
-        r'''
-            @brief  初期化を行う。
-            @param  filepath(str) : 入力melファイル
-            @return (any):
-        '''
+        r"""
+            Args:
+                filepath (str):入力melファイル
+        """
         self.setFile(filepath)
         self.__shape = ''
         self.__skinClusterName = ''
@@ -257,76 +240,91 @@ class Restorer(object):
         self.__param_cache = {}
 
     def setFile(self, filepath):
-        # type: (str) -> any
-        r'''
-            @brief  入力ファイルパスをセットする。
-            @param  filepath(str) : 
-            @return (any):
-        '''
+        r"""
+            入力ファイルパスをセットする。
+            
+            Args:
+                filepath (str):
+        """
         self.__file = filepath
         self.__param_cache = {}
 
     def file(self):
-        # type: () -> str
-        r'''
-            @brief  セットされた入力ファイルパスを返す。
-            @return (str):
-        '''
+        r"""
+            セットされた入力ファイルパスを返す。
+            
+            Returns:
+                str:
+        """
         return self.__file
 
     def setShape(self, shape):
-        # type: (str) -> None
-        r'''
-            @brief  ターゲットとなるシェイプをセットする。
-            @param  shape(str) : 
-            @return (None):
-        '''
+        r"""
+            ターゲットとなるシェイプをセットする。
+            
+            Args:
+                shape (str):
+                
+            Returns:
+                None:
+        """
         self.__shape = shape
 
     def shape(self):
-        # type: () -> None
-        r'''
-            @brief  ターゲットとなるシェイプを返す。
-            @return (None):
-        '''
+        r"""
+            ターゲットとなるシェイプを返す。
+            
+            Returns:
+                None:
+        """
         return self.__shape
 
     def setSkinClusterName(self, name):
-        # type: (str) -> None
-        r'''
-            @brief  復元する時につけるskinClusterの名前をセットする。
-            @param  name(str) : 
-            @return (None):
-        '''
+        r"""
+            復元する時につけるskinClusterの名前をセットする。
+            
+            Args:
+                name (str):
+                
+            Returns:
+                None:
+        """
         self.__skinClusterName = name
 
     def skinClusterName(self):
-        # type: () -> str
-        r'''
-            @brief  復元する時につけるskinClusterの名前を返す。
-            @return (str):
-        '''
+        r"""
+            復元する時につけるskinClusterの名前を返す。
+            
+            Returns:
+                str:
+        """
         return self.__skinClusterName
 
     def setInfluenceReplacer(self, function=None):
-        # type: (function) -> None
-        r'''
-            @brief  インフルエンサーを置き換えるためのルーチンを設定する。
-                    この関数はインフルエンスのリストを受け取り、置換後のリストを
-                    返す関数である必要がある。
-            @param  function(function) : 関数。
-            @return (None):
-        '''
+        r"""
+            インフルエンスを置き換えるための関数を設定する。
+            この関数を指定すると、バインドする際にウェイトファイルの
+            InfluenceOrderで指定されているバインドジョイント名を任意のルールで
+            変更することができる。
+            この関数はインフルエンス名のリストを受け取り、置換後のリストを
+            返す関数である必要がある。
+            
+            Args:
+                function (function):関数。
+        """
         self.__influence_replacer = function
 
     def analyzeInfo(self, force=False):
-        # type: (bool) -> dict
-        r'''
-            @brief  与えられたウェイトファイルを解析し、必用な情報を取得する。
-                    fouceがFalseで、すでにキャッシュがある場合は何もしない。
-            @param  force(bool) : キャッシュを破棄して強制的に更新するかどうか
-            @return (dict):解析結果を持つ辞書オブジェクト
-        '''
+        r"""
+            与えられたウェイトファイルを解析し、必用な情報を取得する。
+            fouceがFalseで、すでにキャッシュがある場合は何もしない。
+            
+            Args:
+                force (bool):キャッシュを破棄して強制的に更新するかどうか
+                
+            Returns:
+                dict:解析結果を持つ辞書オブジェクト
+        """
         if self.__param_cache and not force:
             return self.__param_cache
         self.__param_cache = {}
@@ -367,11 +365,9 @@ class Restorer(object):
         return self.__param_cache
 
     def restore(self):
-        # type: () -> None
-        r'''
-            @brief  復元を開始する。
-            @return (None):
-        '''
+        r"""
+            復元を開始する。
+        """
         boolFromStr = {
             'True':True,   '1':True,  'on':True,
             'False':False, '0':False, 'off':False,
@@ -445,23 +441,10 @@ class Restorer(object):
 #                                                                            //
 # /////////////////////////////////////////////////////////////////////////////
 class BasicTemporaryWeight(object):
-    r'''
-        @brief    一時的にウェイトを書き出し、復元する機能を提供するクラス。
-        @inherit  object
-        @function tempFile     : 一時保存ファイルのパス（拡張子なし）を返す。
-        @function tempFilePath : 一時保存ファイルのパスを返す。
-        @function setNode      : ウェイトを書き出すノード名をセットする。
-        @function node         : ウェイトを書き出すノード名を返す。
-        @function save         : ウェイトを一時的に書き出す。
-        @function restore      : 一時的に書き出したウェイトを復元する。
-        @date     2017/08/29 11:46[eske](eske3g@gmail.com)
-        @update   2020/10/07 09:16[eske3g@gmail.com]
-    '''
+    r"""
+        一時的にウェイトを書き出し、復元する機能を提供するクラス。
+    """
     def __init__(self):
-        r'''
-            @brief  初期化を行う。
-            @return (None):
-        '''
         self.__exporter = Exporter()
         self.__restorer = Restorer()
         self.__nodename = ''
@@ -471,39 +454,45 @@ class BasicTemporaryWeight(object):
         )
 
     def tempFile(self):
-        r'''
-            @brief  一時保存ファイルのパス（拡張子なし）を返す。
-            @return (str):
-        '''
+        r"""
+            一時保存ファイルのパス（拡張子なし）を返す。
+            
+            Returns:
+                str:
+        """
         return self.__tempfile
 
     def tempFilePath(self):
-        r'''
-            @brief  一時保存ファイルのパスを返す。
-            @return (str):
-        '''
+        r"""
+            一時保存ファイルのパスを返す。
+            
+            Returns:
+                str:
+        """
         return '{}{}.mel'.format(self.tempFile(), self.__nodename)
 
     def setNode(self, nodeName):
-        r'''
-            @brief  ウェイトを書き出すノード名をセットする。
-            @param  nodeName(str) : 
-            @return (None):
-        '''
+        r"""
+            ウェイトを書き出すノード名をセットする。
+            
+            Args:
+                nodeName (str):
+        """
         self.__nodename = nodeName
 
     def node(self):
-        r'''
-            @brief  ウェイトを書き出すノード名を返す。
-            @return (str):
-        '''
+        r"""
+            ウェイトを書き出すノード名を返す。
+            
+            Returns:
+                str:
+        """
         return self.__nodename
 
     def save(self):
-        r'''
-            @brief  ウェイトを一時的に書き出す。
-            @return (None):
-        '''
+        r"""
+            ウェイトを一時的に書き出す。
+        """
         n = self.node()
         if not cmds.objExists(n):
             raise RuntimeError('No saved weight node exists.')
@@ -512,11 +501,12 @@ class BasicTemporaryWeight(object):
         self.__exporter.export()
 
     def restore(self, removeWeightFile=True):
-        r'''
-            @brief  一時的に書き出したウェイトを復元する。
-            @param  removeWeightFile(bool) : ウェイトファイルを破棄するかどうか
-            @return (None):
-        '''
+        r"""
+            一時的に書き出したウェイトを復元する。
+            
+            Args:
+                removeWeightFile (bool):ウェイトファイルを破棄するかどうか
+        """
         self.__restorer.setFile(self.tempFilePath())
         self.__restorer.setShape(self.__exporter.shape())
         self.__restorer.restore()
@@ -529,20 +519,13 @@ class BasicTemporaryWeight(object):
 
 
 class TemporaryWeight(BasicTemporaryWeight):
-    r'''
-        @brief    選択オブジェクト１つのウェイトを一時的に保存、復元する。
-        @inherit  BasicTemporaryWeight
-        @function save         : 選択ノード１つのウェイトを一時的に保存する。
-        @function tempFilePath : 一時ファイルのパスを返す。この名前は一意。
-        @function restore      : enter description
-        @date     2017/08/29 11:46[eske](eske3g@gmail.com)
-        @update   2020/10/07 09:16[eske3g@gmail.com]
-    '''
+    r"""
+        選択オブジェクト１つのウェイトを一時的に保存、復元する。
+    """
     def save(self):
-        r'''
-            @brief  選択ノード１つのウェイトを一時的に保存する。
-            @return (None):
-        '''
+        r"""
+            選択ノード１つのウェイトを一時的に保存する。
+        """
         selected = cmds.ls(sl=True)
         if len(selected) != 1:
             raise RuntimeError('The saved object must be only one.')
@@ -550,17 +533,18 @@ class TemporaryWeight(BasicTemporaryWeight):
         super(TemporaryWeight, self).save()
 
     def tempFilePath(self):
-        r'''
-            @brief  一時ファイルのパスを返す。この名前は一意。
-            @return (str):
-        '''
+        r"""
+            一時ファイルのパスを返す。この名前は一意。
+            
+            Returns:
+                str:
+        """
         return self.tempFile() + '.mel'
 
     def restore(self):
-        r'''
-            @brief  復元を行う。
-            @return (any):
-        '''
+        r"""
+            復元を行う。
+        """
         super(TemporaryWeight, self).restore(False)
 # /////////////////////////////////////////////////////////////////////////////
 #                                                                            //

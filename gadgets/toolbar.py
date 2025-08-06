@@ -108,6 +108,7 @@ class ToolbarView(QtWidgets.QWidget):
         self.__hide_timer_id = None
         self.__entered_time = None
         self.__wait_time = 0.5
+        self.__pre_parent_pos = None
         self.__gradient = QtGui.QLinearGradient()
         self.__gradient.setColorAt(0, QtGui.QColor(22, 42, 68, 240))
         self.__gradient.setColorAt(1, QtGui.QColor(0, 0, 0, 175))
@@ -162,7 +163,7 @@ class ToolbarView(QtWidgets.QWidget):
             引き数count ms秒経過したら自身を非表示にするタイマーを開始する
             
             Args:
-                count (any):
+                count (int):
         """
         if self.__hide_timer_id:
             self.killTimer(self.__hide_timer_id)
@@ -171,11 +172,17 @@ class ToolbarView(QtWidgets.QWidget):
     def show(self):
         self.__entered_time = time.time()
         self.__lock = False
+        if self.parent():
+            p = self.parent()
+            self.__pre_parent_pos = p.mapToGlobal(p.pos())
+        else:
+            self.__pre_parent_pos = None
         super(ToolbarView, self).show()
 
     def hide(self):
         self.__lock = False
         self.__entered_time = None
+        self.__pre_parent_pos = None
         super(ToolbarView, self).hide()
 
     def setWaitTime(self, t):
@@ -212,6 +219,11 @@ class ToolbarView(QtWidgets.QWidget):
             Args:
                 event (QtCore.QEvent):
         """
+        if self.__pre_parent_pos:
+            p = self.parent()
+            if p.mapToGlobal(p.pos()) != self.__pre_parent_pos:
+                self.hide()
+                return
         if self.__hide_timer_id:
             self.killTimer(self.__hide_timer_id)
         self.__hide_timer_id = None
@@ -240,12 +252,10 @@ class ToolbarView(QtWidgets.QWidget):
         rect = self.rect()
         rect.setTop(self.ButtonSize)
 
-        # painter.setBrush(QtGui.QBrush(QtGui.QColor(48, 48, 48)))
         self.__gradient.setFinalStop(0, rect.height())
         painter.setBrush(QtGui.QBrush(self.__gradient))
         painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0)))
         painter.drawRect(rect)
-
 
 
 class ToolbarButton(uilib.OButton):
@@ -482,3 +492,4 @@ def showWindow():
     widget.resize(uilib.hires(600), uilib.hires(30))
     widget.show()
     return widget
+

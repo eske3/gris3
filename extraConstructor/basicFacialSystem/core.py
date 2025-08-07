@@ -80,9 +80,9 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
     PartsGroup = 'facialSetupParts_grp'
     FacialCategoryPattern = '(.*?)FacialTarget_grp'
     Parent = 'head_ctrl_C'
-    ParentJoint = 'head_jnt_C'
     EyeHighlightGeoGroup = 'eyeHighLight_grp'
     LayerInitMethod = 'initFacialLayerOperator'
+    EyeBallUnit = None
     IsSetup = False
     DefaultLayerOperatorList = ['BlendShape', 'JawOpener', 'Tweaked']
 
@@ -93,14 +93,27 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         """
         super(ExtraConstructor, self).__init__(const)
         self.__layer_manager = layer.LayerManager(const, self)
-        self.__eye_highlight_system = eyeHighlightRig.EyeHighlightSetup(
-            self.EyeHighlightGeoGroup, self.ParentJoint, const, self.Parent
-        )
+        self.__eye_highlight_system = None
         self.__eye_joints = {}
         self.__combined_objects = []
         self.__combined_cages = []
         self.disp_ctrl = None
         const.combineBody = self.combineBody
+
+    def createEyeHighlightSystem(self):
+        r"""
+            目のハイライトのセットアップ用オブジェクトを作成して返す。
+
+            Returns:
+                const (eyeHighlightRig.EyeHighlightSetup):
+        """
+        return eyeHighlightRig.EyeHighlightSetup(
+            self.EyeHighlightGeoGroup, self.constructor(), self.Parent,
+            self.EyeBallUnit
+        )
+
+    def initializeEyeHighlightSystem(self):
+        self.__eye_highlight_system = self.createEyeHighlightSystem()
 
     def defaultLayerOperators(self):
         layers = layerOperators.listAllLayerOperators()
@@ -188,6 +201,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         r"""
             preSetup前に行う処理
         """
+        self.initializeEyeHighlightSystem()
         cst = self.constructor()
         self.disp_ctrl = cst.ctrlGroup().displayCtrl()
         

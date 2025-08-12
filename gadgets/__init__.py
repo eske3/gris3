@@ -145,6 +145,14 @@ def openSimUtility():
     return ui
 
 
+def openBlendShapeOperator():
+    r"""
+        ブレンドシェイプの管理・編集機能を提供するツールを開く。
+    """
+    from . import blendShapeOperator
+    return blendShapeOperator.showWindow()
+
+
 def showRenamer():
     r"""
         リネーマーを表示する。

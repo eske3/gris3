@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/01/21 23:58 eske yoshinob[eske3g@gmail.com]
-        update:2021/10/12 18:39 eske yoshinob[eske3g@gmail.com]
+        update:2025/08/17 11:23 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -722,9 +722,9 @@ class Framerange(QtWidgets.QWidget):
     """    
     def __init__(self, parent=None):
         r"""
-            Args:
-                parent (QtWidgets.QWidget):親ウィジェット
-        """
+        Args:
+            parent (QtWidgets.QWidget):親ウィジェット
+    """
         super(Framerange, self).__init__(parent)
         self.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
@@ -759,7 +759,7 @@ class Framerange(QtWidgets.QWidget):
     def setFramerange(self, start, end):
         r"""
             開始・終了フレームを設定する。
-
+            
             Args:
                 start (int):開始フレーム
                 end (int):終了フレーム
@@ -809,18 +809,30 @@ class NodePicker(QtWidgets.QWidget):
         layout.setAlignment(pick_btn, QtCore.Qt.AlignBottom)
 
     def setPickMode(self, mode):
+        r"""
+            Args:
+                mode (any):
+        """
         self.__pickmode = mode
 
     def pickMode(self):
         return self.__pickmode
     
     def setNodeTypes(self, *nodeTypes):
+        r"""
+            Args:
+                *nodeTypes (any):
+        """
         self.__node_types = list(nodeTypes)
 
     def nodeTypes(self):
         return self.__node_types
 
     def setSelectionOptions(self, **options):
+        r"""
+            Args:
+                **options (any):
+        """
         self.__selection_options = {x:y for x, y in options.items()}
 
     def selectionOptions(self):
@@ -839,13 +851,32 @@ class NodePicker(QtWidgets.QWidget):
             self.__nodelist = []
             self.__name_editor.setText('')
             return
-        self.__nodelist = [x() for x in selected]
+        self.setData([x() for x in selected])
+
+    def setData(self, nodelist):
+        r"""
+            任意のノードのリストをフィールドにセットする。
+            このメソッドでは引数nodelistの内部で指定しているノード名がシーン中に
+            存在しているかのチェックを行っていない点に注意。
+
+            Args:
+                nodelist (list): ノード名のリスト
+        """
         if self.pickMode() == self.SingleSelection:
-            self.__nodelist = [self.__nodelist[0]]
+            self.__nodelist = [nodelist[0]]
+        else:
+            self.__nodelist = nodelist[:]
         self.__name_editor.setText(', '.join(self.__nodelist))
 
     def data(self):
         r"""
-            フィールドに入っている文字列を返す。
+            登録されているノード名のリストを返す。
+            pickModeがSingleSelectionの場合は戻り値は文字列になる。
+            
+            Returns:
+                list / str:
         """
+        if self.pickMode() == self.SingleSelection:
+            return self.__nodelist[0] if self.__nodelist else ''
         return self.__nodelist
+        

@@ -16,8 +16,9 @@ from ..tools import blendShapeUtil
 from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
-
 DefaultBlendShapeName = 'facial_bs'
+DefaultTargetContainer = 'facialMorph_grp'
+DefaultTargetGeometory = 'face_geo'
 
 
 class TargetContainerSetting(uilib.ClosableGroup):
@@ -38,8 +39,10 @@ class TargetContainerSetting(uilib.ClosableGroup):
         layout.addWidget(self.field)
 
     def selectedNode(self):
-        data = self.field.data()
-        return data[0] if data else ''
+        return self.field.data()
+
+    def setNode(self, nodeName):
+        self.field.setData([nodeName])
 
 
 class BlendShapeOption(uilib.ClosableGroup):
@@ -60,11 +63,16 @@ class BlendShapeOption(uilib.ClosableGroup):
         layout.addRow('Blend Shape', self.bs)
 
     def targetGeometry(self):
-        data = self.geometry.data()
-        return data[0] if data else ''
+        return self.geometry.data()
+
+    def setTargetGeometry(self, target):
+        self.geometry.setData([target])
 
     def blendShape(self):
         return self.bs.text()
+
+    def setBlendShape(self, blendShapeName):
+        self.bs.setText(blendShapeName)
 
 
 class Operator(uilib.ClosableGroup):
@@ -77,7 +85,6 @@ class Operator(uilib.ClosableGroup):
         layout = QtWidgets.QVBoxLayout(self)
         layout.setSpacing(2)
         for l, m, icon in (
-            # ('Create targets', 'createTargets', 'uiBtn_plus'),
             (
                 'Create blend shape for facial', 'createBlendShape',
                 'uiBtn_addUnit'
@@ -160,7 +167,16 @@ class BlendShapeUtil(QtWidgets.QWidget):
             'bsName': self.option.blendShape()
         }
         return result
-    
+
+    def setBlendShape(self, blendShapeName):
+        self.option.setBlendShape(blendShapeName)
+
+    def setTargetGeometry(self, targetGeometry):
+        self.option.setTargetGeometry(targetGeometry)
+
+    def setTargetShapeContainer(self, targetShapeContainer):
+        self.tgt_grp.setNode(targetShapeContainer)
+
     def createTargets(self):
         pass
 
@@ -207,7 +223,9 @@ class MainGUI(uilib.AbstractSeparatedWindow):
         return BlendShapeUtil()
 
 
-def showWindow():
+def showWindow(
+    blendShapeName='', targetGeometry='', targetShapeContainer=''
+):
     r"""
         ウィンドウを作成するためのエントリ関数。
 
@@ -216,5 +234,9 @@ def showWindow():
     """
     widget = MainGUI(mayaUIlib.MainWindow)
     widget.resize(640, 420)
+    m = widget.main()
+    m.setBlendShape(blendShapeName)
+    m.setTargetGeometry(targetGeometry)
+    m.setTargetShapeContainer(targetShapeContainer)
     widget.show()
     return widget

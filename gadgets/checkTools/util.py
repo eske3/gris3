@@ -48,7 +48,11 @@ class CategoryOptionTemplateCreator(object):
             ui.FrameworkのsetCategoryFromDataに渡すためのデータのテンプレートを
             生成して返す。
             引数categoryListにはFrameworkのaddCategoryに渡すためのカテゴリ一覧を
-            渡す。
+            渡す。categoryListの中身はaddCategoryで生成する内容と同じで、
+                moduleName : カテゴリ名
+                options: カテゴリモジュールに渡す任意オプションの辞書
+                modulePrefix: GRIS標準外のカテゴリモジュールのプレフィックス
+            を格納した辞書を持つリストとなる。
             
             Args:
                 categoryList (list):登録するカテゴリーのリスト

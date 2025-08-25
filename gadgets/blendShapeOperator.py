@@ -16,8 +16,9 @@ from ..tools import blendShapeUtil
 from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
-
 DefaultBlendShapeName = 'facial_bs'
+DefaultTargetContainer = 'facialMorph_grp'
+DefaultTargetGeometory = 'face_geo'
 
 
 TargetListTemplate = '''eye_wink_facialGrp_L
@@ -224,6 +225,9 @@ class BlendShapeOption(uilib.ClosableGroup):
         """
         return self.bs.text()
 
+    def setBlendShape(self, blendShapeName):
+        self.bs.setText(blendShapeName)
+
 
 class Operator(uilib.ClosableGroup):
     def __init__(self, parent=None):
@@ -248,7 +252,6 @@ class Operator(uilib.ClosableGroup):
         layout.setSpacing(2)
         layout.addWidget(setup_w)
         for l, m, icon in (
-            # ('Create targets', 'createTargets', 'uiBtn_plus'),
             (
                 'Create blend shape for facial', 'createBlendShape',
                 'uiBtn_addUnit'

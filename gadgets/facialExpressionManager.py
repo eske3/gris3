@@ -15,6 +15,7 @@ r"""
         Proprietary and confidential
 """
 from collections import OrderedDict
+import bisect
 from ..tools import facialMemoryManager
 from ..uilib import mayaUIlib
 from .. import uilib, node, style
@@ -445,6 +446,33 @@ class ExpressionButton(QtWidgets.QWidget):
         """
         return self.__v_btn
 
+    def setChecked(self, state):
+        r"""
+            ヴァーチャルボタンのチェック状態を変更する。
+
+            Args:
+                state (bool):
+        """
+        self.__v_btn.setChecked(state)
+
+    def isChecked(self):
+        r"""
+            ヴァーチャルボタンがチェックされているかを返す。
+            
+            Returns:
+                bool:
+        """
+        return self.__v_btn.isChecked()
+
+    def expression(self):
+        r"""
+            ヴァーチャルボタンに登録されている表情名を返す。
+            
+            Returns:
+                str:
+        """
+        return self.__v_btn.expression()
+
 
 class FacialExpressionView(QtWidgets.QWidget):
     r"""
@@ -458,7 +486,7 @@ class FacialExpressionView(QtWidgets.QWidget):
         super(FacialExpressionView, self).__init__(parent)
         self.__button_col = None
         self.__filter_activation = False
-        self.__buttons = {}
+        self.__buttons = OrderedDict()
         self.__start_pos = None
         self.__start_scroll_val = []
         self.__scroller = QtWidgets.QScrollArea()
@@ -565,9 +593,49 @@ class FacialExpressionView(QtWidgets.QWidget):
         if is_activated:
             self.activateFilter(True)
 
+    def clearSelection(self):
+        for exp, btn in self.__buttons.items():
+            btn.setChecked(False)
+
+    def clearButtonDowningStates(self):
+        for btn in self.__buttons.values():
+            btn.virtualButton().setDown(False)
+
+    def selectExpanded(self, obj):
+        if not isinstance(obj, VirtualSliderButton):
+            return
+        exp = obj.expression()
+        exp_btn = self.__buttons.get(exp)
+        if not exp_btn:
+            return
+        keys = list(self.__buttons.keys())
+        if exp not in keys:
+            return
+        selected_keys = {
+            x: y[0] for x, y in enumerate(self.__buttons.items())
+            if y[1].isChecked() and y[1].isVisible()
+        }
+        if not selected_keys:
+            return
+        idx = keys.index(exp)
+        find_prev = lambda nums, n: nums[
+            max(bisect.bisect_left(nums, n) - 1, 0)
+        ]
+        sted = sorted(
+            [idx, find_prev(list(selected_keys.keys()), idx)]
+        )
+        for i in range(sted[0]+1, sted[1]):
+            btn = self.__buttons.get(keys[i])
+            if not btn:
+                continue
+            if not btn.isVisible():
+                continue
+            btn.setChecked(True)
+
     def getCheckedButton(self):
         r"""
             現在選択中のボタンを返す。
+            複数選択の場合は最後に選択されたボタンを返す。
 
             Returns:
                 ExpressionButton: 
@@ -578,6 +646,19 @@ class FacialExpressionView(QtWidgets.QWidget):
         if not btn:
             return
         return btn.parent()
+
+    def listCheckedButtons(self):
+        r"""
+            現在選択中のボタンを返す。
+            複数選択の場合は選択されているもの全てを返す。
+
+            Returns:
+                list(ExpressionButton): 
+        """
+        return [
+            x for x in self.__buttons.values()
+            if x.isVisible() and x.isChecked()
+        ]
 
     def applyExpressionFromSelected(self):
         r"""
@@ -625,7 +706,8 @@ class FacialExpressionView(QtWidgets.QWidget):
             if not btn.isVisible():
                 continue
             v_scroller = self.__scroller.verticalScrollBar()
-            btn.virtualButton().setChecked(True)
+            self.clearSelection()
+            btn.setChecked(True)
             btn_rect = btn.geometry()
             pos = getattr(btn_rect, pos_method)()
             rect = self.__scroller.geometry()
@@ -679,7 +761,7 @@ class FacialExpressionView(QtWidgets.QWidget):
     def setupMousePressEvent(self, event):
         r"""
             Args:
-                event (any):
+                event (QtGui.QMouseEvent):
         """
         self.__start_scroll_val = []
         if event.button() == QtCore.Qt.LeftButton:
@@ -691,7 +773,7 @@ class FacialExpressionView(QtWidgets.QWidget):
     def setupMouseMoveEvent(self, event):
         r"""
             Args:
-                event (any):
+                event (QtGui.QMouseEvent):
         """
         if not self.__start_pos:
             return False
@@ -722,16 +804,27 @@ class FacialExpressionView(QtWidgets.QWidget):
             scr.setValue(self.__start_scroll_val[idx] - v)
         return True
 
-    def setupMouseReleaseEvent(self, event):
+    def setupMouseReleaseEvent(self, obj, event):
         r"""
             Args:
-                event (any):
+                event (QtGui.QMouseEvent):
         """
-        if not self.__start_scroll_val:
+        if self.__start_scroll_val:
+            # スクロールだった場合、スクロール終了処理をして完了。
+            QtWidgets.QApplication.restoreOverrideCursor()
+            self.__start_scroll_val = []
+            self.__start_pos = None
+            self.clearButtonDowningStates()
+            return True
+        mod = event.modifiers()
+        self.__button_col.setExclusive(False)
+        if mod == QtCore.Qt.ControlModifier:
             return False
-        QtWidgets.QApplication.restoreOverrideCursor()
-        self.__start_scroll_val = []
-        self.__start_pos = None
+        elif mod == QtCore.Qt.ShiftModifier:
+            self.selectExpanded(obj)
+            return False
+        self.__button_col.setExclusive(True)
+        self.clearSelection()
         return False
 
     def eventFilter(self, obj, event):
@@ -741,6 +834,7 @@ class FacialExpressionView(QtWidgets.QWidget):
                 event (QtCore.QEvent):
         """
         e_type = event.type()
+        # ショートカットに関する制御。
         if e_type == QtCore.QEvent.KeyPress:
             key = event.key()
             if key == QtCore.Qt.Key_Tab:
@@ -755,13 +849,13 @@ class FacialExpressionView(QtWidgets.QWidget):
             elif key == QtCore.Qt.Key_Up:
                 self.selectUp()
                 return True
-                
+        # マウス操作に関する制御。
         elif e_type == QtCore.QEvent.MouseButtonPress:
             return self.setupMousePressEvent(event)
         elif e_type == QtCore.QEvent.MouseMove:
             return self.setupMouseMoveEvent(event)
         elif e_type == QtCore.QEvent.MouseButtonRelease:
-            return self.setupMouseReleaseEvent(event)
+            return self.setupMouseReleaseEvent(obj, event)
         return super(FacialExpressionView, self).eventFilter(obj, event)
 
 
@@ -982,6 +1076,17 @@ class FacialExpressionManager(QtWidgets.QWidget):
         """
         root = self.managerEngine().getManagerNode()
         return root.listExpressionData()
+
+    def overrideExpressionToSelected(self, datalist):
+        root = self.managerEngine().getManagerNode()
+        checked = self.facialView().listCheckedButtons()
+        if not checked:
+            return
+        expressions = [x.expression() for x in checked]
+        with node.DoCommand():
+            root.overrideExpressions(expressions, datalist, 2)
+        self.updateViewStatus(expressions)
+
 
 
 class MainGUI(uilib.AbstractSeparatedWindow):

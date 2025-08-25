@@ -4,7 +4,7 @@
 r"""
     Dates:
         date:2024/08/26 11:39 Eske Yoshinob[eske3g@gmail.com]
-        update:2025/07/22 18:46 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/08/12 20:36 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2024 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -248,7 +248,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         if removed:
             cmds.delete(removed)
 
-    def setExpressionFromDataList(self, datalist,  status=1):
+    def setExpressionFromDataList(self, datalist, status=1):
         r"""
             引数datalistで指定した辞書データを元に、表情と対応値を一括設定する。
             datalistは
@@ -326,7 +326,46 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             o_exp_data[1].setExpression(n_exp)
             cnt = 1
         return cnt
-        
+
+    def overrideExpressions(self, expressions, datalist, status=1):
+        r"""
+            引数expressionsで指定した表情に対し、datalistの内容を追加上書きする。
+            expressionsで指定した表情データに対し、
+                datalistの内容が含まれていない場合は追記する。
+                datalistの内容が含まれている場合は上書きする。
+            といった処理を行う。
+            引数datalistはDataTransform.setValuesへ渡す内容と同じ形式の辞書
+            オブジェクト。
+            
+            Args:
+                expressions (list): 上書きする表情名のリスト
+                datalist (dict): 上書きする表情データ
+                status (int):
+        """
+        bs = self.blendShape()
+        if not bs:
+            return
+        # datalistのアトリビュートがblendShapeのアトリビュートに存在
+        # しない場合はエラーを返す。
+        dataset = set(list(datalist.keys()))
+        expset = set(bs.listAttrNames())
+        if not dataset <= expset:
+            subset = dataset - expset
+            subset = sorted(list(subset))
+            raise ValueError(
+                'The given attribute does not in the "{}" : {}"'.format(
+                    bs(), subset
+                )
+            )
+        # 上書き処理を実行。
+        for exp_name in expressions:
+            exp = self.addExpression(exp_name)
+            values = exp.values()
+            values.update(datalist)
+            exp.setValues(values)
+            exp.setStatus(status)
+
+
     def applyExpression(self, expression):
         r"""
             引数expressionで指定した表情パラメータをblendShapeに適用する。

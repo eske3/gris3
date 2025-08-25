@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ポリゴンの頂点カラーセットの検出を行う。
+    ポリゴン数のカウントを行う。。
     checkToolの設定jsonファイルで使用できるオプションは以下の通り。
     {
         "moduleName": "polyCountChecker",

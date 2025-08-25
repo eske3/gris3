@@ -174,6 +174,17 @@ BasicDataTable = OrderedDict({
         'mat':[], 'png': ['phong'], 'bln':['blinn'], 'lbt':['lambert'], 
     }),
     'light': OrderedDict({'lgt':[]}),
+    'THsurfaceShape': OrderedDict({
+        'srfShape': [],
+        'pxrDsk': ['PxrDiskLight'], 'pxrRct': ['PxrRectLight'],
+        'pxrSpr': ['PxrSphereLight'],
+        'pxrDome': ['PxrDomeLight'],
+    }),
+    'THdependNode': OrderedDict({
+        'dpNode': [],
+        'pxrSrf': ['PxrSurface'], 'pxrCst': ['PxrConstant'],
+        
+    }),
     'sets': OrderedDict({'sg': ['shadingEngine']}),
 })
 
@@ -232,12 +243,13 @@ class BasicProductionEngine(BasicRenamerEngine):
             # ジオメトリと推察される場合。
             shape = shapes[0]
             typelist = shape.listInheritedTypes()
-            if 'light' in typelist:
-                key = 'light'
+            for key in ['light', 'THsurfaceShape']:
+                if key in typelist:
+                    break
             else:
                 key = 'geometry'
             return basename, suffix, getNodeType(shape.type(), key)
-            
+
         super(BasicProductionEngine, self).analyzeName(nodeName, fullPathName)
         from ... import node
         obj = node.asObject(fullPathName)
@@ -253,6 +265,8 @@ class BasicProductionEngine(BasicRenamerEngine):
         if 'lambert' in typelist:
             # マテリアルだった場合の振り分け
             node_type = getNodeType(t, 'lambert')
+        elif 'THdependNode' in typelist:
+            node_type = getNodeType(t, 'THdependNode')
         elif t == 'transform':
             # トランスフォーム系だった場合の振り分け
             basename, suffix, node_type = judgeTransformType(

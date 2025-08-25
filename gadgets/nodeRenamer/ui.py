@@ -18,8 +18,8 @@ from ... import uilib, node, lib
 from ...uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
-# from importlib import reload
-# reload(renamerEngine)
+from importlib import reload
+reload(renamerEngine)
 
 class NameEditor(QtWidgets.QScrollArea):
     def __init__(self, parent=None):

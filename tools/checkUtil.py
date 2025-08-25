@@ -195,8 +195,9 @@ class AbstractDagChecker(AbstractAssetChecker):
         checked = self.checkObject(target)
         if checked:
             result.append((target, checked))
-        for child in target.children():
-            result.extend(self.search(child))
+        if hasattr(target, 'children'):
+            for child in target.children():
+                result.extend(self.search(child))
         return result
 
 

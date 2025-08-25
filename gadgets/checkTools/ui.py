@@ -475,15 +475,15 @@ class Framework(QtWidgets.QWidget):
                 'The given data is not type of "{}"'.format(util.DataType)
             )
         d_pfx = data.get('defaultModulePrefix', '-default')
-        if d_pfx == '-default':
-            d_pfx = core.DefaultPrefix
+        # if d_pfx == '-default':
+            # d_pfx = core.DefaultPrefix
         catlist = data.get('categoryList', [])
         self.clearAllCategories()
         for cat in catlist:
             mod_name = cat.get('moduleName')
             mod_pfx = cat.get('modulePrefix', d_pfx)
-            if mod_pfx == '-default':
-                mod_pfx = core.DefaultPrefix
+            # if mod_pfx == '-default':
+                # mod_pfx = core.DefaultPrefix
             opt = cat.get('options', {})
             mod = self.addCategory(mod_name, mod_pfx)
             mod.setOptions(**opt)

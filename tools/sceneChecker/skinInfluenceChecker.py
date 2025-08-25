@@ -37,6 +37,8 @@ class PolySkinInfluenceChecker(checkUtil.AbstractDagChecker):
                 target (node.Transform):
         """
         checked = []
+        if target is None:
+            return checked
         if not target.isType('transform'):
             return checked
         meshs = [x for x in target.children(type='mesh') if not x('io')]

@@ -43,7 +43,8 @@ def showWindow(categoryData=''):
     if isinstance(categoryData, dict):
         widget.main().setCategoryFromData(categoryData)
     else:
-        widget.main().setCategoryFromFile(categoryData)
+        if categoryData:
+            widget.main().setCategoryFromFile(categoryData)
     widget.show()
     return widget
 

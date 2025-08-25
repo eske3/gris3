@@ -127,3 +127,17 @@ class CategoryOptionTemplateCreator(object):
         return self.getCategoryOptionTemplate(
             self.categoryList(), defaultModulePrefix, toJson
         )
+
+    def saveAsCategoryFile(self, outputpath, defaultModulePrefix='-default'):
+        jsontext = self.getCategoryOption(defaultModulePrefix)
+        parent_dir, filename = os.path.split(outputpath)
+        if not os.path.isdir(parent_dir):
+            raise IOError(
+                'The parent dir to save does not exists : {}'.format(parent_dir)
+            )
+        if not filename.lower().endswith('.json'):
+            filename = '{}.json'.format(filename)
+        outpuat_path = os.path.join(parent_dir, filename)
+        with open(outpuat_path, 'w') as f:
+            f.write(jsontext)
+        return outpuat_path

@@ -4,7 +4,7 @@
 r"""
     Dates:
         date:2024/05/09 18:03 Eske Yoshinob[eske3g@gmail.com]
-        update:2024/05/29 14:19 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/08/25 21:07 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2024 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -18,6 +18,10 @@ QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 DefaultPrefix = __package__ + '.checkModules'
 Version = '1.0.0'
+
+
+class CheckCategoryModuleError(Exception):
+    pass
 
 
 class AbstractCategoryOption(QtWidgets.QWidget):
@@ -139,9 +143,9 @@ class AbstractCategoryOption(QtWidgets.QWidget):
             カテゴリ設定データから渡されるオプションを処理するオーバーライド
             専用メソッド。
             受け取るデータは辞書形式で、処理自体はサブクラスの方で実装する。
-
+            
             Args:
-                optionData (dict):
+                **optionData (any):
         """
         pass
 
@@ -151,6 +155,48 @@ class CategoryManager(object):
 
     def __init__(self):
         self.__installed = {}
+
+    @staticmethod
+    def getModuleName(moduleName, prefix):
+        r"""
+            モジュール名とモジュールプレフィックスからインポート用の
+            モジュール名を生成する。
+
+            Args:
+                moduleName (str):
+                prefix (str):
+            
+            Returns:
+                st:
+        """
+        if prefix == '-default':
+            prefix = DefaultPrefix
+        pfx = prefix + '.' if prefix else ''
+        return pfx + moduleName
+
+    @staticmethod
+    def testModule(moduleName, objectName):
+        r"""
+            moduleNameをインポートし、その中にあるobjectNameクラスを取得する。
+            moduleName内にobjectNameクラスがない場合はCheckCategoryModuleError
+            を送出する。
+
+            Args:
+                moduleName (str): モジュール名
+                objectName (str): Managerが読み込み対象とするクラス名
+            
+            Returns:
+                AbstractCategoryOption:
+        """
+        mod = lib.importModule(moduleName, True)
+        if not hasattr(mod, objectName):
+            raise CheckCategoryModuleError(
+                'Specified module "{}" has no attribute "{}".'.format(
+                    moduleName, objectName
+                )
+            )
+        cls = getattr(mod, objectName)
+        return cls
 
     def install(self, moduleName, prefix=DefaultPrefix):
         r"""
@@ -164,19 +210,10 @@ class CategoryManager(object):
             Returns:
                 str:
         """
-        pfx = prefix + '.' if prefix else ''
-        mod_name = pfx + moduleName
+        mod_name = self.getModuleName(moduleName, prefix)
         if mod_name in self.__installed:
             return mod_name
-        mod = lib.importModule(mod_name, True)
-        if not hasattr(mod, self.ObjectName):
-            raise AttributeError(
-                'Specified module "{}" has no attribute "{}".'.format(
-                    moduleName, self.ObjectName
-                )
-            )
-        cls = getattr(mod, self.ObjectName)
-        self.__installed[mod_name] = cls
+        self.__installed[mod_name] = self.testModule(mod_name, self.ObjectName)
         return mod_name
 
     def listInstalled(self):

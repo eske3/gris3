@@ -5,6 +5,16 @@ r"""
     スキニングされたポリゴンの各頂点のインフルエンス数が既定値を超えて
     いないかをチェックする。
 
+    checkToolの設定jsonファイルで使用できるオプションは以下の通り。
+    {
+        "moduleName": "skinInfluenceChecker",
+        "modulePrefix": "-default",
+        "options": {
+            "target": ["チェック対象グループ名"...],
+            "numberOfLimit": 4
+        }
+    }
+
     Dates:
         date:2024/06/27 17:33 Eske Yoshinob[eske3g@gmail.com]
         update:2024/06/27 17:33 Eske Yoshinob[eske3g@gmail.com]

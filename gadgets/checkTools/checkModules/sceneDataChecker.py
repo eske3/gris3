@@ -2,6 +2,24 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
+    unknownプラグインの検知と、任意のプラグインが読み込まれているかどうかを
+    チェックする。
+    任意のプラグインの読み込みチェックについては、主に読み込む必要がない
+    プラグインをリストアップする目的で使用する。
+
+    checkToolの設定jsonファイルで使用できるオプションは以下の通り。
+    {
+        "moduleName": "sceneDataChecker",
+        "modulePrefix": "-default",
+        "options": {
+            "invalidPlugins": ["プラグイン名"...]]
+        }
+    }
+    
+    invalidPluginsで不要なプラグインをリストアップしておく。
+    デフォルトは空（指定無し))。
+
+
     Dates:
         date:2024/06/03 17:48 Eske Yoshinob[eske3g@gmail.com]
         update:2024/06/03 17:48 Eske Yoshinob[eske3g@gmail.com]

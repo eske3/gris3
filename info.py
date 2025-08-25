@@ -21,6 +21,12 @@ LastModified = 20250825
 
 
 ReleaseNote = [
+('2.0.3.10',
+(
+    'checkToolsまわりの仕様を一部更新。',
+)
+),
+
 ('2.0.3.8',
 (
     'blendShapeOeratorの機能開発中（β版）',

@@ -6,10 +6,10 @@ r"""
     
     Dates:
         date:2017/05/30 4:38[Eske](eske3g@gmail.com)
-        update:2020/10/20 06:06 eske yoshinob[eske3g@gmail.com]
+        update:2025/08/17 12:12 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
@@ -145,12 +145,24 @@ def openSimUtility():
     return ui
 
 
-def openBlendShapeOperator():
+def openBlendShapeOperator(
+    blendShapeName='', targetGeometry='', targetShapeContainer=''
+):
     r"""
         ブレンドシェイプの管理・編集機能を提供するツールを開く。
+        
+        Args:
+            blendShapeName (str):ブレンドシェイプ名
+            targetGeometry (str):ブレンドシェイプを適用されるノード名
+            targetShapeContainer (str):シェイプターゲットを格納するグループ名
+   
+        Returns:
+            blendShapeOperator.MainGUI:
     """
     from . import blendShapeOperator
-    return blendShapeOperator.showWindow()
+    return blendShapeOperator.showWindow(
+        blendShapeName, targetGeometry, targetShapeContainer
+    )
 
 
 def showRenamer():
@@ -199,20 +211,22 @@ def showSurfaceMaterialTools():
 def openCheckTools(categoryFile=''):
     r"""
         チェックツールを開く。
-
+        
+        Args:
+            categoryFile (any):
+            
         Returns:
             checkTools.MainGUI:
     """
     from . import checkTools
-    w = checkTools.showWindow()
-    w.main().setCategoryFromFile(categoryFile)
+    w = checkTools.showWindow(categoryFile)
     return w
 
 
 def openGagetsLauncher():
     r"""
         チェックツールを開く。
-
+        
         Returns:
             gadgetsLauncher.MainGUI:
     """

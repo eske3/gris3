@@ -65,7 +65,6 @@ class LineEditorBlock(AbstractEditorBlock):
     def makeEditor(self):
         editor = QtWidgets.QLineEdit()
         editor.setFocusPolicy(QtCore.Qt.StrongFocus)
-        print('Strong!')
         return editor
 
     def setText(self, text):

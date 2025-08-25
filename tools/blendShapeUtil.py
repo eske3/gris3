@@ -16,17 +16,37 @@ from . import cleanup
 cmds = node.cmds
 
 
-def createBlendShapeForFacial(geometry, blendShape, facialGroup):
+def getTargetContainerGroup(targetGroup):
+    t_grp = node.asObject(targetGroup)
+    if not t_grp or not hasattr(t_grp, 'children'):
+        raise RuntimeError(
+            'The target shape container group is invalid : {}'.format(
+                targetGroup
+            )
+        )
+    return t_grp
+
+
+def convTargetContainerGroupToList(targetGroup):
+    t_grp = getTargetContainerGroup(targetGroup)
+    return [x() for x in t_grp.children()]
+
+
+def makeShapeTargets(targetGroup, targetList):
+    t_grp = getTargetContainerGroup(targetGroup)
+    
+    print(targetList)
+
+
+def createBlendShapeForFacial(geometry, blendShape, targetGroup):
     r"""
         Args:
             geometry (str):
             blendShape (str):
-            facialGroup (str):
+            targetGroup (str):
     """
-    f_grp = node.asObject(facialGroup)
-    if not f_grp or not hasattr(f_grp, 'children'):
-        return
-    facial_targets = f_grp.children()
+    t_grp = getTargetContainerGroup(targetGroup)
+    facial_targets = t_grp.children()
     if not facial_targets:
         return
     facial_targets.append(geometry)
@@ -36,9 +56,9 @@ def createBlendShapeForFacial(geometry, blendShape, facialGroup):
 def duplicateTargets(geometry, blendShape, parent=None):
     r"""
         Args:
-            geometry (str):
-            blendShape (str):
-            parent (str):
+            geometry (str):ブレンドシェイプを適用されるノード名
+            blendShape (str):ブレンドシェイプ名
+            parent (str):シェイプターゲットを格納するグループ名
     """
     bs = node.asObject(blendShape)
     if not bs.isType('blendShape'):
@@ -56,9 +76,7 @@ def duplicateTargets(geometry, blendShape, parent=None):
             continue
         geo.unlockTransform()
     
-    parent = node.asObject(parent)
-    if not parent or not hasattr(parent, 'children'):
-        return
+    parent = getTargetContainerGroup(parent)
     children = {x.shortName(): x for x in parent.children()}
     for geo in duplicated:
         name = geo.shortName()

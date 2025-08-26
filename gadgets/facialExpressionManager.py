@@ -111,20 +111,44 @@ class Settings(QtWidgets.QGroupBox):
         """
         super(Settings, self).__init__('Settings', parent)
 
-        edit_btn = uilib.OButton(uilib.IconPath('uiBtn_edit'))
-        edit_btn.setToolTip('Edit expression list.')
-        self.editButtonClicked = edit_btn.clicked
-
         bs_label = QtWidgets.QLabel('Blend Shape')
         self.__bs = QtWidgets.QLineEdit()
-        rel_btn = uilib.OButton(uilib.IconPath('uiBtn_reset'))
+
+        # 編集バー。-----------------------------------------------------------
+        sel_btn = uilib.OButton(uilib.IconPath('uiBtn_select'))
+        sel_btn.setBgColor(*uilib.Color.ExecColor)
+        sel_btn.setToolTip('Select blend shape node')
+        sel_btn.clicked.connect(self.selectBlendShape)
+        
+        reset_btn = uilib.OButton(uilib.IconPath('uiBtn_reset'))
+        reset_btn.setBgColor(*uilib.Color.DebugColor)
+        reset_btn.setToolTip('Reset all attributes for blend shape')
+        reset_btn.clicked.connect(self.resetBlendShape)
+        
+        edit_btn = uilib.OButton(uilib.IconPath('uiBtn_edit'))
+        edit_btn.setToolTip('Edit facial expression list')
+        self.editButtonClicked = edit_btn.clicked
+
+        # rel_btn = uilib.OButton(uilib.IconPath('uiBtn_reset'))
+        rel_btn = uilib.OButton(uilib.IconPath('uiBtn_reload'))
         rel_btn.clicked.connect(self._emit_reloading)
+        rel_btn.setToolTip('Reload view')
+        
+        toolbar = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(toolbar)
+        layout.setContentsMargins(uilib.ZeroMargins)
+        layout.addWidget(sel_btn)
+        layout.addWidget(reset_btn)
+        layout.addStretch()
+        layout.addWidget(edit_btn)
+        layout.addWidget(rel_btn)
+        # ---------------------------------------------------------------------
 
         layout = QtWidgets.QGridLayout(self)
-        layout.addWidget(edit_btn, 0, 2, 1, 1)
-        layout.addWidget(bs_label, 1, 0, 1, 1)
-        layout.addWidget(self.__bs, 1, 1, 1, 1)
-        layout.addWidget(rel_btn, 1, 2, 1, 1)
+        layout.setColumnStretch(1, 1)
+        layout.addWidget(bs_label, 0, 0, 1, 1)
+        layout.addWidget(self.__bs, 0, 1, 1, 1)
+        layout.addWidget(toolbar, 1, 0, 1, 2)
 
     def setBlendShape(self, blendShapeName):
         r"""
@@ -135,6 +159,19 @@ class Settings(QtWidgets.QGroupBox):
     
     def blendShape(self):
         return self.__bs.text()
+
+    def selectBlendShape(self):
+        bs = self.blendShape()
+        cmds = node.cmds
+        if cmds.objExists(bs):
+            cmds.select(bs, r=True)
+    
+    def resetBlendShape(self):
+        bs = node.asObject(self.blendShape())
+        if not bs:
+            return
+        with node.DoCommand():
+            bs.setAllWeightAttr(0)
         
     def _emit_reloading(self):
         self.reloadButtonClicked.emit(self.blendShape())
@@ -519,6 +556,16 @@ class FacialExpressionView(QtWidgets.QWidget):
     def isFilterActivated(self):
         return self.__filter_grp.isVisible()
 
+    def initialize(self):
+        self.__button_col = QtWidgets.QButtonGroup(self)
+        self.__buttons = OrderedDict()
+
+    def _addButtonToList(self, expressionButton):
+        self.__buttons[expressionButton.expression()] = expressionButton
+        v_btn = expressionButton.virtualButton()
+        self.__button_col.addButton(v_btn)
+        v_btn.installEventFilter(self)
+
     def clear(self):
         self.disableFilter()
         layout = self.viewLayout()
@@ -581,14 +628,11 @@ class FacialExpressionView(QtWidgets.QWidget):
         is_activated = self.isFilterActivated()
         layout = self.clear()
         root = managerEngine.getManagerNode()
-        self.__button_col = QtWidgets.QButtonGroup(self)
-        self.__buttons = OrderedDict()
+        self.initialize()
         for exp in root.listExpressions():
             btn = ExpressionButton(root, exp)
             layout.addWidget(btn)
-            self.__button_col.addButton(btn.virtualButton())
-            self.__buttons[exp] = btn
-            btn.virtualButton().installEventFilter(self)
+            self._addButtonToList(btn)
         layout.addStretch()
         if is_activated:
             self.activateFilter(True)
@@ -817,6 +861,8 @@ class FacialExpressionView(QtWidgets.QWidget):
             self.clearButtonDowningStates()
             return True
         mod = event.modifiers()
+        if not self.__button_col:
+            return True
         self.__button_col.setExclusive(False)
         if mod == QtCore.Qt.ControlModifier:
             return False

@@ -2101,6 +2101,16 @@ class BlendShape(AbstractNode):
         """
         return cmds.listAttr(self/'w', m=True)
 
+    def setAllWeightAttr(self, value=0):
+        r"""
+            ウェイト用のアトリビュートすべてに同じ値を設定する。
+            
+            Args:
+                value (float):
+        """
+        for attr in self.listWeightAttr():
+            attr.set(value)
+
     def addInbetween(
         self, baseNode, targetList, name=None, o='local'
     ):

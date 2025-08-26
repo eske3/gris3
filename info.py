@@ -15,15 +15,16 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.3.8'
+Version = '2.0.3.12'
 LastModified = 20250825
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
-('2.0.3.10',
+('2.0.3.12',
 (
-    'checkToolsまわりの仕様を一部更新。',
+    'node.BlendShapeにsetAllWeightAttrを追加',
+    'facialExpressionManagerの一部機能を、継承・拡張のために一部仕様変更。',
 )
 ),
 

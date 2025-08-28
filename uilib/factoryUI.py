@@ -755,9 +755,8 @@ class ModuleBrowser(QtWidgets.QTreeView):
             ]
         # =====================================================================
 
-        root_index = self.model().indexFromItem(
-            self.model().invisibleRootItem()
-        )
+        model = self.model()
+        root_index = self.model().indexFromItem(model.invisibleRootItem())
         items = []
         for index in selectionModel.selectedIndexes():
             if index.column() != 0:
@@ -765,7 +764,7 @@ class ModuleBrowser(QtWidgets.QTreeView):
             items.append(index.data(QtCore.Qt.UserRole + 1))
             i = 0
             while(True):
-                child_index = index.child(i, 0)
+                child_index = model.index(i, 0, index)
                 if not child_index.isValid():
                     break
                 items.append(child_index.data(QtCore.Qt.UserRole + 1))

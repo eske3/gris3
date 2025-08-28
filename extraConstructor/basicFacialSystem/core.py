@@ -7,7 +7,7 @@ r"""
     
     Dates:
         date:2017/02/25 13:10[Eske](eske3g@gmail.com)
-        update:2025/06/01 17:10 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/08/29 03:48 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -33,6 +33,12 @@ class FacialPartsMaker(ui.ExtraConstructorUtil):
     construtor = None
     extraConstructor = None
     def __init__(self, groupName, extraConstructor, parent=None):
+        r"""
+            Args:
+                groupName (any):
+                extraConstructor (any):
+                parent (any):
+        """
         super(FacialPartsMaker, self).__init__(parent)
         self.__ext_const = extraConstructor
         self.__grp_name = groupName
@@ -45,6 +51,10 @@ class FacialPartsMaker(ui.ExtraConstructorUtil):
         return 'Facial Parts Maker'
 
     def setGroupName(self, groupName):
+        r"""
+            Args:
+                groupName (any):
+        """
         self.__grp_name = groupName
 
     def groupName(self):
@@ -98,12 +108,13 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         self.__combined_objects = []
         self.__combined_cages = []
         self.disp_ctrl = None
-        const.combineBody = self.combineBody
+        self.__origin_wrap_list = None
+        const.updateWrapList = self.updateWrapList
 
     def createEyeHighlightSystem(self):
         r"""
             目のハイライトのセットアップ用オブジェクトを作成して返す。
-
+            
             Returns:
                 const (eyeHighlightRig.EyeHighlightSetup):
         """
@@ -143,7 +154,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
     def setCombinedCages(self, *cages):
         r"""
             フェイシャル用の顔と胴体を結合するためのケージを登録する。
-
+            
             Args:
                 *cages (str):
         """
@@ -155,9 +166,9 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
             引数wraplistは、StandardConstrcutorのテンプレートで使用されている
             WrapList(辞書オブジェクト)を渡す。
             WrapListは結合処理後、結合したメッシュ名で上書きする。
-
+            
             Args:
-                wraplist (dict): 
+                wraplist (dict):
         """
         cst = self.constructor()
         geo, cage = None, None
@@ -242,7 +253,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
 
         if copied_list:
             cst.FacialWrapList = {
-                x: [y] for x, y in zip(copied_list[-1][2:], facial_targets)
+                x(): [y] for x, y in zip(copied_list[-1][2:], facial_targets)
             }
         else:
             cst.FacialWrapList = {}
@@ -253,6 +264,23 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         # =====================================================================
 
         l_manager.preSetupLayers()
+
+    def updateWrapList(self, wraplist):
+        r"""
+            ConstructorのWrapListと顔用のWrapListを結合する。
+            また、その際ConstructorのWrapListのバックアップをとっておき、
+            _postProcess時に復元する。
+
+            Args:
+                wraplist (dict):
+        """
+        cst = self.constructor()
+        origin_wraplist = {x:y for x, y in wraplist.items()}
+        if cst.FacialWrapList:
+            wraplist.update(cst.FacialWrapList)
+        self.__origin_wrap_list = {
+            'target': wraplist, 'origin_dict': origin_wraplist
+        }
 
     def preSetup(self):
         r"""
@@ -278,6 +306,13 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         )
         self.layerManager().connectVisibility(plug)
 
+        if not self.__origin_wrap_list:
+            return
+        self.__origin_wrap_list['target'].clear()
+        for key, val in self.__origin_wrap_list['origin_dict'].items():
+            self.__origin_wrap_list['target'][key] = val
+
     def setupUtil(self):
         w = FacialPartsMaker(self.PartsGroup, self)
         return w
+

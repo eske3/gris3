@@ -109,7 +109,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
         self.__combined_cages = []
         self.disp_ctrl = None
         self.__origin_wrap_list = None
-        const.updateWrapList = self.updateWrapList
+        const.updateFacialWrapList = self.updateFacialWrapList
 
     def createEyeHighlightSystem(self):
         r"""
@@ -265,7 +265,7 @@ class ExtraConstructor(extraConstructor.ExtraConstructor):
 
         l_manager.preSetupLayers()
 
-    def updateWrapList(self, wraplist):
+    def updateFacialWrapList(self, wraplist):
         r"""
             ConstructorのWrapListと顔用のWrapListを結合する。
             また、その際ConstructorのWrapListのバックアップをとっておき、

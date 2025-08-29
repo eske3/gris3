@@ -15,12 +15,18 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.3.13'
-LastModified = 20250828
+Version = '2.0.4.0'
+LastModified = 20250829
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.4.0',
+(
+    'checkToolsにTransformCheckerを追加。',
+)
+),
+
 ('2.0.3.13',
 (
     'QModelIndexのchildメソッド廃止に伴う修正。(PySide6向け）',

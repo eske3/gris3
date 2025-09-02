@@ -2682,7 +2682,6 @@ class DagNode(AbstractNode):
             members = parent.children(type='transform')
         my_name = self()
         for i, m in enumerate(members):
-            print(m)
             if m == my_name:
                 return i
         raise RuntimeError(
@@ -2691,13 +2690,16 @@ class DagNode(AbstractNode):
 
     def reorder(self, number):
         r"""
+            Outlinerの表示順序にて、任意の番号numberの位置に並び替える。
+
             Args:
-                number (any):
+                number (int):
         """
-        number += 1
+        if number >= 0:
+            number += 1
         my_name = self()
         cmds.reorder(my_name, f=True)
-        if number < 1:
+        if 0 <= number < 2:
             return
         cmds.reorder(my_name, r=number)
 

@@ -16,11 +16,17 @@ r"""
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
 Version = '2.0.4.0'
-LastModified = 20250829
+LastModified = 20250902
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.4.1',
+(
+    'checkToolsにTransformCheckerを追加。',
+)
+),
+
 ('2.0.4.0',
 (
     'checkToolsにTransformCheckerを追加。',

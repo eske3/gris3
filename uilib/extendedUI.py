@@ -6,14 +6,15 @@ r"""
     
     Dates:
         date:2017/01/21 23:58[Eske](eske3g@gmail.com)
-        update:2025/07/21 15:08 Eske Yoshinob[eske3g@gmail.com]
-
+        update:2025/09/09 16:58 Eske Yoshinob[eske3g@gmail.com]
+        
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import uilib
+import os
+from .. import uilib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 # フィルター表示可能なビュー機能。
@@ -162,7 +163,7 @@ class EasyMovableSplitter(QtWidgets.QSplitter):
     def setPrePosition(self, position=None):
         r"""
             ドラッグ時の開始位置を設定する。
-
+            
             Args:
                 position (QtCore.QPoint):
         """
@@ -231,7 +232,218 @@ class EasyMovableSplitter(QtWidgets.QSplitter):
             self.setPrePosition()
             return True
         return False
+
+
+class FileSelector(QtWidgets.QWidget):
+    def __init__(self, label='filepath', parent=None):
+        r"""
+            ファイルを選択するダイアログと、それを表示するフィールドのGUIを
+            提供する。
+
+            Args:
+                label (str):フィールド横のラベル
+                parent (QtWidgets.QWidget):親ウィジェト
+        """
+        super(FileSelector, self).__init__(parent)
+        self.__title = 'Select File'
+        self.__filter_string = ''
+        self.__use_completer = True
+        self.__icon_manager = uilib.FileIconManager()
+
+        self.__label = QtWidgets.QLabel(label)
+        self.__btn = uilib.OButton(uilib.IconPath('uiBtn_directory'))
+        self.__btn.clicked.connect(self.openFileDialog)
+        self.setIconColor(48, 120, 196)
         
+        self.__field = QtWidgets.QLineEdit()
+        self.__field.textEdited.connect(self.updateCompleter)
+        completer = QtWidgets.QCompleter(self)
+        model = QtGui.QStandardItemModel(0, 1)
+        completer.setModel(model)
+        completer.setCompletionRole(QtCore.Qt.UserRole+1)
+        completer.setCompletionMode(
+            QtWidgets.QCompleter.UnfilteredPopupCompletion
+        )
+        self.__field.setCompleter(completer)
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(uilib.ZeroMargins)
+        layout.setSpacing(1)
+        layout.addWidget(self.__label)
+        layout.addSpacing(10)
+        layout.addWidget(self.__field)
+        layout.addWidget(self.__btn)
+
+    def setLabel(self, label):
+        r"""
+            フィールド横の表示ラベルのテキストを設定する。
+
+            Args:
+                label (str):
+        """
+        self.__label.setText(label)
+
+    def label(self):
+        r"""
+            設定されたフィールド横の表示ラベルのテキストを返す。
+
+            Returns:
+                str:
+        """
+        return self.__label.text()
+
+    def setTitle(self, label):
+        r"""
+            ダイアログのウィンドウタイトルを設定する。
+
+            Args:
+                label (str):
+        """
+        self.__title = label
+
+    def title(self):
+        r"""
+            設定されたダイアログのウィンドウタイトルを返す。
+
+            Returns:
+                str:
+        """
+        return self.__title
+
+    def setFilterString(self, filter):
+        r"""
+            ファイル選択時のファイルの拡張子フィルタを設定する。
+            書式は
+                FileType (*.txt, *.json)
+            のように、QFileDialogのgetOpenFileNameのfilterオプションに準ずる。
+
+            Args:
+                filter (str):
+        """
+        self.__filter_string = filter
+
+    def filterString(self):
+        r"""
+            ファイル選択時のファイルの拡張性を設定する。
+
+            Args:
+                filter (str):
+        """
+        return self.__filter_string
+
+    def setPath(self, path, normalize=True):
+        r"""
+            フィールドにファイルパスを設定する。
+
+            Args:
+                path (str):
+        """
+        if normalize:
+            path = path.replace('\\', '/')
+        self.__field.setText(path)
+    
+    def path(self, checkExisting=True):
+        r"""
+            フィールドに設定されたファイルパスを返す。
+            checkExistingがTrueの場合、フィールド内の文字列が存在するかを
+            検証し、なければ空文字を返す。
+
+            Args:
+                checkExisting (bool):
+            
+            Returns:
+                str:
+        """
+        path = self.__field.text()
+        if not checkExisting:
+            return path
+        import os
+        return path if os.path.exists(path) else ''
+
+    def setIconColor(self, r, g, b):
+        r"""
+            ダイアログ表示ボタンの背景色を設定する。
+
+            Args:
+                r (int):
+                g (int):
+                b (int):
+        """
+        self.__btn.setBgColor(r, g, b)
+
+    def iconColor(self):
+        r"""
+            ダイアログ表示ボタンの背景色を返す。
+
+            Returns:
+                list:
+        """
+        return self.__btn.bgColor()
+
+    def updateCompleter(self, text):
+        if not self.__use_completer:
+            return
+        if not text.endswith('/') and not text.endswith('\\'):
+            return
+        parent_path = text[:-1]
+        if not os.path.isdir(parent_path):
+            return
+        model = self.__field.completer().model()
+        model.removeRows(0, model.rowCount())
+
+        def add_items(row, file, path, icon):
+            item = QtGui.QStandardItem(file)
+            item.setData(path, QtCore.Qt.UserRole + 1)
+            item.setIcon(icon)
+            model.setItem(row, 0, item)
+            
+        dirlist = []
+        filelist = []
+        for file in os.listdir(parent_path):
+            path = os.path.join(parent_path, file)
+            if os.path.isdir(path):
+                dirlist.append((file, path))
+            else:
+                filelist.append((file, path))
+
+        dir_icon = QtGui.QIcon(uilib.IconPath('folder'))
+        for row, files in enumerate(dirlist):
+            file, path = files
+            add_items(row, file, path, dir_icon)
+
+        for row, files in enumerate(filelist, len(dirlist)):
+            file, path = files
+            add_items(row, file, path, self.__icon_manager.fileIcon(path))
+            
+    def showFileDialog(self, parentPath):
+        r"""
+            ファイルを選択させるためのダイアログを表示する。
+
+            Args:
+                parentPath (str):
+            
+            Returns:
+                str:
+        """
+        path, ext = QtWidgets.QFileDialog.getOpenFileName(
+            self, self.title(), parentPath, filter=self.filterString()
+        )
+        return path
+
+    def openFileDialog(self):
+        r"""
+            ファイルを選択させるためのダイアログを表示し、結果をフィールドに
+            反映させる。
+        """
+        origin_path = self.path(checkExisting=True)
+        if origin_path and not os.path.isdir(origin_path):
+            origin_path = os.path.dirname(origin_path)
+        path = self.showFileDialog(origin_path)
+        if not path:
+            return
+        self.setPath(path)
+        
+
 
 # /////////////////////////////////////////////////////////////////////////////
 # スクリーン上でドラッグする事によりラインを描画して方向を確定               //
@@ -442,7 +654,7 @@ class DirectionView(QtWidgets.QGraphicsView):
         r"""
             ドラッグ操作が終了した際に呼ばれる。
             directionChangedシグナルが創出される。
-
+            
             Args:
                 vector (list):
                 mouseButton (QtCore.Qt.MouseButtons):

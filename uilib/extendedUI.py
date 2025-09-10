@@ -532,6 +532,12 @@ class DirectorySelector(FileSelector):
         return os.path.isdir(path)
 
     def showFileDialog(self, parentPath):
+        origin_path = self.path(checkExisting=True)
+        if origin_path == parentPath:
+            temp = os.path.dirname(parentPath)
+            if os.path.isdir(temp):
+                parentPath = temp
+
         path = QtWidgets.QFileDialog.getExistingDirectory(
             self, self.title(), parentPath
         )

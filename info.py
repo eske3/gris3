@@ -15,12 +15,19 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.4.1'
+Version = '2.0.5.0'
 LastModified = 20250902
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.5.0',
+(
+    'uilib.extendedUIにFileSelector、SavePathSelector、DirectorySelectorを追加。',
+    '上記に合わせて、Factoryのプロジェクト選択ウィジェットのQLineEditをDirectorySelectorに変更。',
+)
+),
+
 ('2.0.4.1',
 (
     'checkToolsにTransformCheckerを追加。',

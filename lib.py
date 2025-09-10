@@ -4,7 +4,7 @@
 r"""
     Dates:
         date:2024/05/09 18:03 Eske Yoshinob[eske3g@gmail.com]
-        update:2024/05/16 12:26 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/09/10 10:41 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2024 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -43,7 +43,7 @@ class ParseArgs(dict):
             Args:
                 flags (list):
                 default (any):
-            
+                
             Returns:
                 any:
         """
@@ -88,7 +88,7 @@ class ListDict(dict):
             Args:
                 key (immutable):
                 value (any):
-            
+                
             Returns:
                 any:
         """
@@ -133,7 +133,7 @@ def errorout(israise=True):
         エラーが発生した際、その詳細を表示する。
         
         Args:
-            israise (bool): エラーを表示する際、raiseするかどうか
+            israise (bool):エラーを表示する際、raiseするかどうか
     """
     info = sys.exc_info()
     tb = info[2]
@@ -208,9 +208,9 @@ def importModule(moduleName, echoErrorMessage=False):
         読み込みに失敗し、かつechoErrorMessageがFalseの場合、Noneを返す。
         
         Args:
-            moduleName (str): モジュール名
-            echoErrorMessage (bool): エラーを送出するかどうか
-        
+            moduleName (str):モジュール名
+            echoErrorMessage (bool):エラーを送出するかどうか
+            
         Returns:
             module:
     """
@@ -245,10 +245,10 @@ def loadPythonModules(directory, prefix='', mode=1):
         戻り値は読み込みに成功したモジュールのみがリストされる。
         
         Args:
-            directory (str): ディレクトリパス
-            prefix (str): インポートされたモジュールにつけるプレフィクス
-            mode (int): 読み込みモード
-        
+            directory (str):ディレクトリパス
+            prefix (str):インポートされたモジュールにつけるプレフィクス
+            mode (int):読み込みモード
+            
         Returns:
             list:
     """
@@ -351,7 +351,7 @@ def title(text):
         
         Args:
             text (str):
-        
+            
         Returns:
             str:
     """
@@ -386,6 +386,18 @@ def title(text):
 # /////////////////////////////////////////////////////////////////////////////
 
 
+def normalizePath(path):
+    r"""
+        与えられたファイルパスのパス区切り文字を「/」に置き換える。
+
+        Args:
+            path (str):
+        
+        Returns:
+            str:
+    """
+    return path.replace('\\', '/')
+
 
 def getLatestFileName(basename, number, extension, friendfiles):
     r"""
@@ -396,7 +408,7 @@ def getLatestFileName(basename, number, extension, friendfiles):
             number (int):
             extension (str):
             friendfiles (list):
-    
+            
         Returns:
             str:
     """
@@ -472,7 +484,7 @@ def convNonreText(text):
         
         Args:
             text (str):
-        
+            
         Returns:
             str:
     """

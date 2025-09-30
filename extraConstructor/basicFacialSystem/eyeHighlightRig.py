@@ -12,7 +12,7 @@ r"""
     
     Dates:
         date:2025/06/01 16:58 Eske Yoshinob[eske3g@gmail.com]
-        update:2025/06/01 16:58 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/08/07 12:52 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2025 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -20,7 +20,7 @@ r"""
         Proprietary and confidential
 """
 from collections import OrderedDict
-from ... import node, func, core
+from ... import node, grisNode, func, core
 from ...tools import jointEditor
 cmds = node.cmds
 
@@ -31,23 +31,72 @@ class EyeHighlightSetup(object):
         'R':(0.973, 0.02, 0.115),
     }
     def __init__(
-        self, highlightGroup, parentJoint, constructor, parentCtrlName
+        self, highlightGroup, constructor, parentCtrlName, eyeBallRigUnit=None
     ):
         r"""
+            初期化を行う。
+            引数eyeUnitに指定がない場合はシーン内からeyeBallRigユニットを
+            検索して最初に見つかったものを使用する。
+            
             Args:
-                constructor (constructors.BasicConstructor):
-                parentJoints (str): 目のリグの親となるジョイント名
+                highlightGroup (any):
                 constructor (constructors.BasicConstructor):
                 parentCtrlName (str):
+                eyeBallRigUnit (str):目の制御ユニット名
         """
         self.__grp = highlightGroup
         self.highlights = OrderedDict()
-        self.__parent_joint = parentJoint
+        self.__parent_joint = None
+        self.__eye_unit = eyeBallRigUnit
+        self.__eye_unit_obj = None
         self.__eye_joints = {}
         self.parent_ctrl_name = parentCtrlName
         self.constructor = constructor
         self.isValid = False
-    
+
+    def setEyeBallRigUnit(self, name):
+        r"""
+            このクラスで使用する目のリグシステムのユニットを返す。
+
+            Args:
+                name (str):
+        """
+        self.__eye_unit = name
+
+    def eyeBallRigUnit(self):
+        r"""
+            このクラスで使用する目のリグシステムのユニットを返す。
+            
+            Returns:
+                grisNode.Unit:
+        """
+        return self.__eye_unit_obj
+
+    def setupEyeBallRigUnit(self):
+        r"""
+            このクラスで使用する目のリグシステムのユニット準備を行う。
+            setEyeBallRigUnitで指定がない場合は、シーン中にある最初にみつかった
+            eyeBallRigユニットを使用する。
+        """
+        self.__eye_unit_obj = None
+        root = grisNode.getGrisRoot()
+        if not root:
+            return
+        eyeball_units = [
+            x for x in root.unitGroup().listUnits()
+            if x.unitName() == 'eyeBallRig'
+        ]
+        if not eyeball_units:
+            return
+        if self.__eye_unit:
+            if self.__eye_unit in eyeball_units:
+                self.__eye_unit_obj = eyeball_units[
+                    eyeball_units.index(self.__eye_unit)
+                ]
+        if not self.__eye_unit_obj:
+            self.__eye_unit_obj = eyeball_units[0]
+        self.__parent_joint = self.__eye_unit_obj.getMember('root').parent()
+
     def initialize(self):
         grp = node.asObject(self.__grp)
         self.isValid = False
@@ -55,64 +104,65 @@ class EyeHighlightSetup(object):
             return
         self.isValid = True
         for geo in grp.children():
-            self.highlights[geo] = {}        
+            self.highlights[geo] = {}
+
+        self.setupEyeBallRigUnit()
 
     def parentJoint(self, asName=False):
         r"""
             目のリグの親となるジョイント。
-
+            
+            Args:
+                asName (any):
+                
             Returns:
                 node.Joint:
         """
-        if asName:
-            return self.__parent_joint
-        return node.asObject(self.__parent_joint)
+        return self.__parent_joint
 
     def preSetup(self):
         if not self.isValid:
             return
-        for s in func.SuffixIter():
-            if not cmds.objExists('eye_jnt'*s):
-                return
+
+        # for s in func.SuffixIter():
+            # if not cmds.objExists('eye_jnt'*s):
+                # return
 
         head_jnt = self.parentJoint()
         if not head_jnt:
-            raise RuntimeError(
-                'No parent joint detected : "{}".'.format(
-                    self.parentJoint(True)
-                )
-            )
+            raise RuntimeError('No parent joint of the eye ball rig detected.')
         end_jnt = head_jnt.children()[0]
         head_len = (
             node.MVector(end_jnt.position()) - node.MVector(head_jnt.position())
         ).length()
-        creator = core.createJoint('eyeBallRig', 'eyeBall', 'C', parent=head_jnt)
-        unit = creator.unit()
-        
-        # ルートの位置を頭部の位置に合わせる。
-        root = unit.getMember('root')
-        root.setPosition(head_jnt.position())
-        for s in func.SuffixIter():
-            keys = 'eye'+s, 'target'+s
-            eye = unit.getMember(keys[0])
-            cmds.delete(eye)
-            jnt = node.asObject('eye_jnt'*s)
-            jnt('ssc', 0)
-            jnt('ssc', 0.2)
-            target_jnt = jnt.children()[0]
-            target_jnt('ssc', 0.05)
-            unit.addMember(keys[0], jnt)
-            unit.addMember(keys[1], target_jnt)
-            root.addChild(jnt)
+        unit = self.eyeBallRigUnit()
 
-            pos = node.MVector(jnt.position())
-            eye_vec = (node.MVector(target_jnt.position()) - pos).normal()
-            eye_vec = eye_vec * head_len * 2
-            eye_vec[0] = eye_vec[0] * 0.25
-            new_pos = pos + eye_vec
-            target_jnt.setPosition(new_pos)
-            jointEditor.fixOrientation(jnt)
+        # ルートの位置を頭部の位置に合わせる。
+        # root = unit.getMember('root')
+        # root.setPosition(head_jnt.position())
+        for s in func.SuffixIter():
+            # keys = 'eye'+s, 'target'+s
+            # eye = unit.getMember(keys[0])
+            # cmds.delete(eye)
+            # jnt = node.asObject('eye_jnt'*s)
+            # jnt('ssc', 0)
+            # jnt('ssc', 0.2)
+            # target_jnt = jnt.children()[0]
+            # target_jnt('ssc', 0.05)
+            # unit.addMember(keys[0], jnt)
+            # unit.addMember(keys[1], target_jnt)
+            # root.addChild(jnt)
             
+            jnt = unit.getMember('eye' + s)
+            target_jnt = unit.getMember('target' + s)
+            # pos = node.MVector(jnt.position())
+            # eye_vec = (node.MVector(target_jnt.position()) - pos).normal()
+            # eye_vec = eye_vec * head_len * 2
+            # eye_vec[0] = eye_vec[0] * 0.25
+            # new_pos = pos + eye_vec
+            # target_jnt.setPosition(new_pos)
+            # jointEditor.fixOrientation(jnt)
+
             self.__eye_joints[s] = jnt
 
     def createBaseJoint(self):

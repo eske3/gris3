@@ -17,7 +17,7 @@ class ExtraConstructor(object):
     r"""
         construct.Constructorオブジェクトで実行される各項目の間に差し込む事が
         できるメソッドを定義する機構を提供するクラス。
-        Constractorのinit関数などでinstallExtraConstructorを呼び、
+        Constructorのinit関数などでinstallExtraConstructorを呼び、
         ExtraConstructorを持つモジュール名を指定する事によりこのクラスが
         差し込まれる。
         各メソッドは、Constructor内の同名メソッドが呼ばれた後に呼ばれるるが、

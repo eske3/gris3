@@ -200,6 +200,17 @@ def showDisplaySettings():
     return displaySettings.showWindow()
 
 
+def openMaterialManager():
+    r"""
+        シーン中のマテリアルのアサイン状況と名前を管理するマネージャーを開く。
+        
+        Returns:
+            materialManager.MainGUI:
+    """
+    from . import materialManager
+    return materialManager.showWindow()
+
+
 def showSurfaceMaterialTools():
     r"""
         マテリアル一覧を表示するウィンドウを開く。

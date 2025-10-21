@@ -15,12 +15,19 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.5.0'
-LastModified = 20250902
+Version = '2.0.6.1'
+LastModified = 20251022
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.6.1',
+(
+    'gadgetsにmaterialManagerを追加。',
+    'displayLayerViewerのコメントアウトしていた箇所を削除。',
+)
+),
+
 ('2.0.5.0',
 (
     'uilib.extendedUIにFileSelector、SavePathSelector、DirectorySelectorを追加。',

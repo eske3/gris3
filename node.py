@@ -1332,7 +1332,7 @@ class AbstractNode(AbstractNodeStr):
             Returns:
                 str:
         """
-        return self().split('|')[-1]
+        return self().rsplit('|', 1)[-1]
 
     def isDag(self):
         r"""

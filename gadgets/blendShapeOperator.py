@@ -16,6 +16,8 @@ from ..tools import blendShapeUtil
 from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
+from importlib import reload
+reload(blendShapeUtil)
 
 TargetListTemplate = '''eye_wink_facialGrp_L
 eye_wink_facialGrp_R
@@ -300,6 +302,7 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
         super(BlendShapeUtil, self).__init__(parent)
         self.setWindowTitle('+Blend Shape Util')
         self.setBlendShapeManager()
+        self.setBSNameEngine()
 
         w = QtWidgets.QWidget()
         self.tgt_grp = TargetContainerSetting()
@@ -374,7 +377,7 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
     def setDefaultTargetList(self, targetListText):
         r"""
             Args:
-                targetListText (any):
+                targetListText (list):
         """
         self.__target_list_editor.setTemplateText(targetListText)
 
@@ -402,11 +405,22 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
     def blendShapeManager(self):
         return self.__bs_manager
 
+    def setBSNameEngine(self, bsNameEngine=None):
+        bsNameEngine = (
+            bsNameEngine
+            if bsNameEngine else blendShapeUtil.BasicFacialBSNameEngine
+        )
+        self.__bs_name_engine = bsNameEngine
+
+    def BSNameEngine(self):
+        return self.__bs_name_engine
+
     def getBSManager(self):
         manager_cls = self.blendShapeManager()
         data = self.getData()
         return manager_cls(
-            data['geometry'], data['bsName'], data['targetGroup']
+            data['geometry'], data['bsName'], data['targetGroup'],
+            self.BSNameEngine()
         )
 
     def createTargets(self):
@@ -415,24 +429,32 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
         reload(blendShapeUtil)
         self.setBlendShapeManager()
         # .....................................................................
-        self.getData()
         with node.DoCommand():
             bsm = self.getBSManager()
             bsm.makeTargets()
 
     def createBlendShape(self):
+        # DEBUG用 .............................................................
+        from importlib import reload
+        reload(blendShapeUtil)
+        self.setBlendShapeManager()
+        # .....................................................................
         data = self.getData()
         with node.DoCommand():
-            blendShapeUtil.createBlendShapeForFacial(
-                data['geometry'], data['bsName'], data['targetGroup']
-            )
+            bsm = self.getBSManager()
+            bsm.createBlendShape()
 
     def duplicateTargets(self):
-        data = self.getData()
+        # DEBUG用 .............................................................
+        from importlib import reload
+        reload(blendShapeUtil)
+        self.setBlendShapeManager()
+        # .....................................................................
+
+        # data = self.getData()
         with node.DoCommand():
-            blendShapeUtil.duplicateTargets(
-                data['geometry'], data['bsName'], data['targetGroup']
-            )
+            bsm = self.getBSManager()
+            bsm.duplicateTargets()
 
     def addAnimForCheck(self, interval):
         r"""

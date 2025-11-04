@@ -15,10 +15,11 @@ r"""
 """
 # from ~ import *時に下３つのみをインポートするように明示。
 __all__ = [
-    'QtCore', 'QtGui', 'QtWidgets', 'QtWebKit', 'phonon', 'Package',
+    'QtCore', 'QtGui', 'QtWidgets', 'QtWebKit', 'phonon', 'Package', 'Version',
     'NoGui'
 ]
 Package = 'PySide6'
+Version = 6
 NoGui = False
 
 
@@ -28,9 +29,11 @@ except Exception as e:
     try:
         from PySide2 import QtGui, QtCore, QtWidgets
         Package = 'PySide2'
+        Version = 2
     except Exception as e:
         from PySide import QtGui, QtCore
         Package = 'PySide'
+        Version = 1
         __OLDGUIATTRS = [
             'QAbstractButton',
             'QAbstractGraphicsShapeItem',

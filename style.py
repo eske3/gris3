@@ -23,7 +23,7 @@ if NoGui:
     DesktopLongestEdge = 1920
 else:
     sizelist = []
-    if Package == 'PySide6':
+    if Version >= 6:
         for screen in QtWidgets.QApplication.screens():
             sizes = screen.availableSize()
             sizelist.extend([sizes.width(), sizes.height()])
@@ -37,7 +37,7 @@ UiScale = 1+((DesktopLongestEdge / 1920.0)-1)*0.5
 # =============================================================================
 
 
-if Package == 'PySide6':
+if Version >= 6:
     def screenRect(position):
         r"""
             位置情報から、その座標上にあるスクリーンの矩形情報を返す。

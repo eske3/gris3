@@ -15,12 +15,20 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.6.1'
-LastModified = 20251022
+Version = '2.0.6.5'
+LastModified = 20251104
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.6.5',
+(
+    'polyHairCreator内でmayaUIlib.NodePickerを導入したことによって発生したバグへの対処。',
+    'pyside_module内でPySideのバージョン違いを整数で比較できるようにVersion変数（int)を追加。',
+    'desktopモジュールを追加。デスクトップ情報に関する操作をこのモジュールに集約。',
+)
+),
+
 ('2.0.6.1',
 (
     'gadgetsにmaterialManagerを追加。',

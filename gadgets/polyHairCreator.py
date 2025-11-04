@@ -16,7 +16,6 @@ r"""
 from ..tools import sweepMesh, uvSupporter
 from ..uilib import mayaUIlib
 from .. import node, uilib, lib
-from importlib import reload
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -85,8 +84,7 @@ class PolySelector(QtWidgets.QWidget):
         self.__picker = picker
 
     def getPolygon(self):
-        data = self.__picker.data()
-        return data[0] if data else ''
+        return self.__picker.data()
 
 
 class InterpolcationOption(QtWidgets.QGroupBox):
@@ -150,8 +148,7 @@ class ShapeOption(QtWidgets.QGroupBox):
         return [self.__ui[x].value() for x in ('width', 'height')]
 
     def material(self):
-        data =  self.__ui['material'].data()
-        return data[0] if data else ''
+        return self.__ui['material'].data()
 
 
 class MakeOption(QtWidgets.QGroupBox):
@@ -171,8 +168,7 @@ class MakeOption(QtWidgets.QGroupBox):
             self.__ui[l] = w
 
     def  getData(self, category):
-        data = self.__ui[category].data()
-        return data[0] if data else ''
+        return self.__ui[category].data()
 
     def meshGroup(self):
         return self.getData('mesh')
@@ -237,8 +233,6 @@ class Creator(QtWidgets.QScrollArea):
 
         cam_mtx = dc.cameraMatrix()
         target_mesh = self.__target.getPolygon()
-        # from importlib import reload
-        # reload(sweepMesh)
         center = sweepMesh.centerBetweenCamToMesh(cam_mtx, target_mesh, 0.99)
         with node.DoCommand():
             curve = sweepMesh.createProjectionCurve(
@@ -325,8 +319,6 @@ class Utilities(QtWidgets.QScrollArea):
             sweepMesh.duplicateHairAll()
     
     def createFromJoint(self):
-        # from importlib import reload
-        # reload(sweepMesh)
         with node.DoCommand():
             sweepMesh.createHairFromJointChain()
 

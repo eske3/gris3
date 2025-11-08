@@ -307,7 +307,7 @@ class BaseCreator(object):
         if not self.LockControllerColor:
             return
         from ..tools import curvePrimitives
-        curvePrimitives.addWireColorCtrlAttr(*self.allAnimSet().allChildren())
+        curvePrimitives.addWireColorCtrlAttr(self.allAnimSet().allChildren())
 
 
 

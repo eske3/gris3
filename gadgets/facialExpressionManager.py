@@ -322,7 +322,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         """
         button = event.button()
         self.__start_pos = None
-        if button == QtCore.Qt.MidButton:
+        if button == QtCore.Qt.MiddleButton:
             self.__start_pos = event.pos()
         elif button == QtCore.Qt.RightButton:
             mod = event.modifiers()
@@ -399,7 +399,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         rect = event.rect()
         pen = QtGui.QPen(QtGui.QColor(210, 210, 210), 2)
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setPen(pen)
         painter.setBrush(QtGui.QBrush(QtGui.QColor(64, 64, 64)))
         painter.drawRoundedRect(rect, offset, offset)

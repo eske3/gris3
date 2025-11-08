@@ -108,7 +108,7 @@ class ColorSlider(QtWidgets.QWidget):
         rect = self.rect()
         # ベース部分の描画。===================================================
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         pen = QtGui.QPen()
         pen.setColor(QtGui.QColor(0, 0, 0))
         painter.setPen(pen)
@@ -118,7 +118,7 @@ class ColorSlider(QtWidgets.QWidget):
         # =====================================================================
 
         # カーソルの描画。=====================================================
-        painter.setRenderHints(QtGui.QPainter.Antialiasing, 0)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing, 0)
         painter.setBrush(QtCore.Qt.NoBrush)
         pos = rect.width() * self.value()
         rect.setWidth(style.scaled(5))
@@ -479,7 +479,7 @@ class ColorPalette(QtWidgets.QWidget):
                 event (QtCore.QEvent):
         """
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setPen(QtGui.QPen())
 
         rect = self.rect()

@@ -719,9 +719,9 @@ class DirectionView(QtWidgets.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setRenderHints(
-            QtGui.QPainter.Antialiasing |
-            QtGui.QPainter.SmoothPixmapTransform |
-            QtGui.QPainter.TextAntialiasing
+            QtGui.QPainter.RenderHint.Antialiasing |
+            QtGui.QPainter.RenderHint.SmoothPixmapTransform |
+            QtGui.QPainter.RenderHint.TextAntialiasing
         )
         self.__base_plane = self.XYPlane
 

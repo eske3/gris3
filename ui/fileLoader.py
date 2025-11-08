@@ -693,7 +693,7 @@ class MayaFileOperationWidget(uilib.SingletonWidget):
         rect = self.rect()
         self.__gradient.setFinalStop(0, rect.height())
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
 
         # 背景形状の描画。
         painter.setPen(QtGui.QPen(QtGui.QColor(80, 80, 80), 2))

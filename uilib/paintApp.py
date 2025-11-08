@@ -11,7 +11,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from .. import uilib
+from .. import uilib, desktop
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 class DrawCanvas(QtWidgets.QDialog):
@@ -200,7 +200,7 @@ class DrawCanvas(QtWidgets.QDialog):
         if btns == QtCore.Qt.LeftButton and self.__drawing:
             pos = self.adjustPosToImage(pos)
             painter = QtGui.QPainter(self.__image)
-            painter.setRenderHints(painter.Antialiasing)
+            painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
             brush_size = self.brushSize() * self.__last_pressure
             painter.setPen(
                 QtGui.QPen(
@@ -254,7 +254,7 @@ class DrawCanvas(QtWidgets.QDialog):
                 event (QtCore.QEvent):
         """
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(painter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         painter.drawImage(
             self.rect(), self.__image, self.__image.rect()
         )
@@ -280,10 +280,7 @@ class DesktopCanvas(DrawCanvas):
                 parent (QtWidgets.QWidget):親ウィジェット
                 screenNumber (int):デスクトップのスクリーン番号
         """
-        desktop = QtWidgets.QApplication.desktop()
-        if screenNumber is None:
-            screenNumber = desktop.screenNumber(QtGui.QCursor().pos())
-        screen_geo = desktop.availableGeometry(screenNumber)
+        screen_geo = desktop.DesktopInfo().getAvailableGeometry()
         super(DesktopCanvas, self).__init__(screen_geo, parent)
         self.setWindowFlags(QtCore.Qt.Window|QtCore.Qt.FramelessWindowHint)
         self.setGeometry(screen_geo)
@@ -316,10 +313,7 @@ class DesktopCanvas(DrawCanvas):
             Returns:
                 QtGui.QImage:
         """
-        pixmap = QtGui.QPixmap.grabWindow(
-            QtWidgets.QApplication.desktop().winId(),
-            rect.x(), rect.y(), rect.width(), rect.height()
-        )
+        pixmap = desktop.DesktopInfo().grabWindow(rect)
         image = pixmap.toImage()
         image_rect = QtCore.QRect(rect)
         image_rect.moveTopLeft(QtCore.QPoint(0, 0))

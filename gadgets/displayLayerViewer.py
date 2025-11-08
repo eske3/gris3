@@ -61,7 +61,7 @@ class LayerStatusStyle(QtWidgets.QStyledItemDelegate):
             super(LayerStatusStyle, self).paint(painter, option, index)
             return
         data = index.data()
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         
         d_pen = painter.pen()
         d_brush = painter.brush()

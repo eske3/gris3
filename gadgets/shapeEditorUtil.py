@@ -91,7 +91,7 @@ class ValueChangeButton(QtWidgets.QPushButton):
         label = self.text()
         rect = event.rect()
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setPen(QtGui.QPen(self.penColor(), 1))
 
         if self.__entered:

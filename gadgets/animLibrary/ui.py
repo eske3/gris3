@@ -14,11 +14,12 @@ r"""
         Proprietary and confidential
 """
 import os
-from gris3 import uilib
-from gris3.uilib import mayaUIlib
+from ... import uilib
+from ...uilib import mayaUIlib
 from ...ui import imageViewer
 from . import core
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
+
 
 # 入力ダイアログに関するクラス、定数、関数。///////////////////////////////////
 class InputDialog(uilib.BlackoutDisplay):
@@ -145,7 +146,7 @@ class InputDialog(uilib.BlackoutDisplay):
         rect.moveCenter(center)
         pixmap = pixmap.copy(rect).scaled(
             QtCore.QSize(256, 256),
-            transformMode=QtCore.Qt.SmoothTransformation
+            QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
         )
         self.__thumbnail.setPixmap(pixmap)
         self.__thumbnail_path = filename
@@ -216,6 +217,7 @@ class StandardDataEditor(QtWidgets.QWidget):
     
     def buildUI(self):
         pass
+
 
 class PoseEditor(StandardDataEditor):
     def buildUI(self):
@@ -447,6 +449,7 @@ class DataManager(QtWidgets.QWidget):
         """
         return self.__view
 
+
 class MainWidget(QtWidgets.QWidget):
     r"""
         メインとなるGUIを提供するクラス。
@@ -579,7 +582,9 @@ class MainWidget(QtWidgets.QWidget):
                 fileList (list):
         """
         dm = self.globalDataManager()
-        QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
+        QtWidgets.QApplication.setOverrideCursor(
+            QtGui.QCursor(QtCore.Qt.WaitCursor)
+        )
         try:
             dm.deleteDataFromFile(self.currentTag(), fileList)
         except Exception as e:

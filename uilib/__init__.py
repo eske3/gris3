@@ -22,7 +22,7 @@ import platform
 from abc import ABCMeta, abstractmethod
 from ..pyside_module import *
 
-from .. import globalpath, style, verutil
+from .. import globalpath, style, verutil, desktop
 
 class Color(object):
     ExecColor = (64, 72, 150)
@@ -1230,10 +1230,7 @@ class BlackoutDisplay(QtWidgets.QDialog):
         r"""
             ディスプレイ表示するためのメソッド。
         """
-        desktop = QtWidgets.QApplication.desktop()
-        number = desktop.screenNumber(QtGui.QCursor().pos())
-        rect = desktop.availableGeometry(number)
-        self.setGeometry(rect)
+        self.setGeometry(desktop.DesktopInfo().getAvailableGeometry())
 
         self.stopShowing()
         self.__is_showing = True
@@ -1262,7 +1259,7 @@ class BlackoutDisplay(QtWidgets.QDialog):
         self.__gradient.setFinalStop(0, rect.height())
 
         painter = QtGui.QPainter(self)
-        painter.setPen(None)
+        painter.setPen(QtCore.Qt.NoPen)
         painter.setBrush(self.__gradient)
         painter.drawRect(rect)
 
@@ -1352,7 +1349,7 @@ class ImageViewerWidget(QtWidgets.QWidget):
         if not pixmap or pixmap.isNull():
             return
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         rect = self.rect()
         drawed = pixmap.scaled(
             rect.size(),
@@ -1465,13 +1462,14 @@ class StarndardSpinerObject(QtCore.QObject):
             Args:
                 y (int):現在のY座標
         """
-        currentScreenRect = QtWidgets.QApplication.desktop().screenGeometry(
-            QtWidgets.QApplication.desktop().screenNumber(
-                QtGui.QCursor().pos()
-            )
-        )
-        lowerLimit = currentScreenRect.y()
-        upperLimit = currentScreenRect.height() + lowerLimit - 1
+        # screenRect = QtWidgets.QApplication.desktop().screenGeometry(
+            # QtWidgets.QApplication.desktop().screenNumber(
+                # QtGui.QCursor().pos()
+            # )
+        # )
+        screenRect = desktop.DesktopInfo().getGeometry()
+        lowerLimit = screenRect.y()
+        upperLimit = screenRect.height() + lowerLimit - 1
         if y <= lowerLimit:
             posY = upperLimit - 1
         elif y >= upperLimit:
@@ -1746,7 +1744,7 @@ class ClosableGroup(QtWidgets.QGroupBox):
         if self.__is_closed:
             size = style.scaled(8)
             painter = QtGui.QPainter(self)
-            painter.setRenderHints(QtGui.QPainter.Antialiasing)
+            painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
             painter.setBrush(self.BgColor)
             painter.setPen(self.PenColor)
             painter.drawRoundedRect(self.rect(), size, size)
@@ -2021,7 +2019,8 @@ class OButton(QtWidgets.QPushButton):
 
         painter = QtGui.QPainter(self)
         painter.setRenderHints(
-            QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform
+            QtGui.QPainter.RenderHint.Antialiasing |
+            QtGui.QPainter.RenderHint.SmoothPixmapTransform
        )
 
         # Setup a pen and background color.------------------------------------

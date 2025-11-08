@@ -74,7 +74,7 @@ class FunctionListStyle(QtWidgets.QStyledItemDelegate):
         # super(FunctionListStyle, self).paint(painter, option, index)
         # return
         text = index.data()
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
 
         font = painter.font()
         font_m = QtGui.QFontMetrics(font)

@@ -19,8 +19,9 @@ import time
 import codecs
 import shutil
 from abc import ABCMeta, abstractmethod
-from gris3 import node, lib, verutil
+from ... import node, lib, verutil, settings
 Version = 0.5
+
 
 def checkSelection():
     r"""
@@ -30,6 +31,7 @@ def checkSelection():
             bool:
     """
     return True if node.cmds.ls(sl=True) else False
+
 
 class Namespace(object):
     r"""
@@ -491,12 +493,13 @@ class FileDataList(object):
             if data['fileName'] == fileName:
                 return data
 
+
 class GlobalDataManager(object):
     r"""
         データを統合管理するマネージャ。
         データの書き出しやメタデータの管理を行う。
     """
-    RootDirectoryName = 'grisPrefs/grisAnimLibrary'
+    RootDirectoryName = 'animLibrary'
     DataManagers = {
         x.dataType() : x for x in [
             PoseDataManager
@@ -504,10 +507,13 @@ class GlobalDataManager(object):
     }
     def __init__(self):
         self.__writer = None
-        self.__rootdir = os.path.normpath(node.cmds.internalVar(uad=True))
+        self.__rootdir = settings.GlobalPref().prefdir()
         self.setTags('all')
+        self.clearCache()
+
+    def clearCache(self):
         self.__cached_metadata = None
-        self.__cached_filedata = None
+        self.__cached_filedata = None        
 
     def setTags(self, *tags):
         r"""
@@ -516,7 +522,7 @@ class GlobalDataManager(object):
             Args:
                 *tags (any):
         """
-        self.__tag = tags
+        self.__tag = list(tags)
 
     def tags(self):
         r"""
@@ -739,6 +745,8 @@ class GlobalDataManager(object):
         metadata['fileData'] = filename_data
         self.writeMetaData(metadata)
         # =====================================================================
+        
+        self.clearCache()
 
     def fileDataList(self):
         r"""

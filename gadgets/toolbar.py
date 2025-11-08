@@ -224,6 +224,13 @@ class ToolbarView(QtWidgets.QWidget):
             if p.mapToGlobal(p.pos()) != self.__pre_parent_pos:
                 self.hide()
                 return
+        parent = self.parent()
+        while(parent):
+            if not parent.isVisible():
+                self.hide()
+                return
+            parent = parent.parent()
+
         if self.__hide_timer_id:
             self.killTimer(self.__hide_timer_id)
         self.__hide_timer_id = None

@@ -42,7 +42,7 @@ class CurveView(QtWidgets.QListView):
         data = [x.data(QtCore.Qt.UserRole+1) for x in self.selectedIndexes()]
         if not data:
             return
-        text = "'%s'" % data[0] if withQuotation else data[0]
+        text = "'{}'".format(data[0] if withQuotation else data[0])
         QtWidgets.QApplication.clipboard().setText(text)
 
     def keyPressEvent(self, event):
@@ -331,7 +331,7 @@ class ControllerMirror(uilib.ClosableGroup):
         """
         with node.DoCommand():
             curvePrimitives.mirrorCurve()
-        
+
 
 class ShapeEditor(uilib.ClosableGroup):
     r"""
@@ -344,7 +344,7 @@ class ShapeEditor(uilib.ClosableGroup):
         """
         super(ShapeEditor, self).__init__('Edit Shape', parent)
         self.setIcon(uilib.IconPath('uiBtn_toolBox'))
-        
+
         layout = QtWidgets.QHBoxLayout(self)
         layout.setSpacing(2)
         for data in (
@@ -368,6 +368,7 @@ class ShapeEditor(uilib.ClosableGroup):
             btn.setSize(38)
             btn.clicked.connect(cmd)
             layout.addWidget(btn)
+
         layout.addStretch()
 
     def transfer(self):
@@ -376,7 +377,66 @@ class ShapeEditor(uilib.ClosableGroup):
         """
         with node.DoCommand():
             curvePrimitives.transferCurveShape()
+
+
+class WireColorPicker(colorPicker.ColorPickerWidget):
+    def showColorPicker(self):
+        selected_color = None
+        for n in node.selected():
+            for crv in node.getShapes(n, 'nurbsCurve'):
+                if not crv.hasAttr(curvePrimitives.CurveColorAttr):
+                    continue
+                selected_color = crv(curvePrimitives.CurveColorAttr)
+                break
+            if selected_color:
+                break
+        pre_color = self.colorRgb()
+        if selected_color:
+            self.setColorRgb(selected_color[0])
+        result = super(WireColorPicker, self).showColorPicker()
+        if not result:
+            self.setColorRgb(pre_color)
+        return result
+
+
+class ApperanceEditor(QtWidgets.QGroupBox):
+    def __init__(self, parent=None):
+        super(ApperanceEditor, self).__init__('Apperance', parent)
+        # ラインの太さ編集
+        linewidth = QtWidgets.QWidget()
+        self.__linewidth = uilib.DoubleSpiner()
+        self.__linewidth.setRange(-1, 100)
+        self.__linewidth.setValue(3)
+        btn = uilib.OButton(uilib.IconPath('uiBtn_play'))
+        btn.clicked.connect(self.applyLineWidth)
+        layout = QtWidgets.QHBoxLayout(linewidth)
+        layout.addWidget(self.__linewidth)
+        layout.addWidget(btn)
         
+        # 色編集
+        color_picker = WireColorPicker()
+        color_picker.setColorRgb([0.164, 0.34, 0.865])
+        color_picker.setColorAsFloat(True)
+        color_picker.colorIsSet.connect(self.applyColor)
+        
+        layout = QtWidgets.QFormLayout(self)
+        layout.addRow('Line Width', linewidth)
+        layout.addRow('Line Color', color_picker)
+
+    def applyLineWidth(self):
+        line_width = self.__linewidth.value()
+        if line_width < 0:
+            line_width = -1
+        with node.DoCommand():
+            curvePrimitives.applyLineWidth(line_width)
+
+    def applyColor(self, r, g, b):
+        from importlib import reload
+        reload(curvePrimitives)
+        with node.DoCommand():
+            curvePrimitives.applyWireColor((r, g, b))
+
+
 class ControllerShapeEditor(QtWidgets.QWidget):
     r"""
         カーブの作成、編集を行うためのツールを提供するクラス。
@@ -390,16 +450,18 @@ class ControllerShapeEditor(QtWidgets.QWidget):
         self.setWindowTitle('+Controller Shape Editor')
         mirror = ControllerMirror()
         editor = ShapeEditor()
+        apperance = ApperanceEditor()
         self.__tool = CtrlCurveToolWidget()
 
         layout = QtWidgets.QGridLayout(self)
         layout.setSpacing(2)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(mirror, 0, 0, 1, 1)
-        layout.addWidget(editor, 0, 1, 1, 1)
-        layout.addWidget(self.__tool, 1, 0, 1, 2)
+        layout.addWidget(mirror, 0, 0, 1, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(editor, 0, 1, 1, 1, QtCore.Qt.AlignTop)
+        layout.addWidget(apperance, 0, 2, 1, 1)
+        layout.addWidget(self.__tool, 1, 0, 1, 3)
         layout.setRowStretch(1, 1)
-        layout.setColumnStretch(1, 1)
+        layout.setColumnStretch(2, 1)
         # layout.setStretchFactor(self.__tool, 1)
         
         self.loadCurves()

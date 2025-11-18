@@ -1,35 +1,34 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     surfaceMaterialTools.py
-    @brief    リネームに関するウィジェットを提供するモジュール。
-    @class    MaterialLister : 選択ノードがアサインされているマテリアルを一覧する
-    @class    MainWidget : SimpleRenamerの単独ウィンドウを提供するクラス。
-    @function showWindow : 選択ノードの数に応じて最適なリネーマーを表示する
-    @date        2017/05/30 5:36[Eske](eske3g@gmail.com)
-    @update      2019/03/24 11:39[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    選択オブジェクトにアサインされているマテリアルを一覧、変種するための
+    機能を提供するガジェット。
+
+    Dates:
+        date:2017/05/30 5:36[Eske](eske3g@gmail.com)
+        update:2025/11/11 11:40 Eske Yoshinob[eske3g@gmail.com]
+        
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from .. import uilib
 from ..uilib import mayaUIlib
 from ..tools import surfaceMaterialUtil as smu
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
+
 class MaterialLister(QtWidgets.QWidget):
-    r'''
-        @brief       選択ノードがアサインされているマテリアルを一覧する
-        @inheritance QtWidgets.QWidget
-        @date        2018/03/29 12:02[Eske](eske3g@gmail.com)
-        @update      2019/03/24 11:39[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        選択ノードがアサインされているマテリアルを一覧する
+    """
     def __init__(self, parent=None):
-        r'''
-            @brief  初期化を行う。
-            @param  parent(None) : [QtWidgets.QWidget]
-            @return None
-        '''
+        r"""
+            Args:
+                parent (QtWidgets.QWidget):親ウィジェット
+        """
         super(MaterialLister, self).__init__(parent)
         self.__update_selection = True
         self.__nodelist = []
@@ -37,7 +36,6 @@ class MaterialLister(QtWidgets.QWidget):
 
         model = QtGui.QStandardItemModel(0, 1)
         sel_model = QtCore.QItemSelectionModel(model)
-        # sel_model.selectionChanged.connect(self.doAction)
 
         self.__material_list = QtWidgets.QListView()
         self.__material_list.setVerticalScrollMode(
@@ -71,10 +69,9 @@ class MaterialLister(QtWidgets.QWidget):
         layout.setAlignment(ref_btn, QtCore.Qt.AlignCenter)
 
     def updateList(self):
-        r'''
-            @brief  リストを更新する
-            @return None
-        '''
+        r"""
+            リストを更新する
+        """
         model = self.__material_list.model()
         self.__update_selection = False
         model.removeRows(0, model.rowCount())
@@ -90,11 +87,12 @@ class MaterialLister(QtWidgets.QWidget):
             model.setItem(row, 0, item)
 
     def selectMaterial(self, index):
-        r'''
-            @brief  リストで選択されているマテリアルを選択する
-            @param  index : [QtCore.QModelIndex]
-            @return None
-        '''
+        r"""
+            リストで選択されているマテリアルを選択する
+            
+            Args:
+                index (QtCore.QModelIndex):
+        """
         if (
             QtWidgets.QApplication.mouseButtons() == QtCore.Qt.RightButton
             or not self.__update_selection
@@ -103,11 +101,12 @@ class MaterialLister(QtWidgets.QWidget):
         mayaUIlib.select([index.data()])
 
     def selectAssignedFaces(self, index):
-        r'''
-            @brief  indexのマテリアル名でアサインされている面を選択する
-            @param  index : [QtCore.QModelIndex]
-            @return None
-        '''
+        r"""
+            indexのマテリアル名でアサインされている面を選択する
+            
+            Args:
+                index (QtCore.QModelIndex):
+        """
         mat = index.data()
         faces = smu.listMaterialMembers([mat], self.__nodelist)
         if not faces:
@@ -115,11 +114,12 @@ class MaterialLister(QtWidgets.QWidget):
         mayaUIlib.select(faces)
 
     def doAction(self, index):
-        r'''
-            @brief  リストをクリックしたときのアクションを行う
-            @param  index : [QtCore.QModelIndex]
-            @return None
-        '''
+        r"""
+            リストをクリックしたときのアクションを行う
+            
+            Args:
+                index (QtCore.QModelIndex):
+        """
         if (
             QtWidgets.QApplication.keyboardModifiers()
             == QtCore.Qt.ShiftModifier
@@ -129,47 +129,50 @@ class MaterialLister(QtWidgets.QWidget):
             self.selectMaterial(index)
 
     def assingMaterial(self, pos):
-        r'''
-            @brief  選択オブジェクトに対してマテリアルをアサインする
-            @param  pos : [QtCore.QPoint]
-            @return None
-        '''
+        r"""
+            選択オブジェクトに対してマテリアルをアサインする
+            
+            Args:
+                pos (QtCore.QPoint):
+        """
         item = self.__material_list.indexAt(pos)
         material = item.data()
         if not material:
             return
         smu.assignMaterialToSelected(material)
 
+
 class MainWidget(uilib.AbstractSeparatedWindow):
-    r'''
-        @brief       SimpleRenamerの単独ウィンドウを提供するクラス。
-        @inheritance uilib.AbstractSeparatedWindow
-        @date        2017/03/17 3:14[Eske](eske3g@gmail.com)
-        @update      2019/03/24 11:39[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        MaterialListerの単独ウィンドウを提供するクラス。
+    """
     def centralWidget(self):
-        r'''
-            @brief  UIの作成を行う。
-            @return None
-        '''
+        r"""
+            MaterialListerを作成して返す。
+            
+            Returns:
+                MaterialLister:
+        """
         return MaterialLister(self)
 
     def show(self, nodelist=[]):
-        r'''
-            @brief  ここに説明文を記入
-            @param  nodelist([]) : [edit]
-            @return None
-        '''
+        r"""
+            Args:
+                nodelist (list):
+        """
         self.resize(250, 320)
         main = self.main()
         main.updateList()
         super(MainWidget, self).show()
 
+
 def showWindow():
-    r'''
-        @brief  選択ノードの数に応じて最適なリネーマーを表示する
-        @return None
-    '''
+    r"""
+        選択ノードの数に応じて最適なリネーマーを表示する
+        
+        Returns:
+            MainWidget:
+    """
     w = MainWidget(mayaUIlib.MainWindow)
     w.show()
     return w

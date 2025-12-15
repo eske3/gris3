@@ -15,12 +15,18 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.6.5'
-LastModified = 20251104
+Version = '2.0.6.6'
+LastModified = 20251215
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.6.6',
+(
+    'skinUtilityのstoreWeightModelとrestoreWightModel使用時にアウトライナーカラーを変更するように機能追加。',
+)
+),
+
 ('2.0.6.5',
 (
     'polyHairCreator内でmayaUIlib.NodePickerを導入したことによって発生したバグへの対処。',

@@ -20,6 +20,7 @@ from .. import node, mathlib, verutil
 from . import modelingSupporter, util
 cmds = node.cmds
 
+
 def findSkinCluster(skinObject):
     r"""
         melのfindRelatedSkinClusterのPythonラッパー関数。
@@ -343,6 +344,17 @@ def storeWeightModel(targets=None, tmpGrp='__tempStored_grp__'):
         bindFromBinded([new_tgt], tgt)
         results.append([new_tgt, space])
         origins.append(tgt)
+        
+        # アウトライナーカラーを設定する。
+        o_state = tgt('useOutlinerColor')
+        o_color = tgt('outlinerColor')[0]
+        for n, st, col in (
+            (tgt, True, (0.8, 0.2, 0.15)),
+            (new_tgt, o_state, o_color),
+        ):
+            n('useOutlinerColor', st)
+            n('outlinerColor', col)
+            
     if origins:
         cmds.select(origins)
 
@@ -372,8 +384,14 @@ def restoreWeightModel(
         if deleteHistory:
             cmds.delete(tgt, ch=True)
         bindFromBinded([tgt], strmdl[0])
+        o_state = strmdl[0]('useOutlinerColor')
+        o_color = strmdl[0]('outlinerColor')[0]
+        tgt('useOutlinerColor', o_state)
+        tgt('outlinerColor', o_color)
+
         for sm in strmdl:
             deleting.append(sm.parent())
+
     grp = node.asObject(tmpGrp)
     if deleting:
         cmds.delete(deleting)

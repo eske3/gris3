@@ -15,12 +15,18 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.6.6'
-LastModified = 20251215
+Version = '2.0.6.7'
+LastModified = 20251221
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.6.7',
+(
+    'settings.GlobalPrefにプレファレンスディレクトリを返す関数を追加。',
+)
+),
+
 ('2.0.6.6',
 (
     'skinUtilityのstoreWeightModelとrestoreWightModel使用時にアウトライナーカラーを変更するように機能追加。',

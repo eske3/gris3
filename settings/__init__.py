@@ -16,7 +16,7 @@ r"""
 import os
 from abc import ABCMeta, abstractmethod
 import json
-from gris3 import xmlUtil, lib, fileUtil
+from .. import xmlUtil, lib, fileUtil
 
 
 class AbstractPref(object):
@@ -452,6 +452,22 @@ class GlobalPref(object):
                 XmlPref:
         """
         return self.__subprefs.get(category)
+
+    def subPrefDir(self, *subpath):
+        r"""
+            全体設定のプレファレンスディレクトリ内にある、subpathで指定したサブディレクトリパスを返す。
+            その際、指定されたディレクトリが無い場合は作成してからパスを返す。
+            
+            Args:
+                subpath (str):サブディレクトリ階層のリスト
+                
+            Returns:
+                str:プレファレンスのサブディレクトリパス
+        """
+        dir_path = os.path.join(self.prefdir(), *subpath)
+        if not os.path.isdir(dir_path):
+            os.makedirs(dir_path)
+        return dir_path
 
 
 def addPathToHistory(path, limit=None):

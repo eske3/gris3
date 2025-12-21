@@ -39,6 +39,11 @@ class Editor(QtWidgets.QWidget):
 
         self.__textedit = QtWidgets.QTextEdit()
         
+        test_label = QtWidgets.QLabel('Test Script')
+        test_btn = uilib.OButton(uilib.IconPath('uiBtn_play'))
+        test_btn.setBgColor(*uilib.Color.DebugColor)
+        test_btn.clicked.connect(self.testScript)
+        
         self.__save_btn = uilib.OButton(uilib.IconPath('uiBtn_save'))
         self.__save_btn.setSize(32)
         self.__save_btn.setBgColor(*uilib.Color.ExecColor)
@@ -48,12 +53,14 @@ class Editor(QtWidgets.QWidget):
         self.cancelButtonClicked = ccl_btn.clicked
 
         layout = QtWidgets.QGridLayout(self)
-        layout.setColumnStretch(0, 1)
-        layout.addWidget(self.__title, 0, 0, 1, 3)
-        layout.addWidget(label_widget, 1, 0, 1, 3)
-        layout.addWidget(self.__textedit, 2, 0, 1, 3)
-        layout.addWidget(self.__save_btn, 3, 1, 1, 1)
-        layout.addWidget(ccl_btn, 3, 2, 1, 1)
+        layout.setColumnStretch(1, 1)
+        layout.addWidget(self.__title, 0, 0, 1, 4)
+        layout.addWidget(label_widget, 1, 0, 1, 4)
+        layout.addWidget(self.__textedit, 2, 0, 1, 4)
+        layout.addWidget(test_label, 3, 0, 1, 1)
+        layout.addWidget(test_btn, 3, 1, 1, 1, QtCore.Qt.AlignLeft)
+        layout.addWidget(self.__save_btn, 3, 2, 1, 1)
+        layout.addWidget(ccl_btn, 3, 3, 1, 1)
 
     def setMode(self, mode, label='', text=''):
         r"""
@@ -76,10 +83,14 @@ class Editor(QtWidgets.QWidget):
 
     def save(self):
         label = self.__label.text()
-        script_str = self.__textedit.toPlainText()
-        if not label or not script_str:
+        script_text = self.__textedit.toPlainText()
+        if not label or not script_text:
             return
-        self.saveButtonClicked.emit(self.__mode, label, script_str)
+        self.saveButtonClicked.emit(self.__mode, label, script_text)
+
+    def testScript(self):
+        script_text = self.__textedit.toPlainText()
+        scriptHolder.execScript(script_text)
 
 
 class ScriptWidget(QtWidgets.QWidget):
@@ -130,9 +141,10 @@ class ScriptWidget(QtWidgets.QWidget):
         script = self.script()
         if not script:
             return
-        script_text = script.scriptText()
-        with node.DoCommand():
-            exec(script_text)
+        script.execute()
+        # script_text = script.scriptText()
+        # with node.DoCommand():
+            # exec(script_text)
         
 
 class ScriptList(QtWidgets.QWidget):

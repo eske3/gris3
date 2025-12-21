@@ -15,7 +15,12 @@ r"""
 
 import re
 import os
-from .. import settings
+from .. import settings, node
+
+
+def execScript(sciptText):
+    with node.DoCommand():
+        exec(sciptText)
 
 
 class Script(object):
@@ -87,6 +92,9 @@ class Script(object):
         script_text = self.scriptText()
         with open(filepath, 'w') as f:
             f.write(script_text)
+
+    def execute(self):
+        execScript(self.scriptText())
 
 
 class ScriptHolderManager(object):

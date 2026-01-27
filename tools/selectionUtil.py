@@ -81,6 +81,23 @@ def listNamespaces(nodelist=None):
     return nslist
 
 
+def listEndNodes(nodelist=None):
+    r"""
+        Args:
+            nodelist (list):検索対象のノードリスト
+            
+        Returns:
+            list : エンドノードをリストする
+    """
+    endnodes = []
+    for trs in node.selected(nodelist, type='transform'):
+        if trs.hasChild():
+            if trs.children(type='transform'):
+                continue
+        endnodes.append(trs)
+    return endnodes
+
+
 def reverseSelectionOrder():
     r"""
         選択順序を反転する
@@ -453,4 +470,22 @@ def selectKeyableHir(nodelist=None, isSelecting=True):
         cmds.select(new_selection, r=True)
         cmds.select(last_selection, add=True)
     return new_selection
+
+
+def selectEndNodes(nodelist=None, **args):
+    endnodes = listEndNodes(nodelist)
+    if not endnodes:
+        return
+    cmds.select(endnodes, **args)
+
+
+def selectHierarchyWithEndNodes(withoutEndNode, nodelist=None):
+    cmds.select(node.selected(nodelist), hierarchy=True)
+    endnodes = listEndNodes()
+    if not endnodes:
+        return
+    if withoutEndNode:
+        cmds.select(endnodes, d=True)
+    else:
+        cmds.select(endnodes, r=True, ne=True)
 

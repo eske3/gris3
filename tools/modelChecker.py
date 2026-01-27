@@ -96,6 +96,50 @@ class PolyCvValueChecker(object):
             cmds.select(cl=True)
 
 
+def listLockedNormalVertices(targets=None, returnIndexOnly=False):
+    r"""
+        任意のメッシュtargetの頂点のうち、法線がロックされている頂点番号を返す。
+        returnIndexOnlyがTrueの場合、番号ではなく
+        target.vtx[#]
+        の形式で頂点名のリストとして返す。
+        
+        Args:
+            target (str):操作対象ノード名（メッシュ）
+            returnIndexOnly (bool):戻り値を頂点番号のみにするかどうか
+            
+        Returns:
+            list:法線がロックされた頂点番号のリスト
+    """
+    from maya.api import OpenMaya
+    targets = node.selected(targets)
+    results = []
+    for tgt in targets:
+        shape = node.getShapes(tgt, 'mesh')
+        if not shape:
+            continue
+        shape = shape[0]
+        sellist = OpenMaya.MSelectionList()
+        sellist.add(shape)
+        dagpath = sellist.getDagPath(0)
+        mfn_mesh = OpenMaya.MFnMesh(dagpath)
+        mit_fv = OpenMaya.MItMeshFaceVertex(dagpath)
+
+        locked = set()
+        getter = mfn_mesh.isNormalLocked
+        nid_getter = mit_fv.normalId
+        vtx_id_getter = mit_fv.vertexId
+        while(not mit_fv.isDone()):
+            if getter(nid_getter()):
+                locked.add(vtx_id_getter())
+            mit_fv.next()
+        locked = list(set(locked))
+        locked.sort()
+        if not returnIndexOnly:
+            locked = ['{}.vtx[{}]'.format(shape, x) for x in locked]
+        results.extend(locked)
+    return results
+
+
 def listUnfreezedNodes(targets=None):
     r"""
         フリーズ、リセットを行っていないノードを検出する。

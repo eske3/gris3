@@ -16,7 +16,7 @@ r"""
 import re
 from maya.api import OpenMaya
 
-from .. import node, mathlib, verutil
+from .. import node, mathlib, verutil, mathlib
 from . import modelingSupporter, util
 cmds = node.cmds
 
@@ -56,6 +56,92 @@ def listSkinClustersFromSelected(targetNodes=None):
     return result
 
 
+def listWeights(target):
+    r"""
+        選択オブジェクトについているSkinClusterのウェイト一覧を返す。
+        戻り値はコンポーネントのインデックスをキーとした辞書オブジェクト。
+        対応する値は
+            コンポーネントに対応するアトリビュート名をキー、値をウェイト値
+        とする辞書。
+        
+        Args:
+            target (str):
+            
+        Returns:
+            dict:
+    """
+    sc = findSkinCluster(target)
+    if not sc:
+        return {}
+    return  sc.listWeights()
+
+
+def listWeightValues(target):
+    r"""
+        選択オブジェクトについているSkinClusterのウェイトリストをリストで返す。
+        戻り値はコンポーネントのインデックス順に、各コンポーネントのウェイトのリストを持つリスト。
+        API仕様のためlistWeightsより高速。
+        
+        Args:
+            target (str):
+            
+        Returns:
+            list:
+    """
+    sc = findSkinCluster(target)
+    if not sc:
+        return []
+    return sc.listWeightValues(target)
+
+
+def listOverDecimalWeightVertices(target, decimal=2, selecting=False):
+    weights = listWeightValues(target)
+    vts_fmt = '{}.vtx[{{}}]'.format(target)
+    vtxlist = []
+    for idx, wlist in enumerate(weights):
+        for w in wlist:
+            if mathlib.getNumberOfDecimals(w) <= decimal:
+                continue
+            vtxlist.append(vts_fmt.format(idx))
+            break
+    if selecting:
+        if not vtxlist:
+            cmds.select(cl=True)
+        else:
+            cmds.select(vtxlist)
+    return vtxlist
+            
+
+
+def showBindSkinOption():
+    r"""
+        バインドオプションを開く
+    """
+    from maya import mel
+    mel.eval('SmoothBindSkinOptions')
+
+
+def bindFromBinded(targets, source, copyWeight=True):
+    r"""
+        sourceに使用されているインフルエンスを使用してtargetsにバインド
+        する。copyWeightがTrueの場合、バインド後にウェイトのコピーも
+        行う。
+        戻り値として、生成されたskinClusterを返す。
+        
+        Args:
+            targets (list):バインドされるオブジェクトのリスト
+            source (str):ソースオブジェクト
+            copyWeight (bool):ウェイトをコピーするかどうか
+            
+        Returns:
+            list:
+    """
+    sc = findSkinCluster(source)
+    results = sc.rebind(targets, copyWeight)
+    return results
+
+
+
 def listSkinFromInfluence(influence):
     r"""
         インフルエンスが接続しているskinClusterの一覧を返す。
@@ -91,41 +177,6 @@ def listSkinFromInfluence(influence):
                 p = geo
             result.append([sc, p])
     return result
-
-
-def listWeights(target):
-    sc = findSkinCluster(target)
-    if not sc:
-        return {}
-    return  sc.listWeights()
-
-
-def showBindSkinOption():
-    r"""
-        バインドオプションを開く
-    """
-    from maya import mel
-    mel.eval('SmoothBindSkinOptions')
-
-
-def bindFromBinded(targets, source, copyWeight=True):
-    r"""
-        sourceに使用されているインフルエンスを使用してtargetsにバインド
-        する。copyWeightがTrueの場合、バインド後にウェイトのコピーも
-        行う。
-        戻り値として、生成されたskinClusterを返す。
-        
-        Args:
-            targets (list):バインドされるオブジェクトのリスト
-            source (str):ソースオブジェクト
-            copyWeight (bool):ウェイトをコピーするかどうか
-            
-        Returns:
-            list:
-    """
-    sc = findSkinCluster(source)
-    results = sc.rebind(targets, copyWeight)
-    return results
 
 
 def selectInfluences(skinClusters):
@@ -224,6 +275,38 @@ def replaceAllInfluence(srcInf, dstInf):
 # /////////////////////////////////////////////////////////////////////////////
 # 便利機能                                                                   //
 # /////////////////////////////////////////////////////////////////////////////
+def resetInfluence(jointlist=None):
+    r"""
+        任意のインフルエンスが影響しているskinClusterのバインド状態をリセットする。
+
+        Args:
+            jointlist (list):
+            
+        Returns:
+        `   tuple: リセットしたskinClusterとその影響を受けるメッシュのリスト
+    """
+    jointlist = node.selected(jointlist)
+    sclist = []
+    shapelist = []
+    for j in jointlist:
+        binded = listSkinFromInfluence(j)
+        sclist.extend([node.asObject(x[0]) for x in binded])
+        shapelist.extend([x[1] for x in binded])
+    sclist = list(set(sclist))
+    shapelist = list(set(shapelist))
+    idx_ptn = re.compile('\[\d+\]')
+    for sc in sclist:
+        con = cmds.listConnections(sc/'matrix', s=True, d=False, p=True, c=True)
+        for i in range(0, len(con),2):
+            plug = con[i+1]
+            jnt = node.asObject(con[i+1].split('.', 1)[0])
+            idx = idx_ptn.search(con[i]).group(0)
+            sc('bindPreMatrix'+idx, jnt('wim'), type='matrix')
+    if shapelist:
+        cmds.select(shapelist, r=True, ne=True)
+    return sclist, shapelist
+
+
 def bindToFace(falloff=0.0, hierarchy=True):
     r"""
         選択フェースに対し、選択ジョイントをboxelBindingしたウェイトを

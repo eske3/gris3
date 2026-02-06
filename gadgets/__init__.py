@@ -236,11 +236,22 @@ def openCheckTools(categoryFile=''):
 
 def openGagetsLauncher():
     r"""
-        チェックツールを開く。
+        ガジェットランチャーを開く。
         
         Returns:
             gadgetsLauncher.MainGUI:
     """
     from . import gadgetsLauncher
     gadgetsLauncher.showWindow()
+
+
+def openScriptExecutor():
+    r"""
+        スクリプト登録・実行ツールを開く。
+        
+        Returns:
+            scriptExecUtility.MainGUI:
+    """
+    from . import scriptExecUtility
+    scriptExecUtility.showWindow()
 

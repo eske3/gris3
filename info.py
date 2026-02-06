@@ -15,12 +15,20 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.7.0'
-LastModified = 20260127
+Version = '2.0.8.0'
+LastModified = 20260206
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.8.0',
+(
+    'skinningEditorをパッケージに変更＋bindingObjectList、influenceUtilityWidgetを追加',
+    'scriptExecutorの起動コマンドをgadgetモジュールに追加',
+)
+),
+
+
 ('2.0.7.0',
 (
     'スクリプトを登録・実行するためのガジェット「Script Executor」を追加。',

@@ -489,3 +489,65 @@ def selectHierarchyWithEndNodes(withoutEndNode, nodelist=None):
     else:
         cmds.select(endnodes, r=True, ne=True)
 
+
+class ConditionalSelection(object):
+    ShapeKey = '(Transform)'
+
+    def __init__(self):
+        self.__node_types = []
+
+    def setNodeTypes(self, nodetypes):
+        self.__node_types = list(nodetypes)
+
+    def nodeTypes(self):
+        return self.__node_types
+
+    def listFilteredByNodeType(
+        self, nodelist, includeShapes=False, includeTransform=False
+    ):
+        node_types = []
+        shape_types = []
+        for nt in self.nodeTypes():
+            if nt.endswith(self.ShapeKey):
+                key = nt.replace(self.ShapeKey, '')
+                shape_types.append(key)
+                if includeTransform:
+                    node_types.append(key)
+            else:
+                node_types.append(nt)
+
+        targets = []
+        for n in nodelist:
+            nt = n.type()
+            added = False
+            if nt in shape_types:
+                targets.append(n.parent())
+                added = True
+            if nt in node_types:
+                targets.append(n)
+                added = True
+            if added or not includeShapes or not n.isSubType('transform'):
+                continue
+            for shape in n.shapes(ni=True):
+                if shape.type() in shape_types:
+                    targets.append(n)
+                    break
+        return targets
+
+    def select(self, nodelist=None, **args):
+        targets = self.listFilteredByNodeType(node.selected(nodelist), True)
+        cmds.select(targets, **args)
+    
+    def selectHierarchy(self, nodelist=None, **args):
+        cmds.select(node.selected(nodelist), hierarchy=True)
+        targets = self.listFilteredByNodeType(
+            node.selected(), includeTransform='d' in args
+        )
+        if not targets:
+            return
+        cmds.select(targets, **args)
+
+        
+        
+
+    

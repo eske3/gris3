@@ -15,12 +15,21 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.8.2'
-LastModified = 20260214
+Version = '2.0.9.0'
+LastModified = 20260217
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('2.0.9.0',
+(
+    (
+        'skinningEditorをパッケージに変更に伴い、SkinningEditorクラスにアクセスできなくなってしまったため、'
+        '__init__内にSkinningEditorクラスを読み込み過去コードの互換性を保持。'
+    ),
+)
+),
+
 ('2.0.8.2',
 (
     'tools.selectionUtilにConditionalSelectionクラスを追加。',

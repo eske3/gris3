@@ -12,6 +12,7 @@ r"""
         Proprietary and confidential
 """
 from . import main
+from .main import SkinningEditor
 
 
 def showWindow():

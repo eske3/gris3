@@ -153,9 +153,8 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
 
     def listExpressions(self):
         r"""
-            このノードが保持する表情データノートのリストを返す。
-            戻り値はOrderedDictで、表情名をキーとし、それに対応するTransformを
-            値とする。
+            このノードが保持する表情データノードのリストを返す。
+            戻り値はOrderedDictで、表情名をキーとし、それに対応するTransformを値とする。
             
             Returns:
                 OrderedDict:
@@ -244,7 +243,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
                 expression (str):削除する表情名
         """
         datanodes = self.listExpressions()
-        removed = datanodes.get(expresion)
+        removed = datanodes.get(expression)
         if removed:
             cmds.delete(removed)
 
@@ -297,11 +296,11 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
 
     def renameExpressionFromDataList(self, expressionlist):
         r"""
-            引数expressionlistで指定された表情名のリストで更新を行う。
-            expressionlist内に既存の表情があった場合、その値は保持する。
-            既存の表情リストとexpressionlistが順番も含めて全く同じだった場合は
-            何もせずに0を返す。
-            それ以外の場合は1を返す。
+            既存の表情データリストの表情名を、引数expressionlistで指定した表情名に
+            リネームする。
+            引数expressionlistは既存の表情データリストと同数である必要がある。
+            処理を実行すると、既存の表情データリストの表情名は、上から引数expressionの名前
+            に置き換わっていく。
             
             Args:
                 expressionlist (list):表情名のリスト
@@ -329,14 +328,14 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
 
     def overrideExpressions(self, expressions, datalist, status=1):
         r"""
-            引数expressionsで指定した表情に対し、datalistの内容を追加上書きする。
+            引数expressionsで指定した複数表情に対し、datalistの内容で一括追加上書きする。
             expressionsで指定した表情データに対し、
                 datalistの内容が含まれていない場合は追記する。
                 datalistの内容が含まれている場合は上書きする。
             といった処理を行う。
             引数datalistはDataTransform.setValuesへ渡す内容と同じ形式の辞書
             オブジェクト。
-            
+
             Args:
                 expressions (list): 上書きする表情名のリスト
                 datalist (dict): 上書きする表情データ
@@ -365,7 +364,6 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             exp.setValues(values)
             exp.setStatus(status)
 
-
     def applyExpression(self, expression):
         r"""
             引数expressionで指定した表情パラメータをblendShapeに適用する。
@@ -384,6 +382,32 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
             if attr in values:
                 v = values[attr]
             bs(attr, v)
+
+    def setKeyframeOfAllExpressions(self, startFrame=0, isSettingRange=True):
+        def setkey(bs, attrs, val, f):
+            for attr in attrs:
+                v = 0
+                if val:
+                    if attr in val:
+                        v = val[attr]
+                cmds.setKeyframe(bs/attr, v=v, t=f)
+
+        bs = self.blendShape()
+        if not bs:
+            return
+        bs_attrs = bs.listAttrNames()
+        
+        # キーフレームの削除
+        cmds.cutKey([bs/x for x in bs_attrs], cl=True)
+
+        # 最初はデフォルト状態でキーを打つ。
+        setkey(bs, bs_attrs, None, startFrame)
+        frame = startFrame + 1
+        for exp, values in self.listExpressionData().items():
+            setkey(bs, bs_attrs, values, frame)
+            frame += 1
+        if isSettingRange:
+            cmds.playbackOptions(min=startFrame, max=frame-1)
 
 
 class DataTransform(node.Transform, grisNode.AbstractGrisNode):

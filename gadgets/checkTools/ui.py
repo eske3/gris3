@@ -160,6 +160,21 @@ class Operator(QtWidgets.QStackedWidget):
                 )
         super(Operator, self).addWidget(operatorPage)
 
+    def widgetAtProcessId(self, processId):
+        r"""
+            任意のprocessIdで設定したoperatorPageを返す。
+
+            Args:
+                processId (int):プロセス番号
+            
+            Returns:
+                OperatorPage: 該当IDがない場合はNoneを返す。
+        """
+        for i in range(1, self.count()):
+            op = self.widget(i)
+            if op.processId() == processId:
+                return op
+
     def setIndexByProcessId(self, processId, targetInfo):
         for i in range(1, self.count()):
             op = self.widget(i)
@@ -204,6 +219,18 @@ class NodeResultViewer(QtWidgets.QSplitter):
         self.setOperatorHidden(False)
         operatorPage.setProcessId(processId)
         self.operator().addWidget(operatorPage)
+
+    def operatorPage(self, processId):
+        r"""
+            任意のprocessIdで設定したoperatorPageを返す。
+
+            Args:
+                processId (int):プロセス番号
+            
+            Returns:
+                OperatorPage: 該当IDがない場合はNoneを返す。
+        """
+        return self.operator().widgetAtProcessId(processId)
 
     def setResults(self, checkedResults):
         r"""

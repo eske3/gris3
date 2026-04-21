@@ -83,6 +83,7 @@ class ZeroInfluenceSelector(AbstractVertexSelector):
     def check(self, weightlist):
         return not weightlist
 
+
 class LimitationBreakSelector(AbstractVertexSelector):
     def __init__(self, parent=None):
         super(LimitationBreakSelector, self).__init__(parent)

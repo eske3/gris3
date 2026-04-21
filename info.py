@@ -15,12 +15,29 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.9.0'
-LastModified = 20260217
+Version = '3.0.0.0'
+LastModified = 20260319
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('3.0.0.0',
+(
+    (
+        'QRegExpをPySide6互換のためにQReqularExpressionに変更。これにより初代PySide版はサポート終了。'
+        'pyside_module内のPySide互換用コードはまだ残しているが、将来的には削除予定。'
+    ),
+)
+),
+
+('2.0.9.2',
+(
+    'selectionSupporter.SelectionUtilWidgetに文字列による選択フィルタを追加。',
+    'selectionUtil.ConditionalSelectionに文字列による選択フィルタを追加。'
+)
+),
+
+
 ('2.0.9.0',
 (
     (

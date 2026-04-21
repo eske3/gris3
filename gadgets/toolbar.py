@@ -32,6 +32,11 @@ MODELING_TOOL = (
         (36, 80, 180),
         uilib.IconPath('unit')
 )
+SELETION_TOOL = (
+        'gris3.gadgets.selectionSupporter.SelectionUtilWidget',
+        (36, 80, 180),
+        uilib.IconPath('uiBtn_select')
+)
 SIM_TOOL = (
         'gris3.gadgets.simUtility.ui.MainWidget',
         (36, 80, 180),
@@ -46,6 +51,7 @@ POSE_TOOL = (
 STANDALONE_TOOLBAR = [
     CLEANUP_TOOL,
     None,
+    SELETION_TOOL,
     MODELING_TOOL,
     None,
     (
@@ -79,6 +85,7 @@ STANDALONE_TOOLBAR = [
 
 FACTORY_TOOLBAR = [
     CLEANUP_TOOL,
+    SELETION_TOOL,
     MODELING_TOOL,
     None,
     SIM_TOOL,

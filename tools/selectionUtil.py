@@ -15,8 +15,8 @@ r"""
 """
 import re
 from maya.api import OpenMaya
-from gris3 import node
-from gris3.tools import nameUtility
+from .. import node
+from ..tools import nameUtility
 SIDE_TABLE = nameUtility.SIDE_TABLE
 cmds = node.cmds
 
@@ -495,6 +495,11 @@ class ConditionalSelection(object):
 
     def __init__(self):
         self.__node_types = []
+        self.__filter_text = ''
+        self.__use_re_in_filter = False
+        self.__searching_text = ''
+        self.__replaced_text = ''
+        self.__remove_namespace = False
 
     def setNodeTypes(self, nodetypes):
         self.__node_types = list(nodetypes)
@@ -502,12 +507,36 @@ class ConditionalSelection(object):
     def nodeTypes(self):
         return self.__node_types
 
+    def setFilterText(self, text=''):
+        self.__filter_text = text
+
+    def filterText(self):
+        return self.__filter_text
+    
+    def setUsingReInFilter(self, state=False):
+        self.__use_re_in_filter = bool(state)
+
+    def isUsingReInFilter(self):
+        return self.__use_re_in_filter
+
+    def setSearchingText(self, text):
+        self.__searching_text = text
+        
+    def setReplacedText(self, text):
+        self.__replaced_text = text
+        
+    def setIsRemovingNamespace(self, isUsing):
+        self.__remove_namespace = bool(isUsing)
+
     def listFilteredByNodeType(
         self, nodelist, includeShapes=False, includeTransform=False
     ):
         node_types = []
         shape_types = []
-        for nt in self.nodeTypes():
+        nodetype_list = self.nodeTypes()
+        if not nodetype_list:
+            return nodelist
+        for nt in nodetype_list:
             if nt.endswith(self.ShapeKey):
                 key = nt.replace(self.ShapeKey, '')
                 shape_types.append(key)
@@ -534,8 +563,32 @@ class ConditionalSelection(object):
                     break
         return targets
 
+    def filterByText(self, nodelist):
+        text = self.filterText()
+        if not text:
+            return nodelist
+        is_using_re = self.isUsingReInFilter()
+        if not is_using_re:
+            return [x for x in nodelist if text in x.shortName()]
+        re_ptn = re.compile(text)
+        return [x for x in nodelist if re_ptn.search(x.shortName())]
+
+    def replaceText(self, nodelist):
+        if self.__remove_namespace:
+            nodelist = [x.rsplit(':', 1)[-1] for x in nodelist]
+        if self.__searching_text:
+            nodelist = [
+                x.replace(self.__searching_text, self.__replaced_text)
+                for x in nodelist
+            ]
+        return nodelist
+        
+
     def select(self, nodelist=None, **args):
         targets = self.listFilteredByNodeType(node.selected(nodelist), True)
+        targets = self.filterByText(targets)
+        targets = self.replaceText(targets)
+        targets = cmds.ls(targets)
         cmds.select(targets, **args)
     
     def selectHierarchy(self, nodelist=None, **args):
@@ -543,9 +596,13 @@ class ConditionalSelection(object):
         targets = self.listFilteredByNodeType(
             node.selected(), includeTransform='d' in args
         )
+        targets = self.filterByText(targets)
+        targets = self.replaceText(targets)
+        targets = cmds.ls(targets)
         if not targets:
+            cmds.select(cl=True)
             return
-        cmds.select(targets, **args)
+        cmds.select(*targets, **args)
 
         
         

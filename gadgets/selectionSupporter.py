@@ -105,23 +105,12 @@ class EndNodeSelectionUtil(BasicSelectionWidget):
                 selectionUtil.selectHierarchyWithEndNodes(False)
 
 
-class ConditionalSelectionWidget(BasicSelectionWidget):
-    r"""
-        ノードタイプや特定の条件に基づいてフィルタして選択を行うウィジェット。
-    """
+class NodeTypeFilter(QtWidgets.QGroupBox):
     def __init__(self, parent=None):
-        super(ConditionalSelectionWidget, self).__init__(
-            'Conditional Selection', 'uiBtn_condition',
-            (
-                'Select Node', 'Deselect Node',
-                'Select Hierarchy without the node that matches the condition.',
-                'Select Node that matches the condition in Hierarchy',
-            )
-        )
-        layout = self.layout()
-        
-        # Node type filter
-        nt_filter_grp = QtWidgets.QGroupBox('Node Type Filter')
+        super(NodeTypeFilter, self).__init__('Node Type Filter', parent)
+        self.setCheckable(True)
+        self.setChecked(False)
+
         label = QtWidgets.QLabel('Enter node type')
         self.__node_types = QtWidgets.QLineEdit()
         self.__node_types.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -129,23 +118,9 @@ class ConditionalSelectionWidget(BasicSelectionWidget):
             lambda pos, w=self.__node_types:
             self.showNodeTypesInSelection(pos, w)
         )
-        grp_layout = QtWidgets.QHBoxLayout(nt_filter_grp)
-        grp_layout.addWidget(label)
-        grp_layout.addWidget(self.__node_types)
-        layout.addWidget(nt_filter_grp, 1, 0, 1, 3)
-
-    def listFilteredTypes(self):
-        r"""
-            Node Type Filterに記述されているノードタイプ一覧を返す。
-
-            Returns:
-                list:
-        """
-        text = self.__node_types.text()
-        if not text:
-            return []
-        node_types = [x.strip() for x in text.split(',')]
-        return node_types
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.addWidget(label)
+        layout.addWidget(self.__node_types)
 
     def showNodeTypesInSelection(self, pos, widget):
         r"""
@@ -184,11 +159,156 @@ class ConditionalSelectionWidget(BasicSelectionWidget):
         input_node_types.append(action.text())
         self.__node_types.setText(', '.join(input_node_types))
 
+    def listFilteredTypes(self):
+        r"""
+            Node Type Filterに記述されているノードタイプ一覧を返す。
+
+            Returns:
+                list:
+        """
+        if not self.isChecked():
+            return []
+        text = self.__node_types.text()
+        if not text:
+            return []
+        node_types = [x.strip() for x in text.split(',')]
+        return node_types
+
+
+class TextFilter(QtWidgets.QGroupBox):
+    r"""
+        文字列による選択フィルタを指定するためのGUIを提供する。
+    """
+    def __init__(self, parent=None):
+        super(TextFilter, self).__init__('Filter by Text', parent)
+        self.setCheckable(True)
+        self.setChecked(False)
+        label = QtWidgets.QLabel('Filter Text')
+        self.__text_field = QtWidgets.QLineEdit()
+        self.__use_re = QtWidgets.QCheckBox('Use Reg Exp')
+        self.__use_re.setChecked(False)
+        self.__use_re.setToolTip('Use regular expression')
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.addWidget(label)
+        layout.addWidget(self.__text_field)
+        layout.addWidget(self.__use_re)
+
+    def setFilterText(self, text):
+        self.__text_field.setText(text)
+
+    def filterText(self):
+        r"""
+            フィルタに用いるテキストを返す。
+            このグループウィジェットのチェックがOffの場合空文字列を返す。
+
+            Returns:
+                text:
+        """
+        return self.__text_field.text() if self.isChecked() else ''
+
+    def setUsingRe(self, isUsing):
+        self.__use_re.setChecked(bool(isUsing))
+
+    def isUsingRe(self):
+        r"""
+            正規表現を使うかどうかを返す。
+
+            Returns:
+                bool:
+        """
+        return self.__use_re.isChecked()
+
+
+class TextReplacer(QtWidgets.QGroupBox):
+    def __init__(self, parent=None):
+        super(TextReplacer, self).__init__('Replace Text', parent)
+        self.setCheckable(True)
+        self.setChecked(False)
+        label = QtWidgets.QLabel('Replace Name')
+        self.__searching = QtWidgets.QLineEdit()
+        self.__searching.setPlaceholderText('Enter a text for searching')
+        self.__replaced = QtWidgets.QLineEdit()
+        self.__replaced.setPlaceholderText('Enter a replaced text')
+
+        ns_label = QtWidgets.QLabel('Remove namespace')
+        self.__rem_ns = QtWidgets.QCheckBox()
+        self.__rem_ns.setChecked(True)
+
+        layout = QtWidgets.QGridLayout(self)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addWidget(self.__searching, 0, 1, 1, 1)
+        layout.addWidget(self.__replaced, 0, 2, 1, 1)
+        layout.addWidget(ns_label, 1, 0, 1, 1)
+        layout.addWidget(self.__rem_ns, 1, 1, 1, 2)
+
+    def setSearchingText(self, text):
+        self.__searching.setText(text)
+
+    def setReplacedText(self, text):
+        self.__replaced.setText(text)
+
+    def setRemovingNamespace(self, isUsing):
+        self.__rem_ns.setChecked(bool(isUsing))
+
+    def getValues(self):
+        return {
+            'searching': self.__searching.text(),
+            'replaced': self.__replaced.text(),
+            'removeNamespace': self.__rem_ns.isChecked()
+        }
+
+
+class ConditionalSelectionWidget(BasicSelectionWidget):
+    r"""
+        ノードタイプや特定の条件に基づいてフィルタして選択を行うウィジェット。
+    """
+    def __init__(self, parent=None):
+        super(ConditionalSelectionWidget, self).__init__(
+            'Conditional Selection', 'uiBtn_condition',
+            (
+                'Select Node', 'Deselect Node',
+                'Select Hierarchy without the node that matches the condition.',
+                'Select Node that matches the condition in Hierarchy',
+            )
+        )
+        layout = self.layout()
+        
+        # Node type filter
+        self.__nt_filter_grp = NodeTypeFilter()
+        self.__text_filter = TextFilter()
+        self.__text_replacer = TextReplacer()
+        
+        layout.addWidget(self.__nt_filter_grp, 1, 0, 1, 3)
+        layout.addWidget(self.__text_filter, 2, 0, 1, 3)
+        layout.addWidget(self.__text_replacer, 3, 0, 1, 3)
+
+    def listFilteredTypes(self):
+        return self.__nt_filter_grp.listFilteredTypes()
+
+    def filterText(self):
+        return self.__text_filter.filterText()
+
+    def isUsingReInFilter(self):
+        return self.__text_filter.isUsingRe()
+    
+    def replacedOptions(self):
+        return self.__text_replacer.getValues()
+
     def execCommand(self, mode):
         # from importlib import reload
         # reload(selectionUtil)
+        
+        filter_text = self.filterText()
+        is_using_re_in_filter = self.isUsingReInFilter()
+        rep_text = self.replacedOptions()
+        
         cs = selectionUtil.ConditionalSelection()
         cs.setNodeTypes(self.listFilteredTypes())
+        cs.setFilterText(filter_text)
+        cs.setUsingReInFilter(is_using_re_in_filter)
+        cs.setSearchingText(rep_text['searching'])
+        cs.setReplacedText(rep_text['replaced'])
+        cs.setIsRemovingNamespace(rep_text['removeNamespace'])
         with node.DoCommand():
             if mode == BasicSelectionWidget.SelectInSelection:
                 cs.select(r=True, ne=True)
@@ -200,7 +320,7 @@ class ConditionalSelectionWidget(BasicSelectionWidget):
                 cs.selectHierarchy(r=True, ne=True)
 
 
-class SelectionUtilWidget(QtWidgets.QWidget):
+class SelectionUtilWidget(QtWidgets.QScrollArea):
     def __init__(self, parent=None):
         r"""
             Args:
@@ -208,15 +328,23 @@ class SelectionUtilWidget(QtWidgets.QWidget):
         """
         super(SelectionUtilWidget, self).__init__(parent)
         self.setWindowTitle('Selection Util')
+        self.setWidgetResizable(True)
 
         endnode_selector = EndNodeSelectionUtil()
         endnode_selector.setExpanding(False)
         condtion_selector = ConditionalSelectionWidget()
         condtion_selector.setExpanding(False)
-        layout = QtWidgets.QVBoxLayout(self)
+
+        widget = QtWidgets.QWidget()
+        widget.setObjectName('ScrollAreaTopWidget')
+        widget.setStyleSheet(
+            'QWidget #ScrollAreaTopWidget{background:transparent;}'
+        )
+        layout = QtWidgets.QVBoxLayout(widget)
         layout.addWidget(endnode_selector)
         layout.addWidget(condtion_selector)
         layout.addStretch()
+        self.setWidget(widget)
 
 
 class MainWidget(uilib.AbstractSeparatedWindow):
@@ -240,7 +368,7 @@ def showWindow():
     """
     from gris3.uilib import mayaUIlib
     w = MainWidget(mayaUIlib.MainWindow)
-    w.resize(480, 500)
+    w.resize(640, 500)
     w.show()
     return w
 

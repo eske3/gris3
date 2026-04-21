@@ -79,10 +79,6 @@ pupil_lookat_facialGrp_C
 '''
 
 
-from importlib import reload
-reload(blendShapeUtil)
-
-
 class TargetListEditor(QtWidgets.QWidget):
     edittingFinished = QtCore.Signal(list)
 

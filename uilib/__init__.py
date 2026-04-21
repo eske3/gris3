@@ -19,7 +19,7 @@ import time
 import math
 import threading
 import platform
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from ..pyside_module import *
 
 from .. import globalpath, style, verutil, desktop
@@ -1326,9 +1326,12 @@ class ImageViewerWidget(QtWidgets.QWidget):
                 pixmap (QtGui.QPixmap or str):
         """
         if isinstance(pixmap, QtGui.QPixmap):
-            self.__pixmap = image
+            self.__pixmap = pixmap
             return
-        self.__pixmap = QtGui.QPixmap(pixmap)
+        if pixmap is None:
+            self.__pixmap = QtGui.QPixmap()
+        else:
+            self.__pixmap = QtGui.QPixmap(pixmap)
         self.update()
 
     def image(self):
@@ -2391,7 +2394,7 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             現在アクティブなウィジェットを返す。
             
             Returns:
-                QtWidgets.QWidget:
+                QtWidgets.QWidget or None:
         """
         if self.__currentIndex is None:
             return
@@ -2413,7 +2416,7 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             Args:
                 index (int):
         """
-        if index < 0 and index > self.count() - 1:
+        if 0 > index > self.count() - 1:
             raise ValueError('The given index is out of range.')
         self.__currentIndex = index
         self.hideAllWidgets()

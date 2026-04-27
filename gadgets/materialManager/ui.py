@@ -221,7 +221,7 @@ class MaterialManager(QtWidgets.QTreeView):
         self.__job_id = core.createScriptJob(self.hilightSelectedShader)
 
     def drawBranches(self, painter, option, index):
-        if index.parent().row() == -1:
+        if not index.parent().isValid():
             super(MaterialManager, self).drawBranches(painter, option, index)
             return
 

@@ -19,17 +19,10 @@ Category = 'Basic Human'
 BaseName = 'spine'
 
 class JointCreator(rigScripts.JointCreator):
-    r'''
-        @brief       背骨のジョイント作成機能を提供するクラス。
-        @inheritance rigScripts.JointCreator
-        @date        2017/02/01 1:03[Eske](eske3g@gmail.com)
-        @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        背骨のジョイント作成機能を提供するクラス。
+    """
     def process(self):
-        r'''
-            @brief  ジョイント作成プロセスとしてコールされる。
-            @return None
-        '''
         from gris3.tools import jointEditor
         name = self.basenameObject()
         parent = self.parent()
@@ -75,17 +68,10 @@ class JointCreator(rigScripts.JointCreator):
 
 
 class RigCreator(rigScripts.RigCreator):
-    r'''
-        @brief       ここに説明文を記入
-        @inheritance rigScripts.RigCreator
-        @date        2017/02/01 1:03[Eske](eske3g@gmail.com)
-        @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        背骨のリグ作成機能を提供するクラス。
+    """
     def process(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
         unit = self.unit()
         unitname = self.unitName()
         basename = unitname.name()

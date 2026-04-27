@@ -773,6 +773,11 @@ class Option(object):
         """
         pass
 
+    def _add_attr(self, attr_type, *values):
+        v = list(values)
+        v.insert(0, attr_type)
+        self.__attributelist.append(v)
+
     def addFloatOption(self, attributeName, default=1.0, min=0.0, max=1.0):
         r"""
             float型のオプションを作成する。
@@ -783,9 +788,7 @@ class Option(object):
                 min (float):
                 max (float):
         """
-        self.__attributelist.append(
-            ['float', attributeName, default, min, max]
-        )
+        self._add_attr('float', attributeName, default, min, max)
 
     def addIntOption(self, attributeName, default=1, min=0, max=1):
         r"""
@@ -797,9 +800,7 @@ class Option(object):
                 min (int):
                 max (int):
         """
-        self.__attributelist.append(
-            ['int', attributeName, default, min, max]
-        )
+        self._add_attr('int', attributeName, default, min, max)
 
     def addBoolOption(self, attributeName, default=1):
         r"""
@@ -809,7 +810,7 @@ class Option(object):
                 attributeName (str):
                 default (bool):
         """
-        self.__attributelist.append(['bool', attributeName, default])
+        self._add_attr('bool', attributeName, default)
 
     def addEnumOption(self, attributeName, default=0, enumerations=[]):
         r"""
@@ -820,9 +821,7 @@ class Option(object):
                 default (int):
                 enumerations (list):列挙する文字列のリスト。
         """
-        self.__attributelist.append(
-            ['enum', attributeName, default, enumerations]
-        )
+        self._add_attr('enum', attributeName, default, enumerations)
 
     def addStringOption(self, attributeName, default=''):
         r"""
@@ -832,9 +831,7 @@ class Option(object):
                 attributeName (str):[]
                 default (str):
         """
-        self.__attributelist.append(
-            ['string', attributeName, default]
-        )
+        self._add_attr('string', attributeName, default)
 
     def optionlist(self):
         r"""
@@ -844,6 +841,45 @@ class Option(object):
                 list:
         """
         return self.__attributelist
+
+
+class Editor(Option):
+    r"""
+        作成済みユニット編集用のオプションを定義するクラス。
+    """
+    def __init__(self, option=None):
+        r"""
+            引数optionにはOptionクラスを指定することができる。
+            optionが指定された場合、その内容をそのまま自身に移植した上でdefineメソッドを
+            呼ぶ。
+
+            Args:
+                option (Option):
+        """
+        super(Editor, self).__init__()
+        if not option:
+            return
+        for optlist in option.optionlist():
+            self._add_attr(optlist[0], *optlist[1:])
+
+    def _add_attr(self, attr_type, *values):
+        r"""
+            引数optionにはOptionクラスを指定することができる。
+            optionが指定された場合、その内容をそのまま自身に移植した上でdefineメソッドを
+            呼ぶ。
+
+            Args:
+                option (Option):
+        """
+        keys = {x[1]: x for x in self.optionlist()}
+        if values[0] in keys:
+            v = list(values)
+            v.insert(0, attr_type)
+            keys[values[0]].clear()
+            keys[values[0]].extend(v)
+            return
+        super(Editor, self)._add_attr(attr_type, *values)
+
 
 def rigModuleList(loadMode=0):
     r"""

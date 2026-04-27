@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
 r'''
-    @file     unitCreator.py
     @brief    ここに説明文を記入
-    @class    FloatOptionWidget : float型のオプションを表示する。
-    @class    IntOptionWidget : int型のオプションを表示する。
-    @class    BoolOptionWidget : ブール型のオプションを表示する。
-    @class    EnumOptionWidget : Enumerate型のオプションを表示する。
-    @class    StringOptionWidget : 文字入力型のオプションを表示する。
-    @class    ParamEditor : ここに説明文を記入
-    @class    Creator : 作成用のUIを提供するクラス。
-    @class    MainGUI : ここに説明文を記入
-    @function showWindow : ウィンドウを作成するためのエントリ関数。
     @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
     @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
     このソースの版権はEske Yoshinobにあります
@@ -18,141 +8,184 @@ r'''
     このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
     は一切責任を負いませんのであらかじめご了承ください
 '''
-import re
+from PySide2 import QtWebEngineWidgets
 
-import gris3
-from gris3 import factoryModules, exporter, lib, uilib, core, rigScripts
-from gris3.uilib import factoryUI
+from .. import grisNode
+from .. import factoryModules, lib, uilib, core, rigScripts
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
 
+
 class FloatOptionWidget(QtWidgets.QDoubleSpinBox):
-    r'''
-        @brief       float型のオプションを表示する。
-        @inheritance QtWidgets.QDoubleSpinBox
-        @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        float型のオプションを表示する。
+    """
     def getValue(self):
-        r'''
-            @brief  floatの値を返す。
-            @return float
-        '''
+        r"""
+            floatの値を返す。
+
+            Returns:
+                float:
+        """
         return self.value()
+
 
 class IntOptionWidget(QtWidgets.QSpinBox):
-    r'''
-        @brief       int型のオプションを表示する。
-        @inheritance QtWidgets.QSpinBox
-        @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        int型のオプションを表示する。
+    """
     def getValue(self):
-        r'''
-            @brief  Intの値を返す。
-            @return int
-        '''
+        r"""
+            Intの値を返す。
+
+            Returns:
+                int:
+        """
         return self.value()
 
+
 class BoolOptionWidget(QtWidgets.QCheckBox):
-    r'''
-        @brief       ブール型のオプションを表示する。
-        @inheritance QtWidgets.QCheckBox
-        @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        ブール型のオプションを表示する。
+    """
     def getValue(self):
-        r'''
-            @brief  チェックされているかどうかを返す。
-            @return bool
-        '''
+        r"""
+            チェックされているかどうかを返す。
+
+            Returns:
+                bool:
+        """
         return self.isChecked()
 
+
 class EnumOptionWidget(QtWidgets.QComboBox):
-    r'''
-        @brief       Enumerate型のオプションを表示する。
-        @inheritance QtWidgets.QComboBox
-        @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        Enumerate型のオプションを表示する。
+    """
     def getValue(self):
-        r'''
-            @brief  現在選択されているテキストを返す。
-            @return str
-        '''
+        r"""
+            現在選択されているテキストを返す。
+
+            Returns:
+                str:
+        """
         return self.currentText()
 
+
 class StringOptionWidget(QtWidgets.QLineEdit):
-    r'''
-        @brief       文字入力型のオプションを表示する。
-        @inheritance QtWidgets.QLineEdit
-        @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        文字入力型のオプションを表示する
+    """
     def getValue(self):
-        r'''
-            @brief  文字列の値を返す。
-            @return str
-        '''
+        r"""
+            文字列の値を返す。
+
+            Returns:
+                str:
+        """
         return self.text()
-        
-class ParamEditor(uilib.FlatScrollArea):
-    r'''
-        @brief       ユニットノパラメータを編集するGUIを提供するクラス。
-        @inheritance uilib.FlatScrollArea
-        @date        2017/09/09 11:18[Eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
-    def buildUI(self, parent):
-        r'''
-            @brief  初期化を行う。
-            @param  parent : [QtWidgets.QWidget]
-            @return None
-        '''
-        from gris3 import system
+
+
+class OptionWidgets(object):
+    Widgets = {
+        'float' : FloatOptionWidget,
+        'int' : IntOptionWidget,
+        'bool' : BoolOptionWidget,
+        'enum' : EnumOptionWidget,
+        'string' : StringOptionWidget,
+    }
+
+def createOptionWidget(optionObject):
+    r"""
+        オプション表示UIにオプション項目を追加する。
+
+        Args:
+            optionObject (rigScript.Option):オプション項目を定義したオブジェクト
+
+        Returns:
+            QtWidgets.QWidget: 作成したウィジェット。
+    """
+    parent_widget = QtWidgets.QWidget()
+    layout = QtWidgets.QFormLayout(parent_widget)
+    created_widgets = []
+
+    for data in optionObject.optionlist():
+        widget = OptionWidgets.Widgets[data[0]]()
+        widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
+        if data[0] == 'bool':
+            widget.setChecked(bool(data[2]))
+        elif data[0] == 'enum':
+            widget.addItems(data[3])
+            widget.setCurrentIndex(data[2])
+        elif data[0] == 'string':
+            widget.setText(data[2])
+        else:
+            widget.setValue(data[2])
+            widget.setMinimum(data[3])
+            widget.setMaximum(data[4])
+        widget.optionName = data[1]
+        layout.addRow(QtWidgets.QLabel(lib.title(data[1])), widget)
+        created_widgets.append(widget)
+
+    return parent_widget, created_widgets
+
+
+class BasicParamEditor(uilib.FlatScrollArea):
+    def isOption(self):
+        return True
+
+    def buildUI(self, parent=None):
+        r"""
+             Args:
+                 parent (QtWidgets.QWidget):親ウィジェット
+         """
+        from .. import system
 
         # パラメータを編集するUI。=============================================
-        name_label = QtWidgets.QLabel('Name')
-        name_field = QtWidgets.QLineEdit()
-
-        suffix_label = QtWidgets.QLabel('Suffix')
         suffix_field = QtWidgets.QLineEdit()
 
-        pos_label = QtWidgets.QLabel('Position')
         pos_box = QtWidgets.QComboBox()
         pos_box.addItems(system.GlobalSys().defaultPositionList())
         pos_box.setCurrentIndex(1)
 
         form = QtWidgets.QFormLayout()
-        form.addRow(name_label, name_field)
-        form.addRow(suffix_label, suffix_field)
-        form.addRow(pos_label, pos_box)
-        # =====================================================================
-
-        # オプションを編集するUI。=============================================
-        option_group = QtWidgets.QGroupBox('Option')
-        option_tab = QtWidgets.QStackedWidget()
-        
-        option_layout = QtWidgets.QVBoxLayout(option_group)
-        option_layout.addWidget(option_tab)
-        # =====================================================================
-        
-        layout = QtWidgets.QVBoxLayout(parent)
-        layout.addLayout(form)
-        layout.addWidget(option_group)
-        
-        # 外部からのアクセス用メソッドの移植。
-        self.setName = name_field.setText
-        self.name = name_field.text
+        if self.isOption():
+            name_field = QtWidgets.QLineEdit()
+            form.addRow('Name', name_field)
+            self.setName = name_field.setText
+            self.name = name_field.text
+        form.addRow('Suffix', suffix_field)
+        form.addRow('Position', pos_box)
         self.setSuffix = suffix_field.setText
         self.suffix = suffix_field.text
         self.setPositionIndex = pos_box.setCurrentIndex
         self.positionIndex = pos_box.currentIndex
+        # =====================================================================
+
+        layout = QtWidgets.QVBoxLayout(parent)
+        layout.addLayout(form)
+
+        if not self.isOption():
+            return
+        # オプションを編集するUI。=============================================
+        option_group = QtWidgets.QGroupBox('Option')
+        option_tab = QtWidgets.QStackedWidget()
+
+        option_layout = QtWidgets.QVBoxLayout(option_group)
+        option_layout.addWidget(option_tab)
+        # =====================================================================
+
+        layout.addWidget(option_group)
+
+        # 外部からのアクセス用メソッドの移植。
         self.addOptionWidget = option_tab.addWidget
         self.optionTabCount = option_tab.count
         self.setCurrentIndex = option_tab.setCurrentIndex
         self.currentWidget = option_tab.currentWidget
+
 
 class PresetView(QtWidgets.QGroupBox):
     def __init__(self, parent=None):
@@ -189,29 +222,44 @@ class PresetView(QtWidgets.QGroupBox):
             p_item = QtGui.QStandardItem(position)
             model.setItem(row, 0, n_item)
             model.setItem(row, 1, p_item)
-            
 
-class Creator(QtWidgets.QGroupBox):
-    r'''
-        @brief       作成用のUIを提供するクラス。
-        @inheritance QtWidgets.QGroupBox
-        @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
-    Widgets = {
-        'float' : FloatOptionWidget,
-        'int' : IntOptionWidget,
-        'bool' : BoolOptionWidget,
-        'enum' : EnumOptionWidget,
-        'string' : StringOptionWidget,
-    }
+
+class UnitPresetView(QtWidgets.QTreeView):
+    r"""
+        プリセット選択用のリスト機能を提供するクラス。
+    """
+    def __init__(self, parent=None):
+        super(UnitPresetView, self).__init__(parent)
+        model = QtGui.QStandardItemModel(0, 1)
+        model.setHeaderData(0, QtCore.Qt.Horizontal, 'Presets')
+
+        sel_model = QtCore.QItemSelectionModel(model)
+
+        # self.__selector.setAlternatingRowColors(True)
+        self.setRootIsDecorated(True)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.setModel(model)
+        self.setSelectionModel(sel_model)
+
+    def drawBranches(self, painter, option, index):
+        if not index.parent().isValid():
+            if not index.model().hasChildren(index):
+                return
+        else:
+            if index.column() == 0:
+                return
+        super(UnitPresetView, self).drawBranches(painter, option, index)
+
+
+class Creator(QtWidgets.QSplitter):
+    r"""
+        作成用のUIを提供するクラス。
+    """
+
     def __init__(self):
-        r'''
-            @brief  初期化を行う。
-            @return None
-        '''
-        super(Creator, self).__init__('Base Joint Creator')
+        super(Creator, self).__init__()
         self.setWindowTitle('+Unit Creator')
+        self.setOrientation(QtCore.Qt.Vertical)
         self.__currentModule = ''
         self.__is_preset = False
 
@@ -231,22 +279,11 @@ class Creator(QtWidgets.QGroupBox):
         root_creator_layout.addWidget(rld_btn)
         # ---------------------------------------------------------------------
 
-        # プリセット選択UI。---------------------------------------------------
-        model = QtGui.QStandardItemModel(0, 1)
-        model.setHeaderData(0, QtCore.Qt.Horizontal, 'Presets')
-        
-        sel_model = QtCore.QItemSelectionModel(model)
-        sel_model.selectionChanged.connect(self.updateEditor)
-
-        self.__selector = QtWidgets.QTreeView()
-        self.__selector.setAlternatingRowColors(True)
-        self.__selector.setRootIsDecorated(True)
-        self.__selector.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers
+        # プリセット選択UI。
+        self.__selector = UnitPresetView()
+        self.__selector.selectionModel().selectionChanged.connect(
+            self.updateEditor
         )
-        self.__selector.setModel(model)
-        self.__selector.setSelectionModel(sel_model)
-        # ---------------------------------------------------------------------
         
         side_layout = QtWidgets.QVBoxLayout()
         side_layout.addLayout(root_creator_layout)
@@ -259,7 +296,6 @@ class Creator(QtWidgets.QGroupBox):
         self.__editor.addWidget(QtWidgets.QWidget())
         self.__editor.addWidget(self.__preset_view)
         self.__editor.addWidget(self.__param_editor)
-        # self.__param_editor.setWidgetResizable(False)
        
         self.create_btn = uilib.OButton()
         self.create_btn.setIcon(uilib.IconPath('uiBtn_addUnit'))
@@ -269,13 +305,14 @@ class Creator(QtWidgets.QGroupBox):
         self.create_btn.setToolTip('Create selected unit.')
         self.create_btn.setEnabled(False)
 
-        layout = QtWidgets.QGridLayout(self)
+        main_widget = QtWidgets.QWidget()
+        layout = QtWidgets.QGridLayout(main_widget)
         layout.setSpacing(1)
         layout.addLayout(side_layout, 0, 0, 1, 1)
-        layout.addWidget(self.__editor, 1, 0, 1, 2)
         layout.addWidget(self.create_btn, 0, 1, 1, 1)
-        layout.setRowStretch(0, 2)
-        layout.setRowStretch(1, 1)
+
+        self.addWidget(main_widget)
+        self.addWidget(self.__editor)
 
         self.refreshPresetList()
 
@@ -284,50 +321,31 @@ class Creator(QtWidgets.QGroupBox):
             @brief  ルートを作成する。
             @return None
         '''
-        from gris3 import core
+        from .. import core
         with core.Do:
             core.createRoot()
 
     def addOption(self, optionObject):
-        r'''
-            @brief  オプション表示UIにオプション項目を追加する。
-            @param  optionObject : [rigScript.Option]
-            @return None
-        '''
-        parent_widget = QtWidgets.QWidget()
-        layout = QtWidgets.QFormLayout(parent_widget)
+        r"""
+            オプション表示UIにオプション項目を追加する。
 
-        for data in optionObject.optionlist():
-            widget = self.Widgets[data[0]]()
-            widget.setSizePolicy(
-                QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
-            )
-            if data[0] == 'bool':
-                widget.setChecked(bool(data[2]))
-            elif data[0] == 'enum':
-                widget.addItems(data[3])
-                widget.setCurrentIndex(data[2])
-            elif data[0] == 'string':
-                widget.setText(data[2])
-            else:
-                widget.setValue(data[2])
-                widget.setMinimum(data[3])
-                widget.setMaximum(data[4])
-            widget.optionName = data[1]
-            layout.addRow(QtWidgets.QLabel(lib.title(data[1])), widget)
+            Args:
+                optionObject (rigScript.Option):オプション項目を定義したオブジェクト
 
-        return parent_widget
+            Returns:
+                QtWidgets.QWidget:
+        """
+        return createOptionWidget(optionObject)[0]
 
     def refreshPresetList(self):
-        r'''
-            @brief  プリセットのリストを更新する。
-            @brief  itemのdata内には
-            @brief  QtCore.Qt.UserRole+1 : モジュール名
-            @brief  QtCore.Qt.UserRole+2 : オプション表示タブのインデックス
-            @brief  QtCore.Qt.UserRole+3 : ベースネーム
-            @brief  が格納されている。
-            @return None
-        '''
+        r"""
+            プリセットのリストを更新する。
+            itemのdata内には
+                QtCore.Qt.UserRole+1 : モジュール名
+                QtCore.Qt.UserRole+2 : オプション表示タブのインデックス
+                QtCore.Qt.UserRole+3 : ベースネーム
+            が格納されている。
+        """
         model = self.__selector.model()
         model.removeRows(0, model.rowCount())
         rootitem = model.invisibleRootItem()
@@ -371,7 +389,7 @@ class Creator(QtWidgets.QGroupBox):
                 parentitem = None
             # =================================================================
 
-            # モジュール内にBaseName変数があれば、このモジュールが選択された===
+            # モジュール内にBaseName変数があれば、このモジュールが選択された
             # 時にオプションUIのNameフィールドに、BaseNameの中身を表示する。
             # 無ければRigNamePatternに沿ってモジュール名からNameを作成する。
             if hasattr(mod, 'BaseName'):
@@ -406,12 +424,9 @@ class Creator(QtWidgets.QGroupBox):
             rootitem.setChild(rootitem.rowCount(), 0, item)
 
     def updateEditor(self, selected, deselected):
-        r'''
-            @brief  編集用UIを更新するメソッド。
-            @param  selected : [edit]
-            @param  deselected : [edit]
-            @return None
-        '''
+        r"""
+            編集用UIを更新する。
+        """
         index = selected.indexes()
         if not index:
             return
@@ -419,7 +434,6 @@ class Creator(QtWidgets.QGroupBox):
         if index.column() != 0:
             return
 
-        row_index = index.row()
         data = index.data(QtCore.Qt.UserRole+1)
         self.__is_preset = False
         if not data:
@@ -451,10 +465,9 @@ class Creator(QtWidgets.QGroupBox):
             self.__param_editor.setCurrentIndex(tab_index)
 
     def create(self):
-        r'''
-            @brief  選択されたユニットのユニットノードとジョイント作成を行う。
-            @return None
-        '''
+        r"""
+            選択されたユニットのユニットノードとジョイント作成を行う。
+        """
         if not self.__currentModule:
             raise RuntimeError('No Presets selected.')
 
@@ -490,27 +503,250 @@ class Creator(QtWidgets.QGroupBox):
                 options=options
             )
 
+
+class UnitLister(QtWidgets.QWidget):
+    r"""
+        現在のシーン中にあるユニットを一覧で表示するGUIを提供する
+    """
+    selectionChanged = QtCore.Signal(str)
+
+    def __init__(self, parent=None):
+        super(UnitLister, self).__init__(parent)
+        self.__always_update = True
+        label = QtWidgets.QLabel('Units')
+        model = QtGui.QStandardItemModel(0, 1)
+        sel_model = QtCore.QItemSelectionModel(model)
+        sel_model.selectionChanged.connect(self.__on_selection)
+        self.__view = QtWidgets.QListView()
+        self.__view.setModel(model)
+        self.__view.setSelectionModel(sel_model)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(label)
+        layout.addWidget(self.__view)
+
+    def view(self):
+        return self.__view
+
+    def setIsAlwayUpdate(self, isAllwaysUpdate):
+        self.__always_update = bool(isAllwaysUpdate)
+
+    def selectedUnit(self):
+        selected = [
+                x.data() for x in self.view().selectionModel().selectedIndexes()
+        ]
+        if not selected:
+            return
+        return selected[0]
+
+    def refreshList(self):
+        model = self.view().model()
+        clear_cmd = lambda : model.removeRows(0, model.rowCount())
+        old_units = [model.item(x, 0).data() for x in range(model.rowCount())]
+        cur_unit = self.selectedUnit()
+        try:
+            root = grisNode.getGrisRoot()
+        except grisNode.GrisRootError as e:
+            clear_cmd()
+            return
+        unit_grp = root.unitGroup()
+        new_units = unit_grp.listUnits()
+
+        # 過去のユニット一覧と比較して同一の場合更新をスキップ。
+        if len(new_units) != 0 and len(old_units) == len(new_units):
+            for ou, nu in zip(old_units, new_units):
+                if not ou != nu:
+                    break
+            else:
+                return
+        clear_cmd()
+        sel_index = None
+        for row, unit in enumerate(unit_grp.listUnits()):
+            unit_name = unit()
+            item = QtGui.QStandardItem(unit_name)
+            model.setItem(row, 0, item)
+            if cur_unit == unit_name:
+                sel_index = model.indexFromItem(item)
+        if sel_index:
+            self.view().selectionModel().select(
+                sel_index, QtCore.QItemSelectionModel.ClearAndSelect
+            )
+
+    def enterEvent(self, event):
+        if self.__always_update:
+            self.refreshList()
+
+    def __on_selection(self, selected, deselected):
+        for index in  selected.indexes():
+            self.selectionChanged.emit(index.data())
+            return
+
+
+class ParamEditor(BasicParamEditor):
+    r"""
+        ユニットノパラメータを編集するGUIを提供するクラス。
+    """
+    pass
+
+
+class UnitEditorWidget(BasicParamEditor):
+    r"""
+        各Unitごとの編集機能をGUIとして表示するためのクラス。
+    """
+    def __init__(self, unit, parent=None):
+        self.__unit_node_name = unit()
+        self.__tmp_unit = unit
+        super(UnitEditorWidget, self).__init__(parent)
+        self.__tmp_unit = None
+        self.__unit_node_name = ''
+
+    def setUnitNode(self, nodename):
+        self.__unit_node_name = nodename
+
+    def unit(self):
+        if self.__tmp_unit:
+            return self.__tmp_unit
+        unit = grisNode.Unit(self.__unit_node_name)
+        return unit
+
+    def isOption(self):
+        return False
+
+    def buildUI(self, parent=None):
+        r"""
+            Args:
+                parent(QtWidgets.QWidget):親ウィジェット
+        """
+        super(UnitEditorWidget, self).buildUI(parent)
+        module = rigScripts.getRigModule(self.unit().unitName())
+        if hasattr(module, 'Editor'):
+            obj = module.Editor()
+        elif hasattr(module, 'Option'):
+            obj = module.Option()
+        else:
+            return
+        widgets = createOptionWidget(obj)
+        grp = QtWidgets.QGroupBox('Parameters')
+        layout = QtWidgets.QVBoxLayout(grp)
+        layout.addWidget(widgets[0])
+
+        layout = parent.layout()
+        layout.addWidget(grp)
+        layout.addStretch()
+
+    def updateUI(self):
+        unit = self.unit()
+        print(unit)
+
+class UnitEditorOption(QtWidgets.QWidget):
+    r"""
+        Unitを編集するためのGUIを提供するクラス。
+    """
+    def __init__(self, parent=None):
+        super(UnitEditorOption, self).__init__(parent)
+        self.__created_guis = []
+        label = QtWidgets.QLabel('Unit:')
+        self.__type_label = QtWidgets.QLabel()
+        font = self.__type_label.font()
+        font.setPixelSize(int(font.pixelSize() * 1.25))
+        font.setBold(True)
+        self.__type_label.setFont(font)
+
+        self.__stacked = uilib.ScrolledStackedWidget()
+        self.__stacked.setOrientation(QtCore.Qt.Vertical)
+        no_operation = QtWidgets.QLabel('No operation')
+        no_operation.setAlignment(QtCore.Qt.AlignCenter)
+        self.__stacked.addTab(no_operation)
+
+        layout = QtWidgets.QGridLayout(self)
+        layout.setColumnStretch(1, 1)
+        layout.setRowStretch(1, 1)
+        layout.addWidget(label, 0, 0, 1, 1, QtCore.Qt.AlignBottom)
+        layout.addWidget(self.__type_label, 0, 1, 1, 1, QtCore.Qt.AlignBottom)
+        layout.addWidget(self.__stacked, 1, 0, 1, 2)
+
+    def refreshGui(self, unitName):
+        try:
+            unit = grisNode.Unit(unitName)
+        except:
+            self.__stacked.moveTo(0)
+            self.__type_label.setText('-Not Unit-')
+            return
+        unit_type = unit.unitName()
+        self.__type_label.setText(unit_type)
+        if unit_type in self.__created_guis:
+            index = self.__created_guis.index(unit_type) + 1
+        else:
+            edit_option = UnitEditorWidget(unit)
+            self.__created_guis.append(unit_type)
+            self.__stacked.addTab(edit_option, False)
+            index = len(self.__created_guis)
+        self.__stacked.moveTo(index)
+        editor = self.__stacked.currentWidget()
+        editor.setUnitNode(unitName)
+        editor.updateUI()
+
+
+class Editor(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(Editor, self).__init__(parent)
+
+        unit_list = UnitLister()
+        option = UnitEditorOption()
+        unit_list.selectionChanged.connect(option.refreshGui)
+        self.refreshList = unit_list.refreshList
+        splitter = QtWidgets.QSplitter()
+        splitter.addWidget(unit_list)
+        splitter.addWidget(option)
+        splitter.setStretchFactor(1, 1)
+
+        reload_btn = uilib.OButton(uilib.IconPath('uiBtn_reload.png'))
+        reload_btn.clicked.connect(unit_list.refreshList)
+        rel_check = QtWidgets.QCheckBox('Auto update when the widget is active')
+        rel_check.setChecked(True)
+        rel_check.stateChanged.connect(unit_list.setIsAlwayUpdate)
+
+        opt_widget = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(opt_widget)
+        layout.addWidget(reload_btn)
+        layout.addStretch()
+        layout.addWidget(rel_check)
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.addWidget(opt_widget)
+        layout.addWidget(splitter)
+        layout.setStretchFactor(splitter, 1)
+
+
+class Manager(QtWidgets.QTabWidget):
+    def __init__(self, parent=None):
+        super(Manager, self).__init__(parent)
+        self.addTab(Creator(), 'Creator')
+        self.addTab(Editor(), 'Editor')
+        self.currentChanged.connect(self.updateState)
+
+    def updateState(self, index):
+        if index == 1:
+            self.widget(index).refreshList()
+
+
 class MainGUI(uilib.AbstractSeparatedWindow):
-    r'''
-        @brief       ここに説明文を記入
-        @inheritance uilib.AbstractSeparatedWindow
-        @date        2017/06/27 18:31[s_eske](eske3g@gmail.com)
-        @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    '''
     def centralWidget(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
-        return Creator()
+        r"""
+            Returns:
+                Manager:
+        """
+        return Manager()
 
 
 def showWindow():
-    r'''
-        @brief  ウィンドウを作成するためのエントリ関数。
-        @return QtWidgets.QWidget
-    '''
-    from gris3.uilib import mayaUIlib
+    r"""
+        ウィンドウを作成するためのエントリ関数。
+
+        Returns:
+            MainGUI:
+    """
+    from ..uilib import mayaUIlib
     widget = MainGUI(mayaUIlib.MainWindow)
     widget.resize(400, 600)
     widget.show()

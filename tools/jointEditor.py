@@ -1146,7 +1146,7 @@ class JointMirror(object):
         cmds.select([x() for x in results])
 
 
-def mirrorJoints(jointlist=None):
+def mirrorJoints(jointlist=None, includeRadius=True):
     r"""
         選択ジョイントの反対側のジョイントをミラーリングする。
         引数jointListがNoneの場合は現在選択しているジョイントに対して実行する。
@@ -1161,13 +1161,15 @@ def mirrorJoints(jointlist=None):
         all_children.append(joint)
         all_children.reverse()
         for child in all_children:
-            rev = child.replace('_L', '_R')
-            if child == rev:
+            rev = node.asObject(child.replace('_L', '_R'))
+            if child == rev or not rev:
                 continue
             util.mirror([child(), rev])
+            if includeRadius and child.isType('joint'):
+                rev('radius', child('radius'))
 
 
-def mirrorJointsAlternately(jointlist=None):
+def mirrorJointsAlternately(jointlist=None, includeRadius=True):
     r"""
         ジョイントをミラーリングする。
         引数jointListがNoneの場合は現在選択しているジョイントに対して実行する。
@@ -1183,6 +1185,11 @@ def mirrorJointsAlternately(jointlist=None):
             'Specify a mirrored joint and a mirroring joint.'
         )
     util.mirror(jointlist)
+    for i in range(0, len(jointlist), 2):
+        src = jointlist[i]
+        dst = jointlist[i+1]
+        if includeRadius and src.isType('joint') and dst.isType('joint'):
+            dst('radius', src('radius'))
 
 
 def createHalfRotater(nodes=None):

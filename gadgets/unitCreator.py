@@ -30,6 +30,9 @@ class FloatOptionWidget(QtWidgets.QDoubleSpinBox):
         """
         return self.value()
 
+    def editUnit(self, unit, attr, value):
+        unit(attr, value)
+
 
 class IntOptionWidget(QtWidgets.QSpinBox):
     r"""
@@ -44,11 +47,18 @@ class IntOptionWidget(QtWidgets.QSpinBox):
         """
         return self.value()
 
+    def editUnit(self, unit, attr, value):
+        unit(attr, value)
+
 
 class BoolOptionWidget(QtWidgets.QCheckBox):
     r"""
         ブール型のオプションを表示する。
     """
+    def __init__(self, parent=None):
+        super(BoolOptionWidget, self).__init__(parent)
+        self.valueChanged = self.toggled
+
     def getValue(self):
         r"""
             チェックされているかどうかを返す。
@@ -58,11 +68,27 @@ class BoolOptionWidget(QtWidgets.QCheckBox):
         """
         return self.isChecked()
 
+    def setValue(self, value):
+        r"""
+            値を更新するためのメソッド。他ウィジェットとの統一インターフェース。
+
+            Args:
+                value:bool
+        """
+        self.setChecked(bool(value))
+
+    def editUnit(self, unit, attr, value):
+        unit(attr, value)
+
 
 class EnumOptionWidget(QtWidgets.QComboBox):
     r"""
         Enumerate型のオプションを表示する。
     """
+    def __init__(self, parent=None):
+        super(EnumOptionWidget, self).__init__(parent)
+        self.valueChanged = self.currentIndexChanged
+
     def getValue(self):
         r"""
             現在選択されているテキストを返す。
@@ -72,11 +98,29 @@ class EnumOptionWidget(QtWidgets.QComboBox):
         """
         return self.currentText()
 
+    def setValue(self, value):
+        r"""
+            値を更新するためのメソッド。他ウィジェットとの統一インターフェース。
+
+            Args:
+                value:str
+        """
+        self.setCurrentText(value)
+
+    def editUnit(self, unit, attr, value):
+        unit(attr, value)
+
 
 class StringOptionWidget(QtWidgets.QLineEdit):
     r"""
         文字入力型のオプションを表示する
     """
+    valueChanged = QtCore.Signal(str)
+
+    def __init__(self, parent=None):
+        super(StringOptionWidget, self).__init__(parent)
+        self.editingFinished.connect(self.__on_editing)
+
     def getValue(self):
         r"""
             文字列の値を返す。
@@ -85,6 +129,21 @@ class StringOptionWidget(QtWidgets.QLineEdit):
                 str:
         """
         return self.text()
+
+    def setValue(self, value):
+        r"""
+            値を更新するためのメソッド。他ウィジェットとの統一インターフェース。
+
+            Args:
+                value:str
+        """
+        self.setText(value)
+
+    def __on_editing(self):
+        self.valueChanged.emit(self.text())
+
+    def editUnit(self, unit, attr, value):
+        unit(attr, value, type='string')
 
 
 class OptionWidgets(object):
@@ -134,6 +193,8 @@ def createOptionWidget(optionObject):
 
 
 class BasicParamEditor(uilib.FlatScrollArea):
+    suffixChanged = QtCore.Signal(str)
+
     def isOption(self):
         return True
 
@@ -146,6 +207,7 @@ class BasicParamEditor(uilib.FlatScrollArea):
 
         # パラメータを編集するUI。=============================================
         suffix_field = QtWidgets.QLineEdit()
+        suffix_field.editingFinished.connect(self.__on_editing)
 
         pos_box = QtWidgets.QComboBox()
         pos_box.addItems(system.GlobalSys().defaultPositionList())
@@ -159,10 +221,12 @@ class BasicParamEditor(uilib.FlatScrollArea):
             self.name = name_field.text
         form.addRow('Suffix', suffix_field)
         form.addRow('Position', pos_box)
+        self.__suffix_field = suffix_field
         self.setSuffix = suffix_field.setText
         self.suffix = suffix_field.text
         self.setPositionIndex = pos_box.setCurrentIndex
         self.positionIndex = pos_box.currentIndex
+        self.positionChanged = pos_box.currentIndexChanged
         # =====================================================================
 
         layout = QtWidgets.QVBoxLayout(parent)
@@ -185,6 +249,10 @@ class BasicParamEditor(uilib.FlatScrollArea):
         self.optionTabCount = option_tab.count
         self.setCurrentIndex = option_tab.setCurrentIndex
         self.currentWidget = option_tab.currentWidget
+
+    def __on_editing(self):
+        suffix = self.__suffix_field.text()
+        self.suffixChanged.emit(suffix)
 
 
 class PresetView(QtWidgets.QGroupBox):
@@ -594,6 +662,7 @@ class UnitEditorWidget(BasicParamEditor):
         各Unitごとの編集機能をGUIとして表示するためのクラス。
     """
     def __init__(self, unit, parent=None):
+        self.__option_widgets = []
         self.__unit_node_name = unit()
         self.__tmp_unit = unit
         super(UnitEditorWidget, self).__init__(parent)
@@ -618,6 +687,9 @@ class UnitEditorWidget(BasicParamEditor):
                 parent(QtWidgets.QWidget):親ウィジェット
         """
         super(UnitEditorWidget, self).buildUI(parent)
+        self.suffixChanged.connect(self.updateSuffix)
+        self.positionChanged.connect(self.updatePosition)
+
         module = rigScripts.getRigModule(self.unit().unitName())
         if hasattr(module, 'Editor'):
             obj = module.Editor()
@@ -629,6 +701,9 @@ class UnitEditorWidget(BasicParamEditor):
         grp = QtWidgets.QGroupBox('Parameters')
         layout = QtWidgets.QVBoxLayout(grp)
         layout.addWidget(widgets[0])
+        self.__option_widgets = widgets[1]
+        for w in self.__option_widgets:
+            w.valueChanged.connect(self.updateUnitValue)
 
         layout = parent.layout()
         layout.addWidget(grp)
@@ -636,7 +711,33 @@ class UnitEditorWidget(BasicParamEditor):
 
     def updateUI(self):
         unit = self.unit()
-        print(unit)
+        # 基本情報の更新
+        for attr, setter in zip(
+            ('suffix', 'position'), (self.setSuffix, self.setPositionIndex)
+        ):
+            setter(unit(attr))
+
+        for opt in self.__option_widgets:
+            attr = opt.optionName
+            val = unit(attr)
+            opt.setValue(val)
+
+    def selectUnitNode(self):
+        unit = self.unit()
+        unit.select()
+
+    def updateSuffix(self, suffix):
+        unit = self.unit()
+        unit.setSuffix(suffix)
+
+    def updatePosition(self, index):
+        unit = self.unit()
+        unit.setPosition(index)
+
+    def updateUnitValue(self, value):
+        widget = self.sender()
+        widget.editUnit(self.unit(), widget.optionName, value)
+
 
 class UnitEditorOption(QtWidgets.QWidget):
     r"""
@@ -652,6 +753,10 @@ class UnitEditorOption(QtWidgets.QWidget):
         font.setBold(True)
         self.__type_label.setFont(font)
 
+        sel_btn = uilib.OButton(uilib.IconPath('uiBtn_select'))
+        sel_btn.setBgColor(*uilib.Color.ExecColor)
+        sel_btn.clicked.connect(self.selectUnitNode)
+
         self.__stacked = uilib.ScrolledStackedWidget()
         self.__stacked.setOrientation(QtCore.Qt.Vertical)
         no_operation = QtWidgets.QLabel('No operation')
@@ -663,7 +768,8 @@ class UnitEditorOption(QtWidgets.QWidget):
         layout.setRowStretch(1, 1)
         layout.addWidget(label, 0, 0, 1, 1, QtCore.Qt.AlignBottom)
         layout.addWidget(self.__type_label, 0, 1, 1, 1, QtCore.Qt.AlignBottom)
-        layout.addWidget(self.__stacked, 1, 0, 1, 2)
+        layout.addWidget(sel_btn, 0, 2, 1, 1)
+        layout.addWidget(self.__stacked, 1, 0, 1, 3)
 
     def refreshGui(self, unitName):
         try:
@@ -685,6 +791,11 @@ class UnitEditorOption(QtWidgets.QWidget):
         editor = self.__stacked.currentWidget()
         editor.setUnitNode(unitName)
         editor.updateUI()
+
+    def selectUnitNode(self):
+        editor = self.__stacked.currentWidget()
+        if hasattr(editor, 'selectUnitNode'):
+            editor.selectUnitNode()
 
 
 class Editor(QtWidgets.QWidget):

@@ -25,7 +25,7 @@ from ..pyside_module import *
 from .. import globalpath, style, verutil, desktop
 
 class Color(object):
-    ExecColor = (64, 72, 150)
+    ExecColor = (52, 88, 190)
     DebugColor = (130, 105, 150)
 
 FocusedColor = QtGui.QColor(60, 140, 220)

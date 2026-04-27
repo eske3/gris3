@@ -15,6 +15,10 @@ r"""
 """
 from . import node, info, system
 
+
+class GrisRootError(Exception):
+    pass
+
 class AbstractGrisNode(object):
     r"""
         GrisNodeの基底クラス。必ずnode.AbstractNodeと合わせて
@@ -1084,9 +1088,9 @@ def getGrisRoot():
     """
     roots = listGrisRoots()
     if not roots:
-        raise RuntimeError('No gris root is not in the current scene.')
+        raise GrisRootError('No gris root is not in the current scene.')
     if len(roots) > 1:
-        raise RuntimeError('More than one gris root are in the scene.')
+        raise GrisRootError('More than one gris root are in the scene.')
     return roots[0]
 # /////////////////////////////////////////////////////////////////////////////
 #                                                                            //

@@ -65,8 +65,9 @@ class UnitEditorWidget(common.BasicParamEditor):
             member_attrs,
             (member_editor.SingleMemberEditor, member_editor.MultMemberEditor)
         ):
-            for attr in attrs:
+            for attr, as_root in attrs:
                 e = editor(attr)
+                e.setAsRoot(as_root)
                 layout.addRow(lib.title(attr), e)
                 self.__member_widgets.append(e)
         return parent

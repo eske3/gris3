@@ -11,7 +11,8 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from ... import factoryModules, uilib, grisNode
+from ... import rigScripts
+from ... import factoryModules, uilib, grisNode, node
 from ...tools import selectionUtil
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
@@ -30,6 +31,7 @@ class AbstractMemberEditor(QtWidgets.QWidget):
         """
         self.__unit = None
         self.__attr = attr
+        self.__as_root = False
 
     def attr(self):
         r"""
@@ -80,6 +82,11 @@ class AbstractMemberEditor(QtWidgets.QWidget):
             unit = None
         return unit
 
+    def setAsRoot(self, as_root):
+        self.__as_root = bool(as_root)
+
+    def isRoot(self):
+        return self.__as_root
 
 class SingleMemberEditor(AbstractMemberEditor):
     def __init__(self, attr, parent=None):
@@ -144,7 +151,10 @@ class SingleMemberEditor(AbstractMemberEditor):
         if not selected:
             return
         attr = self.attr()
+        old_member = unit.getMember(attr)
+        rigScripts.unsetRootForUnit(unit, old_member)
         unit.setMember(attr, selected[0])
+        rigScripts.setRootForUnit(unit, selected[0])
         self.updateUI(unit, attr)
 
 
@@ -250,15 +260,21 @@ class MultMemberEditor(AbstractMemberEditor):
         unit = self.unit()
         attr = self.attr()
         editors = self.listEditors()
+        old_members = set(unit.getMember(attr))
         plug = unit.attr(attr)
-        if plug.isArray():
-            for p in plug.listArray():
-                p.disconnect()
-        target_nodes = []
-        for e in editors:
-            target = e.nodeName()
-            if grisNode.node.cmds.objExists(target):
-                target_nodes.append(target)
-        if target_nodes:
-            unit.addMember(attr, target_nodes)
+        with node.DoCommand():
+            if plug.isArray():
+                for p in plug.listArray():
+                    p.disconnect()
+            if old_members:
+                rigScripts.unsetRootForUnit(unit, *old_members)
+            target_nodes = []
+            for e in editors:
+                target = e.nodeName()
+                if grisNode.node.cmds.objExists(target):
+                    target_nodes.append(target)
+            if target_nodes:
+                rigScripts.setRootForUnit(unit, *target_nodes)
+                unit.addMember(attr, target_nodes)
+
         self.updateUI(unit, attr)

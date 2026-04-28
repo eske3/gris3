@@ -72,11 +72,11 @@ def unsetRootForUnit(unit, *joints):
         for loc in joint.children(typ='locator'):
             if not loc.hasAttr('unitRoot'):
                 continue
-            if loc.attr('unitRoot').source() != unit():
+            source = loc.attr('unitRoot').source()
+            if unit and source and source != unit():
                 continue
             deleting_list.append(loc)
             deleted.append(joint)
-            break
     if deleting_list:
         cmds.delete(deleting_list)
     return deleted

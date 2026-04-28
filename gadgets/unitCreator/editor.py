@@ -11,169 +11,12 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from . import common
+from . import common, member_editor
 from ... import factoryModules, lib, uilib, grisNode, rigScripts
-from ...tools import selectionUtil
+from ...uilib import extendedUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
-
-
-class AbstractMemberEditor(QtWidgets.QWidget):
-    r"""
-        ユニットのメンバー編集を行うGUIの基底クラス。
-    """
-    def __init__(self, attr, parent=None):
-        super(AbstractMemberEditor, self).__init__(parent)
-        r"""
-            Args:
-               attr (str): 操作対象となるアトリビュート名
-               parent (QtWidgets.QWidget): 親ウィジェット
-        """
-        self.__unit = None
-        self.__attr = attr
-
-    def attr(self):
-        r"""
-            編集するユニットを設定する。。
-
-            Returns:
-                str:操作対象となる
-        """
-        return self.__attr
-
-    def updateUI(self, unit, attr):
-        r"""
-            UIの更新を行うための上書き専用メソッド。
-
-            Args:
-                unit (grisNode.Unit):操作対象となるユニット
-                attr (str):操作対象となるユニット名
-        """
-        pass
-
-    def setUnit(self, unit=None):
-        r"""
-            編集するユニットを設定する。
-            合わせてGUIの更新も行う。
-
-            Args:
-                str:操作対象となるユニット名
-        """
-        self.__unit = unit
-        u = self.unit()
-        if not u:
-            return
-        attr = self.attr()
-        if not u.hasAttr(attr):
-            return
-        self.updateUI(u, attr)
-
-    def unit(self):
-        r"""
-            設定された編集ユニットを返す。
-
-            Returns:
-                grisNode.Unit:
-        """
-        try:
-            unit = grisNode.Unit(self.__unit)
-        except:
-            unit = None
-        return unit
-
-
-class SingleMemberEditor(AbstractMemberEditor):
-    def __init__(self, attr, parent=None):
-        super(SingleMemberEditor, self).__init__(attr, parent)
-        self.__name_field = QtWidgets.QLineEdit()
-        self.__name_field.setReadOnly(True)
-
-        reg_btn = uilib.OButton(uilib.IconPath('uiBtn_import'))
-        reg_btn.clicked.connect(self.setMember)
-        reg_btn.setBgColor(*uilib.Color.DebugColor)
-
-        sel_btn = uilib.OButton(uilib.IconPath('uiBtn_select'))
-        sel_btn.clicked.connect(self.select)
-        sel_btn.setBgColor(*uilib.Color.ExecColor)
-
-        layout = QtWidgets.QHBoxLayout(self)
-        layout.setContentsMargins(uilib.ZeroMargins)
-        layout.addWidget(self.__name_field)
-        layout.addWidget(reg_btn)
-        layout.addWidget(sel_btn)
-
-    def setNodeName(self, nodeName):
-        self.__name_field.setText(nodeName)
-
-    def updateUI(self, unit, attr):
-        r"""
-            UIの更新を行う。
-
-            Args:
-                unit (grisNode.Unit):操作対象となるユニット
-                attr (str):操作対象となるユニット名
-        """
-        member_node = unit.getMember(attr)
-        if not member_node:
-            member_node = ''
-        self.setNodeName(member_node)
-
-    def select(self):
-        node_name = self.__name_field.text()
-        selectionUtil.selectNodes([node_name])
-
-    def setMember(self):
-        unit = self.unit()
-        if not unit:
-            return
-        selected = selectionUtil.selected()
-        if not selected:
-            return
-        attr = self.attr()
-        unit.setMember(attr, selected[0])
-        self.updateUI(unit, attr)
-
-
-class SoloMemberEditor(SingleMemberEditor):
-    def __init__(self, member, parent=None):
-        super(SoloMemberEditor, self).__init__('', parent)
-        del_btn = uilib.OButton(uilib.IconPath('uiBtn_trush'))
-        self.layout().addWidget(del_btn)
-        self.setNodeName(member)
-
-
-class MultMemberEditor(AbstractMemberEditor):
-    def __init__(self, attr, parent=None):
-        super(MultMemberEditor, self).__init__(attr, parent)
-        grp = QtWidgets.QGroupBox('Members')
-        self.__layout = QtWidgets.QFormLayout(grp)
-        self.__add = uilib.OButton(uilib.IconPath('uiBtn_plus'))
-        self.__apply = QtWidgets.QPushButton('Apply')
-        self.__cancel = QtWidgets.QPushButton('Cancel')
-
-        layout = QtWidgets.QGridLayout(self)
-        layout.setSpacing(1)
-        layout.setColumnStretch(0, 1)
-        layout.addWidget(grp, 0, 0, 1, 4)
-        layout.addWidget(self.__add, 1, 1, 1, 1)
-        layout.addWidget(self.__cancel, 1, 2, 1, 1)
-        layout.addWidget(self.__apply, 1, 3, 1, 1)
-
-    def uiLayout(self):
-        return self.__layout
-
-    def updateUI(self, unit, attr):
-        member_nodes = unit.getMember(attr)
-        layout = self.uiLayout()
-        uilib.clearLayout(layout)
-        if not isinstance(member_nodes, list):
-            return
-        for member in member_nodes:
-            editor = SoloMemberEditor(member)
-            layout.addWidget(editor)
-
-
 
 class UnitEditorWidget(common.BasicParamEditor):
     r"""
@@ -219,7 +62,8 @@ class UnitEditorWidget(common.BasicParamEditor):
         parent = QtWidgets.QGroupBox('Members')
         layout = QtWidgets.QFormLayout(parent)
         for attrs, editor in zip(
-            member_attrs, (SingleMemberEditor, MultMemberEditor)
+            member_attrs,
+            (member_editor.SingleMemberEditor, member_editor.MultMemberEditor)
         ):
             for attr in attrs:
                 e = editor(attr)
@@ -290,7 +134,6 @@ class UnitEditorWidget(common.BasicParamEditor):
     def updateUnitValue(self, value):
         widget = self.sender()
         widget.editUnit(self.unit(), widget.optionName, value)
-
 
 
 class UnitEditorOption(QtWidgets.QWidget):
@@ -430,7 +273,6 @@ class UnitLister(QtWidgets.QWidget):
             return
 
 
-
 class Editor(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(Editor, self).__init__(parent)
@@ -439,10 +281,11 @@ class Editor(QtWidgets.QWidget):
         option = UnitEditorOption()
         unit_list.selectionChanged.connect(option.refreshGui)
         self.refreshList = unit_list.refreshList
-        splitter = QtWidgets.QSplitter()
+        splitter = extendedUI.EasyMovableSplitter()
         splitter.addWidget(unit_list)
-        splitter.addWidget(option)
+        splitter.addWidgetAsHandle(option)
         splitter.setStretchFactor(1, 1)
+        splitter.setSizes([200, 400])
 
         reload_btn = uilib.OButton(uilib.IconPath('uiBtn_reload.png'))
         reload_btn.clicked.connect(unit_list.refreshList)
@@ -461,4 +304,3 @@ class Editor(QtWidgets.QWidget):
         layout.addWidget(splitter)
         layout.addWidget(opt_widget)
         layout.setStretchFactor(splitter, 1)
-

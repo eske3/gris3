@@ -13,6 +13,7 @@ r"""
 """
 from . import common
 from ... import factoryModules, uilib, core, rigScripts
+from ...uilib import extendedUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
@@ -91,7 +92,7 @@ class UnitPresetView(QtWidgets.QTreeView):
 
 
 
-class Creator(QtWidgets.QSplitter):
+class Creator(extendedUI.EasyMovableSplitter):
     r"""
         作成用のUIを提供するクラス。
     """
@@ -151,7 +152,7 @@ class Creator(QtWidgets.QSplitter):
         layout.addLayout(side_layout, 0, 0, 1, 1)
         layout.addWidget(self.create_btn, 0, 1, 1, 1)
 
-        self.addWidget(main_widget)
+        self.addWidgetAsHandle(main_widget)
         self.addWidget(self.__editor)
 
         self.refreshPresetList()

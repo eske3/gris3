@@ -1,13 +1,16 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @brief    ここに説明文を記入
-    @date        2017/01/22 0:04[Eske](eske3g@gmail.com)
-    @update      2017/09/09 11:18[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    Dates:
+        date:2025/05/11 01:47 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/05/11 01:47 Eske Yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2025 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from . import creator, editor
 from ... import factoryModules, uilib
 

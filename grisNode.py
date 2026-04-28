@@ -610,7 +610,7 @@ class Unit(AbstractTopGroup):
             アトリビュートが作成される。
             
             Args:
-                label (str):[]作成されるアトリビュート名
+                label (str):作成されるアトリビュート名
                 nodes (str or list):メンバーとなるノードの名前のリスト
         """
         is_list = isinstance(nodes, (list, tuple))

@@ -168,7 +168,7 @@ class BaseCreator(object):
         """
         node_chain = func.listNodeChain(self.jointRoot(), baseJoint)
         if len(node_chain) < 2:
-            return
+            return None
 
         node_chain.reverse()
         mltmtx = func.createUtil('multMatrix')
@@ -195,12 +195,12 @@ class BaseCreator(object):
         if not mltmtx:
             # １階層しかない場合は、直接コネクトする。
             func.connectKeyableAttr(parentBaseJoint, node)
-            return
+            return None
         decmtx = func.createDecomposeMatrix(
             nodes[0], [mltmtx/'matrixSum'], False
         )[0]
         if len(nodes) > 1:
-            func.makeDecomposeMatrixConnection(dexmtx, nodes[1:])
+            func.makeDecomposeMatrixConnection(decmtx, nodes[1:])
         return [decmtx, mltmtx]
 
     def createBaseJointProxy(self, srcNode, name='transform', parent=None):
@@ -215,13 +215,13 @@ class BaseCreator(object):
             Returns:
                 node.Transform:
         """
-        srcNode = node.asObject(srcNode)
+        src_node = node.asObject(srcNode)
         parent = node.asObject(parent) if parent else self.unitRigGroup()
 
-        proxy = node.createNode(srcNode.type(), n=name, p=parent)
+        proxy = node.createNode(src_node.type(), n=name, p=parent)
         if hasattr(proxy, 'hideDisplay'):
             proxy.hideDisplay()
-        proxy.setMatrix(srcNode.matrix())
+        proxy.setMatrix(src_node.matrix())
         return proxy
 
     def createParentProxy(self, srcNode, name='transform', parent=None):
@@ -236,10 +236,10 @@ class BaseCreator(object):
             Returns:
                 node.Transform:
         """
-        srcNode = node.asObject(srcNode)
-        if not srcNode.hasParent():
-            return
-        return self.createBaseJointProxy(srcNode.parent(), name, parent)
+        src_node = node.asObject(srcNode)
+        if not src_node.hasParent():
+            return None
+        return self.createBaseJointProxy(src_node.parent(), name, parent)
 
     def createRigParentProxy(self, srcNode, name, position=None):
         r"""
@@ -573,9 +573,7 @@ class JointCreator(StandardCreator):
         name.setName(self.name())
         name.setNodeType('unit')
         name.setPosition(self.position())
-        position_list = name.positionList()
 
-        # unit = node.createNode('transform', n=name(), p=unit_grp())
         unit = grisNode.createNode(grisNode.Unit, n=name(), p=unit_grp())
         unit.lockTransform()
 
@@ -614,7 +612,6 @@ class JointCreator(StandardCreator):
             Args:
                 parent (str):作成する際のターゲットとなる親の名前
         """
-        unit = self.createUnit()
         self.setParent(parent)
         self.process()
         self.postProcess()
@@ -778,29 +775,31 @@ class Option(object):
         v.insert(0, attr_type)
         self.__attributelist.append(v)
 
-    def addFloatOption(self, attributeName, default=1.0, min=0.0, max=1.0):
+    def addFloatOption(
+        self, attributeName, default=1.0, minValue=0.0, maxValue=1.0
+    ):
         r"""
             float型のオプションを作成する。
             
             Args:
                 attributeName (str):
                 default (float):
-                min (float):
-                max (float):
+                minValue (float):
+                maxValue (float):
         """
-        self._add_attr('float', attributeName, default, min, max)
+        self._add_attr('float', attributeName, default, minValue, maxValue)
 
-    def addIntOption(self, attributeName, default=1, min=0, max=1):
+    def addIntOption(self, attributeName, default=1, minValue=0, maxValue=1):
         r"""
             int型のオプションを作成する。
             
             Args:
                 attributeName (str):
                 default (int):
-                min (int):
-                max (int):
+                minValue (int):
+                maxValue (int):
         """
-        self._add_attr('int', attributeName, default, min, max)
+        self._add_attr('int', attributeName, default, minValue, maxValue)
 
     def addBoolOption(self, attributeName, default=1):
         r"""
@@ -857,10 +856,21 @@ class Editor(Option):
                 option (Option):
         """
         super(Editor, self).__init__()
-        if not option:
+        inherited_option = self.inheritedOption()
+        if not inherited_option:
             return
         for optlist in option.optionlist():
             self._add_attr(optlist[0], *optlist[1:])
+
+    def inheritedOption(self):
+        r"""
+            このクラスの初期化時に内容をコピーしたいOptionクラスのインスタンスを返す。
+            上書き専用メソッド。
+
+            Returns:
+                Option:
+        """
+        return None
 
     def _add_attr(self, attr_type, *values):
         r"""
@@ -1038,9 +1048,9 @@ class Preset(BaseCreator):
         modules = OrderedDict()
         for preset in self.includes():
             mod = getRigModule(preset.unitName(), True)
-            name = (
-                mod.BaseName if hasattr(mod, 'BaseName') else preset.unitName()
-            )
+            # name = (
+            #     mod.BaseName if hasattr(mod, 'BaseName') else preset.unitName()
+            # )
             creator = mod.JointCreator()
             creator.setName(mod.BaseName)
             creator.setPosition(preset.position())

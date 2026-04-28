@@ -7,7 +7,7 @@ r"""
     Dates:
         date:2017/01/22 0:01[Eske](eske3g@gmail.com)
         update:2020/10/20 14:18 eske yoshinob[eske3g@gmail.com]
-        
+
     License:
         Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
@@ -19,6 +19,67 @@ from .. import grisNode, func, node, lib, system, verutil
 cmds = func.cmds
 
 RigNamePattern = re.compile('Rig[A-Z]*$')
+
+
+def setRootForUnit(unit, *joints):
+    r"""
+        引数jointsで指定したノードを引数unitで指定したユニットのルートとして登録する。
+
+        Args:
+            unit (grisNode.Unit): 対象となるユニットオブジェクト
+            *joints (tuple):ジョイント名のリスト
+        
+        Returns:
+            list: 
+    """
+    shapes = []
+    namerule = system.GlobalSys().nameRule()
+    for joint in node.toObjects(joints):
+        name = namerule(joint.shortName())
+        name.setNodeType('unitRoot')
+        loc = node.createNode('locator', n=name(), p=joint)
+        if joint.isType('joint'):
+            joint.attr('radius') >> ~loc.attr('localScale')
+        ~joint.attr('rotatePivot') >> ~loc.attr('localPosition')
+
+        loc.applyColor((1, 0.62, 0.02))
+        for attr in ('localScale', 'localPosition'):
+            for axis in 'XYZ':
+                plug = loc.attr(attr + axis)
+                plug.setChannelBox(False)
+                plug.setKeyable(False)
+        msg_plug = loc.addMessageAttr('unitRoot')
+        unit / 'message' >> msg_plug
+
+        shapes.append(loc)
+    return shapes
+
+
+def unsetRootForUnit(unit, *joints):
+    r"""
+        引数jointsで指定したノードを引数unitで指定したユニットのルートから解除する。
+
+        Args:
+            unit (grisNode.Unit): 対象となるユニットオブジェクト
+            *joints (tuple):ジョイント名のリスト
+
+        Returns:
+            list:
+    """
+    deleting_list = []
+    deleted = []
+    for joint in node.toObjects(joints):
+        for loc in joint.children(typ='locator'):
+            if not loc.hasAttr('unitRoot'):
+                continue
+            if loc.attr('unitRoot').source() != unit():
+                continue
+            deleting_list.append(loc)
+            deleted.append(joint)
+            break
+    if deleting_list:
+        cmds.delete(deleting_list)
+    return deleted
 
 class BaseCreator(object):
     r"""
@@ -498,26 +559,7 @@ class JointCreator(StandardCreator):
                 *joints (tuple):ジョイント名のリスト
         """
         unit = self.unit()
-        shapes = []
-        namerule = system.GlobalSys().nameRule()
-        for joint in node.toObjects(joints):
-            name = namerule(joint.shortName())
-            name.setNodeType('unitRoot')
-            loc = node.createNode('locator', n=name(), p=joint)
-            if joint.isType('joint'):
-                joint.attr('radius') >> ~loc.attr('localScale')
-            ~joint.attr('rotatePivot') >> ~loc.attr('localPosition')
-                
-            loc.applyColor((1, 0.62, 0.02))
-            for attr in ('localScale', 'localPosition'):
-                for axis in 'XYZ':
-                    plug = loc.attr(attr+axis)
-                    plug.setChannelBox(False)
-                    plug.setKeyable(False)
-            msg_plug = loc.addMessageAttr('unitRoot')
-            unit/'message' >> msg_plug
-
-            shapes.append(loc)
+        setRootForUnit(unit, *joints)
 
     def unitType(self):
         r"""
@@ -883,25 +925,31 @@ class Editor(Option):
         """
         return None
 
-    def addMember(self, *members):
+    def addMember(self, *members, **options):
         r"""
             メッセージで接続しているアトリビュートを、編集するためのGUIに登録する、
             引数membersはメッセージアトリビュート名のリスト。
+            引数でasRoot=Trueと設定すると、追加されたメンバーはルート扱いとなる。
 
             Args:
                 members (str):アトリビュート名
+                options (dict):
         """
-        self.__members.extend(members)
+        as_root = options.get('asRoot', False)
+        self.__members.extend([(x, as_root) for x in members])
 
-    def addMultMember(self, *members):
+    def addMultMember(self, *members, **options):
         r"""
             複数メッセージを接続しているマルチアトリビュートを、編集するためのGUIに登録する、
             引数membersはメッセージアトリビュート名のリスト。
+            引数でasRoot=Trueと設定すると、追加されたメンバーはルート扱いとなる。
 
             Args:
                 members (str):アトリビュート名
+                options (dict):
         """
-        self.__mult_members.extend(members)
+        as_root = options.get('asRoot', False)
+        self.__mult_members.extend([(x, as_root) for x in members])
 
     def listMemberAttrs(self):
         r"""

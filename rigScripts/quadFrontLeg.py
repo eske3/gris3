@@ -21,7 +21,7 @@ class Editor(rigScripts.Editor):
         return Option()
 
     def define(self):
-        self.addMember('uparm')
+        self.addMember('uparm', asRoot=True)
         self.addMember('lowarm')
         self.addMember('wrist')
         self.addMember('hand')

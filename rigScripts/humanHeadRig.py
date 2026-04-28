@@ -24,7 +24,7 @@ BaseName = 'head'
 
 class Editor(rigScripts.Editor):
     def define(self):
-        self.addMember('neck')
+        self.addMember('neck', asRoot=True)
         self.addMember('head')
         self.addMember('headEnd')
 

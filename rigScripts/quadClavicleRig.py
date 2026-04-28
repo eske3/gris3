@@ -22,7 +22,7 @@ Category = 'Quads'
 
 class Editor(rigScripts.Editor):
     def define(self):
-        self.addMember('clavicleBase')
+        self.addMember('clavicleBase', asRoot=True)
         self.addMember('clavicle')
 
 

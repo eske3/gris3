@@ -31,7 +31,7 @@ class Editor(rigScripts.Editor):
         return Option()
 
     def define(self):
-        self.addMember('base')
+        self.addMember('base', asRoot=True)
         self.addMember('end')
 
 class JointCreator(rigScripts.JointCreator):

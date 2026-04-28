@@ -80,7 +80,7 @@ class Editor(rigScripts.Editor):
         pass
 
     def define(self):
-        self.addMember(self.BlockNameRule.upblock)
+        self.addMember(self.BlockNameRule.upblock, asRoot=True)
         self.addMember(self.BlockNameRule.lowblock)
         self.addMember(self.BlockNameRule.endblock)
         self.defineExtra()

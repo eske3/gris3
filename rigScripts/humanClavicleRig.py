@@ -24,7 +24,7 @@ BaseName = 'clavicle'
 
 class Editor(rigScripts.Editor):
     def define(self):
-        self.addMember('clavicle')
+        self.addMember('clavicle', asRoot=True)
 
 
 class JointCreator(rigScripts.JointCreator):

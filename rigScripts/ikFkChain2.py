@@ -40,7 +40,7 @@ class Editor(rigScripts.Editor):
         return Option()
 
     def define(self):
-        self.addMember('startJoint')
+        self.addMember('startJoint', asRoot=True)
         self.addMember('endJoint')
 
 

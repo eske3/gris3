@@ -36,7 +36,7 @@ class Editor(rigScripts.Editor):
         return Option()
 
     def define(self):
-        self.addMember('thigh')
+        self.addMember('thigh', asRoot=True)
         self.addMember('lowleg')
         self.addMember('foot')
         self.addMember('ball')

@@ -25,7 +25,7 @@ BaseName = 'spine'
 
 class Editor(rigScripts.Editor):
     def define(self):
-        self.addMember('hip')
+        self.addMember('hip', asRoot=True)
         self.addMember('spineEnd')
 
 

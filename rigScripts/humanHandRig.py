@@ -23,8 +23,8 @@ BaseName = 'hand'
 
 class Editor(rigScripts.Editor):
     def define(self):
-        self.addMultMember('thumbBase')
-        self.addMultMember('extraBase')
+        self.addMultMember('thumbBase', asRoot=True)
+        self.addMultMember('extraBase', asRoot=True)
 
 
 class JointCreator(rigScripts.JointCreator):

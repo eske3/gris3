@@ -80,7 +80,6 @@ class UnitPresetView(QtWidgets.QTreeView):
         self.setModel(model)
         self.setSelectionModel(sel_model)
 
-
     def drawBranches(self, painter, option, index):
         if not index.parent().isValid():
             if not index.model().hasChildren(index):
@@ -197,6 +196,9 @@ class Creator(extendedUI.EasyMovableSplitter):
         catitems = {}
         items = []
 
+        preset_icon = QtGui.QIcon(uilib.IconPath('uiBtn_squareLayout'))
+        module_icon = QtGui.QIcon(uilib.IconPath('unit'))
+
         for mod in modules:
             mod_name = mod.__name__
             prename = mod_name.split('.')[-1]
@@ -206,7 +208,7 @@ class Creator(extendedUI.EasyMovableSplitter):
                 p = mod.Preset()
                 item = QtGui.QStandardItem(p.name())
                 item.setData('__preset__')
-                item.setIcon(QtGui.QIcon(uilib.IconPath('uiBtn_squareLayout')))
+                item.setIcon(preset_icon)
                 item.setData(prename, QtCore.Qt.UserRole + 2)
                 item.setData(p.description(), QtCore.Qt.UserRole + 3)
                 item.setData(
@@ -242,6 +244,7 @@ class Creator(extendedUI.EasyMovableSplitter):
             item = QtGui.QStandardItem(prename)
             item.setData(mod_name)
             item.setData(basename, QtCore.Qt.UserRole + 3)
+            item.setIcon(module_icon)
 
             if parentitem:
                 parentitem.setChild(parentitem.rowCount(), 0, item)

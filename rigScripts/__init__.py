@@ -612,6 +612,7 @@ class JointCreator(StandardCreator):
             Args:
                 parent (str):作成する際のターゲットとなる親の名前
         """
+        self.createUnit()
         self.setParent(parent)
         self.process()
         self.postProcess()

@@ -26,7 +26,13 @@ from .. import globalpath, style, verutil, desktop
 
 class Color(object):
     ExecColor = (52, 88, 190)
+    SubColor =  (96, 150, 225)
     DebugColor = (130, 105, 150)
+
+    @staticmethod
+    def toText(color):
+        color = QtGui.QColor(*color)
+        return color.name()
 
 FocusedColor = QtGui.QColor(60, 140, 220)
 

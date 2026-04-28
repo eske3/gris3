@@ -59,6 +59,7 @@ class UnitEditorWidget(common.BasicParamEditor):
                 break
         else:
             return None
+        root_color = uilib.Color.toText(uilib.Color.SubColor)
         parent = QtWidgets.QGroupBox('Members')
         layout = QtWidgets.QFormLayout(parent)
         for attrs, editor in zip(
@@ -68,7 +69,13 @@ class UnitEditorWidget(common.BasicParamEditor):
             for attr, as_root in attrs:
                 e = editor(attr)
                 e.setAsRoot(as_root)
-                layout.addRow(lib.title(attr), e)
+                label = lib.title(attr)
+                if as_root:
+                    label = QtWidgets.QLabel(label)
+                    label.setStyleSheet(
+                        'QLabel {{font: bold; color: {};}}'.format(root_color)
+                    )
+                layout.addRow(label, e)
                 self.__member_widgets.append(e)
         return parent
 

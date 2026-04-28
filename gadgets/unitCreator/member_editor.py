@@ -88,6 +88,7 @@ class AbstractMemberEditor(QtWidgets.QWidget):
     def isRoot(self):
         return self.__as_root
 
+
 class SingleMemberEditor(AbstractMemberEditor):
     def __init__(self, attr, parent=None):
         super(SingleMemberEditor, self).__init__(attr, parent)
@@ -151,10 +152,12 @@ class SingleMemberEditor(AbstractMemberEditor):
         if not selected:
             return
         attr = self.attr()
-        old_member = unit.getMember(attr)
-        rigScripts.unsetRootForUnit(unit, old_member)
-        unit.setMember(attr, selected[0])
-        rigScripts.setRootForUnit(unit, selected[0])
+        with node.DoCommand():
+            old_member = unit.getMember(attr)
+            unit.setMember(attr, selected[0])
+            if self.isRoot():
+                rigScripts.unsetRootForUnit(unit, old_member)
+                rigScripts.setRootForUnit(unit, selected[0])
         self.updateUI(unit, attr)
 
 

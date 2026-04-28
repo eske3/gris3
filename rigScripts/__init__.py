@@ -755,6 +755,7 @@ class RigCreator(StandardCreator):
         self.process()
         self.postProcess()
 
+
 class Option(object):
     r"""
         ユニット作成時のオプションを定義するクラス。
@@ -776,7 +777,7 @@ class Option(object):
         self.__attributelist.append(v)
 
     def addFloatOption(
-        self, attributeName, default=1.0, minValue=0.0, maxValue=1.0
+        self, attributeName, default=1.0, min=0.0, max=1.0
     ):
         r"""
             float型のオプションを作成する。
@@ -784,22 +785,22 @@ class Option(object):
             Args:
                 attributeName (str):
                 default (float):
-                minValue (float):
-                maxValue (float):
+                min (float):
+                max (fl
         """
-        self._add_attr('float', attributeName, default, minValue, maxValue)
+        self._add_attr('float', attributeName, default, min, max)
 
-    def addIntOption(self, attributeName, default=1, minValue=0, maxValue=1):
+    def addIntOption(self, attributeName, default=1, min=0, max=1):
         r"""
             int型のオプションを作成する。
             
             Args:
                 attributeName (str):
                 default (int):
-                minValue (int):
-                maxValue (int):
+                min (int):
+                max (int):
         """
-        self._add_attr('int', attributeName, default, minValue, maxValue)
+        self._add_attr('int', attributeName, default, min, max)
 
     def addBoolOption(self, attributeName, default=1):
         r"""
@@ -855,12 +856,21 @@ class Editor(Option):
             Args:
                 option (Option):
         """
+        self.__members = []
+        self.__mult_members = []
+        # Superクラスの初期化内でdefineを一時的に呼べないようにするための処理。----------
+        _define_method = self.define
+        self.define = lambda :None
+        # ---------------------------------------------------------------------
         super(Editor, self).__init__()
-        inherited_option = self.inheritedOption()
-        if not inherited_option:
-            return
-        for optlist in option.optionlist():
-            self._add_attr(optlist[0], *optlist[1:])
+        self.define = _define_method
+
+        for opt in (option, self.inheritedOption()):
+            if not opt:
+                continue
+            for optlist in opt.optionlist():
+                self._add_attr(optlist[0], *optlist[1:])
+        self.define()
 
     def inheritedOption(self):
         r"""
@@ -871,6 +881,36 @@ class Editor(Option):
                 Option:
         """
         return None
+
+    def addMember(self, *members):
+        r"""
+            メッセージで接続しているアトリビュートを、編集するためのGUIに登録する、
+            引数membersはメッセージアトリビュート名のリスト。
+
+            Args:
+                members (str):アトリビュート名
+        """
+        self.__members.extend(members)
+
+    def addMultMember(self, *members):
+        r"""
+            複数メッセージを接続しているマルチアトリビュートを、編集するためのGUIに登録する、
+            引数membersはメッセージアトリビュート名のリスト。
+
+            Args:
+                members (str):アトリビュート名
+        """
+        self.__mult_members.extend(members)
+
+    def listMemberAttrs(self):
+        r"""
+            memberとmultMemberに登録されているアトリビュートのリストを返す。
+            戻り値の各リストは本体が保持するリストのコピー
+
+            Returns:
+                tuple:memberアトリビュートのリストとmultMemberアトリビュートのリスト
+        """
+        return self.__members[:], self.__mult_members[:]
 
     def _add_attr(self, attr_type, *values):
         r"""

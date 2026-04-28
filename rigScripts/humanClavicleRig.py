@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    UNITY用の鎖骨を作成するための機能を提供するモジュール。
+    人型の鎖骨を作成するための機能を提供するモジュール。
     
     Dates:
         date:2017/02/01 1:01[Eske](eske3g@gmail.com)
@@ -13,8 +13,8 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import rigScripts, node
-from gris3.tools import jointEditor
+from .. import rigScripts, node
+from ..tools import jointEditor
 func = rigScripts.func
 cmds = func.cmds
 

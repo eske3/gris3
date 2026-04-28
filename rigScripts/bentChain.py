@@ -1,20 +1,18 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     humanBaseLimbsRig.py
-    @brief    UNITY用の腕を作成するための機能を提供するモジュール。
-    @class    BlockNameRule : ベースとなる名前のルールを定義するクラス。
-    @class    Option : 作成時に表示するUI用のクラス。
-    @class    JointCreator : 腕のジョイント作成機能を提供するクラス。
-    @class    RigCreator : 四肢の共通部分を作成する機能を提供するクラス。
-    @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-    @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
-import string
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    リグ用スクリプトを管理するモジュール。
 
+    Dates:
+        date:2017/02/01 1:01[Eske](eske3g@gmail.com)
+        update:2017/07/01 1:26 eske yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from .. import rigScripts, func, node, verutil
 from ..tools import jointEditor
 cmds = func.cmds
@@ -23,32 +21,21 @@ Category = 'Utilties'
 BaseName = 'bentChain'
 
 class Option(rigScripts.Option):
-    r'''
-        @brief       作成時に表示するUI用のクラス。
-        @inheritance rigScripts.Option
-        @date        2017/02/04 18:52[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
     def define(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
         self.addStringOption('name', default='bentBase')
         self.addIntOption('division', default=3, min=1, max=26)
 
+
+class Editor(rigScripts.Editor):
+    def inheritedOption(self):
+        return Option()
+
+    def define(self):
+        self.addMember('base')
+        self.addMember('end')
+
 class JointCreator(rigScripts.JointCreator):
-    r'''
-        @brief       腕のジョイント作成機能を提供するクラス。
-        @inheritance rigScripts.JointCreator
-        @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
     def createUnit(self):
-        r'''
-            @brief  ユニット作成のオーバーライド。
-            @return None
-        '''
         super(JointCreator, self).createUnit()
         unit = self.unit()
         options = self.options()
@@ -62,10 +49,6 @@ class JointCreator(rigScripts.JointCreator):
         attr.set(value)
 
     def process(self):
-        r'''
-            @brief  ジョイント作成プロセスとしてコールされる。
-            @return None
-        '''
         unit = self.unit()
         name = self.basenameObject()
         parent = self.parent()
@@ -115,17 +98,7 @@ class JointCreator(rigScripts.JointCreator):
 
 
 class RigCreator(rigScripts.RigCreator):
-    r'''
-        @brief       四肢の共通部分を作成する機能を提供するクラス。
-        @inheritance rigScripts.RigCreator
-        @date        2017/02/01 1:01[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
     def process(self):
-        r'''
-            @brief  実処理部分。基本的にこの部分はサブクラスでは上書きしない。
-            @return None
-        '''
         unit = self.unit()
         unitname = self.unitName()
         basename = unitname.name()
@@ -148,7 +121,7 @@ class RigCreator(rigScripts.RigCreator):
         # コントローラ用の代理親ノードの作成。
         ctrl_parent_proxy = self.createCtrlParentProxy(base, basename)
         parent_matrix = self.createParentMatrixNode(base.parent())
-        decmtx = func.createDecomposeMatrix(
+        func.createDecomposeMatrix(
             ctrl_parent_proxy, ['%s.matrixSum' % parent_matrix],
             withMultMatrix=False
         )

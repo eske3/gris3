@@ -5,6 +5,7 @@ cmds = func.cmds
 
 Category = 'Quads'
 
+
 class Option(rigScripts.Option):
     r"""
         作成時に表示するUI用のクラス。
@@ -13,6 +14,21 @@ class Option(rigScripts.Option):
     def define(self):
         for attr in self.AttrList:
             self.addIntOption(attr, default=3, min=1, max=26)
+
+
+class Editor(rigScripts.Editor):
+    def inheritedOption(self):
+        return Option()
+
+    def define(self):
+        self.addMember('uparm')
+        self.addMember('lowarm')
+        self.addMember('wrist')
+        self.addMember('hand')
+        self.addMember('handEnd')
+        self.addMember('handtipMarker')
+        self.addMember('handendMarker')
+
 
 class JointCreator(rigScripts.JointCreator):
     def createUnit(self):

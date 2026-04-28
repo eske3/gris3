@@ -13,11 +13,18 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3.tools import jointEditor
-from gris3 import rigScripts, func, node
+from ..tools import jointEditor
+from .. import rigScripts, func, node
 cmds = func.cmds
 
 Category = 'Quads'
+
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMember('clavicleBase')
+        self.addMember('clavicle')
+
 
 class JointCreator(rigScripts.JointCreator):
     def process(self):

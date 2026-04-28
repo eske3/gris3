@@ -14,7 +14,7 @@ r"""
         Proprietary and confidential
 """
 from .. import rigScripts, func, node, verutil
-from gris3.tools import jointEditor
+from ..tools import jointEditor
 cmds = func.cmds
 
 IgnoreLoad = False
@@ -69,6 +69,21 @@ class Option(rigScripts.Option):
         self.addBoolOption(self.BlockNameRule.attrlist[0], True)
         for attr in self.BlockNameRule.attrlist[1:]:
             self.addIntOption(attr, default=3, min=1, max=26)
+
+
+class Editor(rigScripts.Editor):
+    BlockNameRule = Default_Block_Name_Rule
+    def inheritedOption(self):
+        return Option()
+
+    def defineExtra(self):
+        pass
+
+    def define(self):
+        self.addMember(self.BlockNameRule.upblock)
+        self.addMember(self.BlockNameRule.lowblock)
+        self.addMember(self.BlockNameRule.endblock)
+        self.defineExtra()
 
 
 class JointCreator(rigScripts.JointCreator):

@@ -625,6 +625,24 @@ class Unit(AbstractTopGroup):
         else:
             nodes+'.message' >> attr
 
+    def setMember(self, attr, target):
+        r"""
+            引数attrで指定されたアトリビュートにtargetを紐付ける。
+            アトリビュートが存在しない場合は何もせずにFalseを返す。
+
+            Args:
+                attr (str):
+                target (str):
+
+            Returns:
+                bool: 紐づけが行えた場合はTrue、失敗の場合はFalse
+        """
+        if not self.hasAttr(attr):
+            return False
+        attr = self.attr(attr)
+        '{}.message'.format(target) >> attr
+        return True
+
     def getMember(self, keyword):
         r"""
             引数keywordで指定されたアトリビュートに紐付けされているノードを返す。
@@ -633,7 +651,7 @@ class Unit(AbstractTopGroup):
                 keyword (str):
         """
         if not self.hasAttr(keyword):
-            return
+            return []
         attr = self.attr(keyword)
         connections = node.cmds.listConnections(self/keyword, s=True, d=False)
         if not connections:

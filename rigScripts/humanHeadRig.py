@@ -21,6 +21,14 @@ cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'head'
 
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMember('neck')
+        self.addMember('head')
+        self.addMember('headEnd')
+
+
 class Option(rigScripts.Option):
     r'''
         @brief       作成時に表示するUI用のクラス。
@@ -35,6 +43,7 @@ class Option(rigScripts.Option):
         '''
         self.addBoolOption('bendCtrl', True)
         self.addIntOption('numberOfJoints', default=3, min=1, max=26)
+
 
 class JointCreator(rigScripts.JointCreator):
     r'''

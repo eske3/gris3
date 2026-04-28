@@ -20,6 +20,7 @@ cmds = func.cmds
 Category = 'Quads'
 BaseName = 'quadBackLeg'
 
+
 class Option(rigScripts.Option):
     r"""
         作成時に表示するUI用のクラス。
@@ -28,6 +29,22 @@ class Option(rigScripts.Option):
     def define(self):
         for attr in self.AttrList:
             self.addIntOption(attr, default=3, min=1, max=26)
+
+
+class Editor(rigScripts.Editor):
+    def inheritedOption(self):
+        return Option()
+
+    def define(self):
+        self.addMember('thigh')
+        self.addMember('lowleg')
+        self.addMember('foot')
+        self.addMember('ball')
+        self.addMember('toe')
+        self.addMember('toeEnd')
+        self.addMember('toeMarker')
+        self.addMember('heelMarker')
+
 
 class JointCreator(rigScripts.JointCreator):
     r"""

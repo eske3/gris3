@@ -725,8 +725,6 @@ class AbstractMemberEditor(QtWidgets.QWidget):
 class SingleMemberEditor(AbstractMemberEditor):
     def __init__(self, attr, parent=None):
         super(SingleMemberEditor, self).__init__(attr, parent)
-        label = QtWidgets.QLabel(lib.title(attr))
-
         self.__name_field = QtWidgets.QLineEdit()
         self.__name_field.setReadOnly(True)
 
@@ -740,7 +738,6 @@ class SingleMemberEditor(AbstractMemberEditor):
 
         layout = QtWidgets.QHBoxLayout(self)
         layout.setContentsMargins(uilib.ZeroMargins)
-        layout.addWidget(label)
         layout.addWidget(self.__name_field)
         layout.addWidget(reg_btn)
         layout.addWidget(sel_btn)
@@ -769,7 +766,9 @@ class SingleMemberEditor(AbstractMemberEditor):
         selected = selectionUtil.selected()
         if not selected:
             return
-        selected[0].attr('message') >> unit/self.__attr
+        attr = self.attr()
+        unit.setMember(attr, selected[0])
+        self.updateUI(unit, attr)
 
 
 class MultMemberEditor(AbstractMemberEditor):
@@ -818,15 +817,14 @@ class UnitEditorWidget(BasicParamEditor):
                 break
         else:
             return None
-        parent = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(parent)
-        layout.setContentsMargins(uilib.ZeroMargins)
+        parent = QtWidgets.QGroupBox('Members')
+        layout = QtWidgets.QFormLayout(parent)
         for attrs, editor in zip(
             member_attrs, (SingleMemberEditor, MultMemberEditor)
         ):
             for attr in attrs:
                 e = editor(attr)
-                layout.addWidget(e)
+                layout.addRow(lib.title(attr), e)
                 self.__member_widgets.append(e)
         return parent
 
@@ -975,13 +973,14 @@ class Editor(QtWidgets.QWidget):
 
         opt_widget = QtWidgets.QWidget()
         layout = QtWidgets.QHBoxLayout(opt_widget)
+        layout.setContentsMargins(uilib.ZeroMargins)
         layout.addWidget(reload_btn)
         layout.addStretch()
         layout.addWidget(rel_check)
 
         layout = QtWidgets.QVBoxLayout(self)
-        layout.addWidget(opt_widget)
         layout.addWidget(splitter)
+        layout.addWidget(opt_widget)
         layout.setStretchFactor(splitter, 1)
 
 

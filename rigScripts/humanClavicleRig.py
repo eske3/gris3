@@ -21,6 +21,12 @@ cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'clavicle'
 
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMember('clavicle')
+
+
 class JointCreator(rigScripts.JointCreator):
     r"""
         鎖骨のジョイント作成機能を提供するクラス。

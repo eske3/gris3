@@ -13,14 +13,13 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-import string
-
 from .. import rigScripts, func, node, verutil
 from ..tools import jointEditor
 cmds = func.cmds
 
 Category = 'Vehicle'
 BaseName = 'clawler'
+IgnoreLoad = False
 
 
 class JointCreator(rigScripts.JointCreator):

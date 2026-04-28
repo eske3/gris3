@@ -34,6 +34,16 @@ class Option(rigScripts.Option):
         '''
         self.addIntOption('numberOfIkControls', default=5, min=3, max=100)
 
+
+class Editor(rigScripts.Editor):
+    def inheritedOption(self):
+        return Option()
+
+    def define(self):
+        self.addMember('startJoint')
+        self.addMember('endJoint')
+
+
 class JointCreator(rigScripts.JointCreator):
     r'''
         @brief       ジョイント作成用のクラス。

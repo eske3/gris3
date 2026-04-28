@@ -1,16 +1,20 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     unitySpineRig.py
-    @brief    UNITY用の背骨を作成するための機能を提供するモジュール。
-    @class    JointCreator : 背骨のジョイント作成機能を提供するクラス。
-    @class    RigCreator : ここに説明文を記入
-    @date        2017/02/01 1:03[Eske](eske3g@gmail.com)
-    @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    背骨を作成するための機能を提供するモジュール
+
+    Dates:
+        date:2017/02/01 1:03[Eske](eske3g@gmail.com)
+        update:2017/02/01 1:04 eske yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
+
+
 from .. import rigScripts, node
 func = rigScripts.func
 cmds = func.cmds
@@ -71,7 +75,6 @@ class JointCreator(rigScripts.JointCreator):
         
         self.asRoot(hip)
         spineC.select()
-
 
 
 class RigCreator(rigScripts.RigCreator):

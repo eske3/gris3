@@ -11,7 +11,8 @@ r'''
     このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
     は一切責任を負いませんのであらかじめご了承ください
 '''
-from gris3 import rigScripts, node
+from .. import rigScripts, node
+
 
 class Preset(rigScripts.Preset):
     def name(self):

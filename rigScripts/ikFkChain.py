@@ -34,6 +34,15 @@ class Option(rigScripts.Option):
         self.addBoolOption('oldSpecification', default=False)
 
 
+class Editor(rigScripts.Editor):
+    def inheritedOption(self):
+        return Option()
+
+    def define(self):
+        self.addMember('startJoint')
+        self.addMember('endJoint')
+
+
 class JointCreator(rigScripts.JointCreator):
     r"""
         ジョイント作成用のクラス。

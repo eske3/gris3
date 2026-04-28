@@ -13,11 +13,9 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-import string
-
-from gris3.rigScripts import humanBaseLimbsRig
-from gris3.tools import jointEditor
-from gris3 import rigScripts, func, node
+from ..rigScripts import humanBaseLimbsRig
+from ..tools import jointEditor
+from .. import func, node
 cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'arm'
@@ -28,6 +26,11 @@ class Option(humanBaseLimbsRig.Option):
         作成時に表示するUI用のクラス。
     """
     pass
+
+
+class Editor(humanBaseLimbsRig.Editor):
+    def defineExtra(self):
+        self.addMember('handEnd')
 
 
 class JointCreator(humanBaseLimbsRig.JointCreator):

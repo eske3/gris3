@@ -20,17 +20,11 @@ math = func.math
 
 Category = 'Quads'
 
-'''
-class Option(rigScripts.Option):
+
+class Editor(rigScripts.Editor):
     def define(self):
-        self.addFloatOption('spineBias', default=1.0, min=0.0, max=1.0)
-        self.addIntOption('numberOfSpines', default=4, min=1, max=20)
-        self.addBoolOption('newMode', default=1)
-        self.addEnumOption(
-            'defaultOrientation', default=0, enumerations=['x', 'y', 'z']
-        )
-        self.addStringOption('ID', default='0x02121')
-'''
+        self.addMember('hip')
+        self.addMember('spineEnd')
 
 
 class JointCreator(rigScripts.JointCreator):

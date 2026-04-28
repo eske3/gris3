@@ -7,6 +7,12 @@ Category = 'Utilties'
 BaseName = 'simpleSpine'
 
 
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMember('startJoint')
+        self.addMember('endJoint')
+
+
 class JointCreator(rigScripts.JointCreator):
     def process(self):
         from gris3.tools import jointEditor

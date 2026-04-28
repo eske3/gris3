@@ -93,29 +93,29 @@ class QtSingletonMeta(type(QtCore.QObject)):
         Qtのシングルトン処理を行うためのメタクラス。
     """
     _singleton = None
-    def __new__(cls, classname, objects=None, dict=None):
+    def __new__(cls, classname, objects=None, dic=None):
         r"""
             Args:
-                classname (any):
+                classname (str):
                 objects (any):
-                dict (any):
+                dic (dict):
         """
         objects = objects if isinstance(objects, tuple) else (objects,)
-        dict = dict or {}
+        dic = dic or {}
         return super(QtSingletonMeta, cls).__new__(
-            cls, classname, objects, dict
+            cls, classname, objects, dic
         )
 
-    def __init__(self, classname, objects=None, dict=None):
+    def __init__(self, classname, objects=None, dic=None):
         r"""
             Args:
-                classname (any):
+                classname (str):
                 objects (any):
-                dict (any):
+                dic (dict):
         """
         objects = objects if isinstance(objects, tuple) else (objects,)
-        dict = dict or {}
-        super(QtSingletonMeta, self).__init__(classname, objects, dict)
+        dic = dic or {}
+        super(QtSingletonMeta, self).__init__(classname, objects, dic)
 
     def __call__(self, *args, **keywords):
         r"""
@@ -232,17 +232,17 @@ class RGB(tuple):
                )
            )
 
-        fixedValues = []
+        fixed_values = []
         for color in values:
-            newColor = color
-            if newColor > 255:
-                newColor = 255
-            elif newColor < 0:
-                newColor = 0
-            fixedValues.append(newColor)
-        fixedValues = tuple(fixedValues)
+            new_color = color
+            if new_color > 255:
+                new_color = 255
+            elif new_color < 0:
+                new_color = 0
+            fixed_values.append(new_color)
+        fixed_values = tuple(fixed_values)
 
-        return super(RGB, cls).__new__(cls, tuple(fixedValues))
+        return super(RGB, cls).__new__(cls, tuple(fixed_values))
 
     def __add__(self, other):
         r"""
@@ -296,12 +296,14 @@ class ConstantWidget(QtWidgets.QDialog):
         """
         super(ConstantWidget, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint)
-        self.__interlock=threading.Lock()
-        self.__cursor_count_timer = None
         self.setModal(False)
         if IsMac:
             self.setProperty('saveWindowPref', False)
-
+        self.__goalRect = None
+        self.__startRect = None
+        self.__subRect = None
+        self.__interlock=threading.Lock()
+        self.__cursor_count_timer = None
         self.__from_close_command = False
         self.__isMovable = True
         self.__isScalable   = QtCore.Qt.Horizontal | QtCore.Qt.Vertical
@@ -383,33 +385,33 @@ class ConstantWidget(QtWidgets.QDialog):
         
         rect = self.geometry()
 
-        posX = (
+        pos_x = (
             pos.x() - (rect.width() / 2) - drect.x() - self.WindowOffset.x()
        )
-        posY = (
+        pos_y = (
             pos.y() - (rect.height() / 4) - drect.y() - self.WindowOffset.y()
        )
         width = rect.width()
         height = rect.height()
-        limitMaxX = dwidth - width
-        limitMaxY = dheight - height
+        limit_max_x = dwidth - width
+        limit_max_y = dheight - height
 
         # Decide x position.---------------------------------------------------
-        if posX < 0:
-            posX = 0
-        elif posX > limitMaxX:
-            posX = dwidth - width
+        if pos_x < 0:
+            pos_x = 0
+        elif pos_x > limit_max_x:
+            pos_x = dwidth - width
         # ---------------------------------------------------------------------
 
         # Decide y position.---------------------------------------------------
-        if posY < 0:
-            posY = 0
-        elif posY > limitMaxY:
-            posY = dheight - height
+        if pos_y < 0:
+            pos_y = 0
+        elif pos_y > limit_max_y:
+            pos_y = dheight - height
         # ---------------------------------------------------------------------
 
-        pos.setX(posX + drect.x())
-        pos.setY(posY + drect.y())
+        pos.setX(pos_x + drect.x())
+        pos.setY(pos_y + drect.y())
 
         self.move(pos)
         # =====================================================================
@@ -441,7 +443,7 @@ class ConstantWidget(QtWidgets.QDialog):
 
     def setIsMovable(self, state):
         r"""
-            ウィンドウを動かすことができるかを設定する
+            ウィンドウを動かせるかを設定する
             
             Args:
                 state (bool):
@@ -450,7 +452,7 @@ class ConstantWidget(QtWidgets.QDialog):
 
     def isMovable(self):
         r"""
-            ウィンドウを動かすことができるかを返す
+            ウィンドウが動かせるかを返す
             
             Returns:
                 bool:
@@ -575,7 +577,7 @@ class ConstantWidget(QtWidgets.QDialog):
                 tuple(QRect, QRect):
         """
         rect = self.geometry()
-        return (rect, style.screenRect(rect.center()))
+        return rect, style.screenRect(rect.center())
 
     def currentRect(self):
         r"""
@@ -711,12 +713,12 @@ class ConstantWidget(QtWidgets.QDialog):
             return
         pos         = QtGui.QCursor.pos()
         rect        = self.geometry()
-        topLeft     = rect.topLeft()
-        bottomRight = rect.bottomRight()
+        top_left     = rect.topLeft()
+        bottom_right = rect.bottomRight()
 
         if (
-            pos.x() < topLeft.x() or pos.x() > bottomRight.x() or
-            pos.y() < topLeft.y() or  pos.y() > bottomRight.y()
+            pos.x() < top_left.x() or pos.x() > bottom_right.x() or
+            pos.y() < top_left.y() or  pos.y() > bottom_right.y()
        ):
             self.startAutoFadeOut()
         super(ConstantWidget, self).leaveEvent(event)
@@ -766,18 +768,18 @@ class ConstantWidget(QtWidgets.QDialog):
             event.buttons() in (QtCore.Qt.RightButton, QtCore.Qt.MiddleButton)
             and is_scalable
        ):
-            moveValue = [x - y for x, y in zip(cur, self.__pos)]
+            move_value = [x - y for x, y in zip(cur, self.__pos)]
             rect = self.geometry()
             if is_scalable & QtCore.Qt.Horizontal:
-                rect.setWidth(rect.width() + moveValue[0])
+                rect.setWidth(rect.width() + move_value[0])
             if is_scalable & QtCore.Qt.Vertical:
-                rect.setHeight(rect.height() + moveValue[1])
+                rect.setHeight(rect.height() + move_value[1])
             self.setGeometry(rect)
         else:
-            moveValue = [
+            move_value = [
                 z + y - x for x, y, z in zip(self.__pos, cur, pos)
             ]
-            self.move(moveValue[0], moveValue[1])
+            self.move(move_value[0], move_value[1])
 
         self.__pos = cur
         self.__modified = True
@@ -863,7 +865,6 @@ class ConstantWidget(QtWidgets.QDialog):
                 self.__animTime
            )
             if ratio > 1:
-                ratio = 1
                 self.killTimer(self.__maximizeMinimizeTimerId)
                 self.__maximizeMinimizeTimerId = None
                 goal_rect = self.__goalRect
@@ -1196,6 +1197,7 @@ class BlackoutDisplay(QtWidgets.QDialog):
                 parent (QtWidgets.QWidget):
         """
         super(BlackoutDisplay, self).__init__(parent)
+        self.__show_close_starttime = None
         self.__show_close_timerid = None
         self.__is_showing = True
         self.setWindowFlags(
@@ -1205,7 +1207,8 @@ class BlackoutDisplay(QtWidgets.QDialog):
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.__gradient = self.createBgGradient()
 
-    def createBgGradient(self):
+    @staticmethod
+    def createBgGradient():
         r"""
             背景描画用のグラデーションを生成して返す
             
@@ -1470,18 +1473,18 @@ class StarndardSpinerObject(QtCore.QObject):
                 # QtGui.QCursor().pos()
             # )
         # )
-        screenRect = desktop.DesktopInfo().getGeometry()
-        lowerLimit = screenRect.y()
-        upperLimit = screenRect.height() + lowerLimit - 1
-        if y <= lowerLimit:
-            posY = upperLimit - 1
-        elif y >= upperLimit:
-            posY = lowerLimit + 1
+        screen_rect = desktop.DesktopInfo().getGeometry()
+        lower_limit = screen_rect.y()
+        upper_limit = screen_rect.height() + lower_limit - 1
+        if y <= lower_limit:
+            pos_y = upper_limit - 1
+        elif y >= upper_limit:
+            pos_y = lower_limit + 1
         else:
             self.__Y = y
             return
-        QtGui.QCursor().setPos(QtGui.QCursor().pos().x(), posY)
-        self.__Y = posY
+        QtGui.QCursor().setPos(QtGui.QCursor().pos().x(), pos_y)
+        self.__Y = pos_y
 
     def setPressedCallback(self, callback):
         r"""
@@ -1536,26 +1539,26 @@ class StarndardSpinerObject(QtCore.QObject):
             self.__moved_callback()
         # マウスカーソルの現在位置を取得し、最後に記録されたマウスカーソル位置
         # との差分を取得。
-        posY = event.globalY()
-        delta = self.__Y - posY
+        pos_y = event.globalY()
+        delta = self.__Y - pos_y
         if(
             not self.__moved and
             abs(delta) < QtWidgets.QApplication.startDragDistance()
         ):
             return
-        movedValue = self.__target.singleStep() * (1 if delta>0 else -1)
-        self.__Y = posY
+        moved_value = self.__target.singleStep() * (1 if delta>0 else -1)
+        self.__Y = pos_y
          
         # マウスの押されたボタンに応じて加算される数字に倍率をかける。
         # 真中ボタンなら×１０、右ボタンなら×１００される。
         if self.__pressed in self.ButtonFactor:
-            movedValue *= self.ButtonFactor[self.__pressed]
+            moved_value *= self.ButtonFactor[self.__pressed]
  
         # 差分を現在のスピンボックスの値に加算してからセットする。
-        value = self.__target.value() + movedValue
+        value = self.__target.value() + moved_value
         if self.__target.minimum() < value < self.__target.maximum():
             self.__target.setValue(value)
-        self.repositionCursor(posY)
+        self.repositionCursor(pos_y)
  
     def _orMouseReleaseEvent(self, event):
         r"""
@@ -1664,13 +1667,13 @@ class ClosableGroup(QtWidgets.QGroupBox):
             Args:
                 show (bool):
         """
-        def toggleVisibiliy(layout, show):
+        def toggleVisibiliy(layout, is_shown):
             r"""
                 レイアウト内で再帰的に表示・非表示を設定するローカル関数。
                 
                 Args:
                     layout (QLayout):
-                    show (bool):
+                    is_shown (bool):
             """
             if not layout:
                 return
@@ -1678,10 +1681,10 @@ class ClosableGroup(QtWidgets.QGroupBox):
                 item = layout.itemAt(i)
                 w = item.widget()
                 if w:
-                    w.setVisible(show)
+                    w.setVisible(is_shown)
                 l = item.layout()
                 if l:
-                    toggleVisibiliy(l)
+                    toggleVisibiliy(l, is_shown)
         toggleVisibiliy(self.layout(), show)
         for child in self.children():
             if isinstance(child, QtWidgets.QWidget):
@@ -1921,7 +1924,7 @@ class OButton(QtWidgets.QPushButton):
                 QtGui.QImage:
         """
         if not self.__icon:
-            return
+            return None
 
         if self.isEnabled():
             return QtGui.QImage(self.__icon)
@@ -2038,17 +2041,17 @@ class OButton(QtWidgets.QPushButton):
             gradient.setColorAt(1.0, end)
             brush    = QtGui.QBrush(gradient)
 
-            penColor = self.__penColor
+            pen_color = self.__penColor
             if self.isDown() and not self.isCheckable():
                 pen_width = self.__penWidth + 1
-                penColor = QtGui.QColor(200, 200, 200)
+                pen_color = QtGui.QColor(200, 200, 200)
             elif is_checked:
-                penColor = penColor.lighter()
+                pen_color = pen_color.lighter()
         else:
             brush    = QtGui.QColor(168, 168, 168)
-            penColor = QtGui.QColor(96, 96, 96)
+            pen_color = QtGui.QColor(96, 96, 96)
 
-        pen = QtGui.QPen(penColor)
+        pen = QtGui.QPen(pen_color)
         pen.setWidth(pen_width)
         pen.setJoinStyle(QtCore.Qt.RoundJoin)
         # ---------------------------------------------------------------------
@@ -2085,29 +2088,29 @@ class OButton(QtWidgets.QPushButton):
             Args:
                 event (QtCore.QEvent):
         """
-        passTime = time.time() - self.__startTime
-        timerId  = event.timerId()
+        pass_time = time.time() - self.__startTime
+        timer_id  = event.timerId()
         div      = self.IconMaxRatio - self.IconMinRatio
 
-        if timerId == self.__enterTimerId:
-            if passTime > self.AnimationTime:
+        if timer_id == self.__enterTimerId:
+            if pass_time > self.AnimationTime:
                 self.__iconScaleRatio = self.IconMaxRatio
                 self.killTimer(self.__enterTimerId)
                 self.__enterTimerId = None
             else:
                 self.__iconScaleRatio = (
-                    self.IconMinRatio + div * passTime / self.AnimationTime
+                    self.IconMinRatio + div * pass_time / self.AnimationTime
                )
             self.update()
 
-        elif timerId == self.__leaveTimerId:
-            if passTime > self.AnimationTime:
+        elif timer_id == self.__leaveTimerId:
+            if pass_time > self.AnimationTime:
                 self.__iconScaleRatio = self.IconMinRatio
                 self.killTimer(self.__leaveTimerId)
                 self.__leaveTimerId = None
             else:
                 self.__iconScaleRatio = (
-                    self.IconMaxRatio - div * passTime / self.AnimationTime
+                    self.IconMaxRatio - div * pass_time / self.AnimationTime
                )
             self.update()
         else:
@@ -2167,17 +2170,17 @@ class TitleBarWidget(QtWidgets.QWidget):
         label.mouseMoveEvent = self.mouseMoveEvent
         label.mouseReleaseEvent = self.mouseReleaseEvent
 
-        closeBtn = OButton()
-        closeBtn.setSize(24)
-        closeBtn.setBgColor(180, 42, 80, 60)
-        closeBtn.setActiveBgColor(180, 42, 80)
-        closeBtn.setPenWidth(1)
-        closeBtn.setIcon(IconPath('uiBtn_x'))
-        closeBtn.clicked.connect(self.closeWidget)
+        close_btn = OButton()
+        close_btn.setSize(24)
+        close_btn.setBgColor(180, 42, 80, 60)
+        close_btn.setActiveBgColor(180, 42, 80)
+        close_btn.setPenWidth(1)
+        close_btn.setIcon(IconPath('uiBtn_x'))
+        close_btn.clicked.connect(self.closeWidget)
 
         layout.addWidget(label)
         layout.addStretch()
-        layout.addWidget(closeBtn)
+        layout.addWidget(close_btn)
 
         self.__widget = widget
         self.__layout = layout
@@ -2397,7 +2400,7 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
                 QtWidgets.QWidget or None:
         """
         if self.__currentIndex is None:
-            return
+            return None
         return self.widgetFromIndex(self.__currentIndex)
 
     def currentIndex(self):
@@ -2435,7 +2438,7 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
                 QtWidgets.QWidget:
         """
         if not self.__tabs:
-            return
+            return None
         if index >= len(self.__tabs):
             return self.__tabs[0]
         return self.__tabs[index]
@@ -2461,7 +2464,7 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             Returns:
                 bool:
         """
-        return (self.currentIndex() == 0)
+        return self.currentIndex() == 0
         
     def isLast(self):
         r"""
@@ -2470,7 +2473,7 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             Returns:
                 bool:
         """
-        return (self.currentIndex() == len(self.__tabs) - 1)
+        return self.currentIndex() == len(self.__tabs) - 1
 
     def __initializeAnim(self):
         r"""
@@ -2526,13 +2529,13 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             return
 
         self.hideAllWidgets()
-        currentIndex = self.currentIndex()
+        current_index = self.currentIndex()
         self.__initializeAnim()
         self.__movedWidgets = [
-            self.widgetFromIndex(x + currentIndex) for x in range(2)
+            self.widgetFromIndex(x + current_index) for x in range(2)
         ]
         self.__direction = -1
-        self.setCurrentIndex(currentIndex + 1)
+        self.setCurrentIndex(current_index + 1)
         self.setWidgetsLayout()
 
         self.beforeMovingTab.emit(self.currentWidget())
@@ -2548,13 +2551,13 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             return
 
         self.hideAllWidgets()
-        currentIndex = self.currentIndex()
+        current_index = self.currentIndex()
         self.__initializeAnim()
         self.__movedWidgets = [
-            self.widgetFromIndex(currentIndex - x) for x in range(2)
+            self.widgetFromIndex(current_index - x) for x in range(2)
         ]
         self.__direction = 1
-        self.setCurrentIndex(currentIndex - 1)
+        self.setCurrentIndex(current_index - 1)
         self.setWidgetsLayout()
 
         self.beforeMovingTab.emit(self.currentWidget())
@@ -2573,12 +2576,12 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             index = len(self.__tabs) - 1
         elif index < 0 or index >len(self.__tabs):
             raise ValueError('The given index is out of range.')
-        currentIndex = self.currentIndex()
-        if currentIndex == index:
+        current_index = self.currentIndex()
+        if current_index == index:
             for widget in self.allWidgets():
                 if not widget.isHidden():
                     return
-        if index < currentIndex:
+        if index < current_index:
             self.__direction = 1
         else:
             self.__direction = -1
@@ -2586,7 +2589,7 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
         self.hideAllWidgets()
         self.__initializeAnim()
         self.__movedWidgets = [
-            self.widgetFromIndex(currentIndex), self.widgetFromIndex(index)
+            self.widgetFromIndex(current_index), self.widgetFromIndex(index)
         ]
         self.setCurrentIndex(index)
         self.setWidgetsLayout()
@@ -2614,10 +2617,10 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
             Args:
                 event (QtCore.QEvent):
         """
-        currentWidget = self.currentWidget()
-        if not currentWidget:
+        current_widget = self.currentWidget()
+        if not current_widget:
             return
-        currentWidget.setGeometry(self.rect())
+        current_widget.setGeometry(self.rect())
 
     def timerEvent(self, event):
         r"""
@@ -2625,27 +2628,27 @@ class ScrolledStackedWidget(QtWidgets.QWidget):
                 event (QtCore.QEvent):
         """
         if event.timerId() == self.__startTimerId:
-            timeRatio = (time.time() - self.__startTime) / self.MotionTime
+            time_ratio = (time.time() - self.__startTime) / self.MotionTime
 
-            if timeRatio >= 1.0:
+            if time_ratio >= 1.0:
                 if self.__movedWidgets[0] != self.__movedWidgets[1]:
                     self.__movedWidgets[0].hide()
                 self.__initializeAnim()
                 self.resizeEvent(None)
             else:
                 rect = self.rect()
-                preRect = self.__movedWidgets[0].rect()
-                postRect = self.__movedWidgets[1].rect()
+                pre_rect = self.__movedWidgets[0].rect()
+                post_rect = self.__movedWidgets[1].rect()
                 if self.__orientation == QtCore.Qt.Horizontal:
-                    dx = rect.width() * accelarate(timeRatio, 2)
-                    preRect.moveLeft(dx * self.__direction)
-                    postRect.moveLeft((dx - rect.width()) * self.__direction)
+                    dx = rect.width() * accelarate(time_ratio, 2)
+                    pre_rect.moveLeft(dx * self.__direction)
+                    post_rect.moveLeft((dx - rect.width()) * self.__direction)
                 else:
-                    dy = rect.height() * accelarate(timeRatio, 2)
-                    preRect.moveTop(dy * self.__direction)
-                    postRect.moveTop((dy - rect.height()) * self.__direction)
-                self.__movedWidgets[0].setGeometry(preRect)
-                self.__movedWidgets[1].setGeometry(postRect)
+                    dy = rect.height() * accelarate(time_ratio, 2)
+                    pre_rect.moveTop(dy * self.__direction)
+                    post_rect.moveTop((dy - rect.height()) * self.__direction)
+                self.__movedWidgets[0].setGeometry(pre_rect)
+                self.__movedWidgets[1].setGeometry(post_rect)
 
     def keyPressEvent(self, event):
         r"""
@@ -2683,18 +2686,18 @@ class FilteredLineEdit(QtWidgets.QLineEdit):
         self.textEdited.connect(self.updateText)
         self.textEdited = self.textFiltered
 
-    def setFilter(self, filter):
+    def setFilter(self, filterString):
         r"""
             フィルタを行う正規表現を設定する。
             
             Args:
-                filter (str):
+                filterString (str):
         """
-        self.__filter = filter
-        if not filter:
+        self.__filter = filterString
+        if not filterString:
             self.__compiled_obj = None
         else:
-            self.__compiled_obj = re.compile(filter)
+            self.__compiled_obj = re.compile(filterString)
 
     def filterObject(self):
         r"""

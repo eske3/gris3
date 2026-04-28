@@ -20,6 +20,13 @@ cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'hand'
 
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMultMember('thumbBase')
+        self.addMultMember('extraBase')
+
+
 class JointCreator(rigScripts.JointCreator):
     r"""
         手(指)のジョイント作成機能を提供するクラス。

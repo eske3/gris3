@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    クローラ（キャタピラ）を実現するリグモジュール。
+    クローラ（キャタピラ）を実現するリグモジュール。(開発中）
     
     Dates:
         date:2017/02/01 1:01[Eske](eske3g@gmail.com)

@@ -18,6 +18,13 @@ cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'spine'
 
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMember('hip')
+        self.addMember('spineEnd')
+
+
 class JointCreator(rigScripts.JointCreator):
     r"""
         背骨のジョイント作成機能を提供するクラス。

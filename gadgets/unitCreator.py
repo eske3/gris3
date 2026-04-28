@@ -12,6 +12,7 @@ from PySide2 import QtWebEngineWidgets
 
 from .. import grisNode
 from .. import factoryModules, lib, uilib, core, rigScripts
+from ..tools import selectionUtil
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
@@ -657,12 +658,132 @@ class ParamEditor(BasicParamEditor):
     pass
 
 
+class AbstractMemberEditor(QtWidgets.QWidget):
+    r"""
+        ユニットのメンバー編集を行うGUIの基底クラス。
+    """
+    def __init__(self, attr, parent=None):
+        super(AbstractMemberEditor, self).__init__(parent)
+        r"""
+            Args:
+               attr (str): 操作対象となるアトリビュート名
+               parent (QtWidgets.QWidget): 親ウィジェット
+        """
+        self.__unit = None
+        self.__attr = attr
+
+    def attr(self):
+        r"""
+            編集するユニットを設定する。。
+
+            Returns:
+                str:操作対象となる
+        """
+        return self.__attr
+
+    def updateUI(self, unit, attr):
+        r"""
+            UIの更新を行うための上書き専用メソッド。
+
+            Args:
+                unit (grisNode.Unit):操作対象となるユニット
+                attr (str):操作対象となるユニット名
+        """
+        pass
+
+    def setUnit(self, unit=None):
+        r"""
+            編集するユニットを設定する。
+            合わせてGUIの更新も行う。
+
+            Args:
+                str:操作対象となるユニット名
+        """
+        self.__unit = unit
+        u = self.unit()
+        if not u:
+            return
+        attr = self.attr()
+        if not u.hasAttr(attr):
+            return
+        self.updateUI(u, attr)
+
+    def unit(self):
+        r"""
+            設定された編集ユニットを返す。
+
+            Returns:
+                grisNode.Unit:
+        """
+        try:
+            unit = grisNode.Unit(self.__unit)
+        except:
+            unit = None
+        return unit
+
+
+class SingleMemberEditor(AbstractMemberEditor):
+    def __init__(self, attr, parent=None):
+        super(SingleMemberEditor, self).__init__(attr, parent)
+        label = QtWidgets.QLabel(lib.title(attr))
+
+        self.__name_field = QtWidgets.QLineEdit()
+        self.__name_field.setReadOnly(True)
+
+        reg_btn = uilib.OButton(uilib.IconPath('uiBtn_import'))
+        reg_btn.clicked.connect(self.setMember)
+        reg_btn.setBgColor(*uilib.Color.DebugColor)
+
+        sel_btn = uilib.OButton(uilib.IconPath('uiBtn_select'))
+        sel_btn.clicked.connect(self.select)
+        sel_btn.setBgColor(*uilib.Color.ExecColor)
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(uilib.ZeroMargins)
+        layout.addWidget(label)
+        layout.addWidget(self.__name_field)
+        layout.addWidget(reg_btn)
+        layout.addWidget(sel_btn)
+
+    def updateUI(self, unit, attr):
+        r"""
+            UIの更新を行う。
+
+            Args:
+                unit (grisNode.Unit):操作対象となるユニット
+                attr (str):操作対象となるユニット名
+        """
+        member_node = unit.getMember(attr)
+        if not member_node:
+            member_node = ''
+        self.__name_field.setText(member_node)
+
+    def select(self):
+        node_name = self.__name_field.text()
+        selectionUtil.selectNodes([node_name])
+
+    def setMember(self):
+        unit = self.unit()
+        if not unit:
+            return
+        selected = selectionUtil.selected()
+        if not selected:
+            return
+        selected[0].attr('message') >> unit/self.__attr
+
+
+class MultMemberEditor(AbstractMemberEditor):
+    def __init__(self, attr, parent=None):
+        super(MultMemberEditor, self).__init__(attr, parent)
+
+
 class UnitEditorWidget(BasicParamEditor):
     r"""
         各Unitごとの編集機能をGUIとして表示するためのクラス。
     """
     def __init__(self, unit, parent=None):
         self.__option_widgets = []
+        self.__member_widgets = []
         self.__unit_node_name = unit()
         self.__tmp_unit = unit
         super(UnitEditorWidget, self).__init__(parent)
@@ -681,6 +802,34 @@ class UnitEditorWidget(BasicParamEditor):
     def isOption(self):
         return False
 
+    def addMemberEditor(self, editorObj):
+        r"""
+            メンバー編集用のGUIを追加する。
+
+            Args:
+                editorObj(rigScripts.Editor): Editorクラスのインスタンス
+
+            Returns:
+                QtWidgets.QWidget:作成したウィジェット
+        """
+        member_attrs = editorObj.listMemberAttrs()
+        for attr in member_attrs:
+            if attr:
+                break
+        else:
+            return None
+        parent = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(parent)
+        layout.setContentsMargins(uilib.ZeroMargins)
+        for attrs, editor in zip(
+            member_attrs, (SingleMemberEditor, MultMemberEditor)
+        ):
+            for attr in attrs:
+                e = editor(attr)
+                layout.addWidget(e)
+                self.__member_widgets.append(e)
+        return parent
+
     def buildUI(self, parent=None):
         r"""
             Args:
@@ -694,19 +843,23 @@ class UnitEditorWidget(BasicParamEditor):
         if hasattr(module, 'Editor'):
             obj = module.Editor()
         elif hasattr(module, 'Option'):
-            obj = module.Option()
+            obj = rigScripts.Editor(module.Option())
         else:
             return
-        widgets = createOptionWidget(obj)
-        grp = QtWidgets.QGroupBox('Parameters')
-        layout = QtWidgets.QVBoxLayout(grp)
-        layout.addWidget(widgets[0])
-        self.__option_widgets = widgets[1]
-        for w in self.__option_widgets:
-            w.valueChanged.connect(self.updateUnitValue)
-
         layout = parent.layout()
-        layout.addWidget(grp)
+        widgets = createOptionWidget(obj)
+        self.__option_widgets = widgets[1]
+        if len(self.__option_widgets):
+            grp = QtWidgets.QGroupBox('Parameters')
+            grp_layout = QtWidgets.QVBoxLayout(grp)
+            grp_layout.addWidget(widgets[0])
+            for w in self.__option_widgets:
+                w.valueChanged.connect(self.updateUnitValue)
+            layout.addWidget(grp)
+
+        member_widget = self.addMemberEditor(obj)
+        if member_widget:
+            layout.addWidget(member_widget)
         layout.addStretch()
 
     def updateUI(self):
@@ -721,6 +874,9 @@ class UnitEditorWidget(BasicParamEditor):
             attr = opt.optionName
             val = unit(attr)
             opt.setValue(val)
+        unit_name = unit()
+        for w in self.__member_widgets:
+            w.setUnit(unit_name)
 
     def selectUnitNode(self):
         unit = self.unit()

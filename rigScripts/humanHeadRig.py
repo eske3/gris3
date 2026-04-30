@@ -1,18 +1,18 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     unityHeadRig.py
-    @brief    UNITY用の頭部を作成するための機能を提供するモジュール。
-    @class    JointCreator : ここに説明文を記入
-    @class    RigCreator : ここに説明文を記入
-    @date        2017/02/01 1:04[Eske](eske3g@gmail.com)
-    @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
-import string
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    標準的な人の頭部を作成するための機能を提供するモジュール。
 
+    Dates:
+        date:2017/02/01 1:01[Eske](eske3g@gmail.com)
+        update:2025/07/17 20:11 Eske Yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 from ..tools import jointEditor
 from .. import rigScripts, node, verutil
 func = rigScripts.func
@@ -21,37 +21,30 @@ cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'head'
 
+class Option(rigScripts.Option):
+    r"""
+        作成時に表示するUI用のクラス。
+    """
+    def define(self):
+        self.addBoolOption('bendCtrl', True)
+        self.addIntOption('numberOfJoints', default=3, min=1, max=26)
+
 
 class Editor(rigScripts.Editor):
+    def inheritedOption(self):
+        return Option()
+
     def define(self):
         self.addMember('neck', asRoot=True)
         self.addMember('head')
         self.addMember('headEnd')
 
 
-class Option(rigScripts.Option):
-    r'''
-        @brief       作成時に表示するUI用のクラス。
-        @inheritance rigScripts.Option
-        @date        2017/02/04 18:52[Eske](eske3g@gmail.com)
-        @update      2017/07/01 1:26[Eske](eske3g@gmail.com)
-    '''
-    def define(self):
-        r'''
-            @brief  オプション内容を定義する
-            @return None
-        '''
-        self.addBoolOption('bendCtrl', True)
-        self.addIntOption('numberOfJoints', default=3, min=1, max=26)
-
 
 class JointCreator(rigScripts.JointCreator):
-    r'''
-        @brief       頭部のジョイント作成機能を提供するクラス。
-        @inheritance rigScripts.JointCreator
-        @date        2017/02/01 1:04[Eske](eske3g@gmail.com)
-        @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        頭部のジョイント作成機能を提供するクラス。
+    """
     def createUnit(self):
         super(JointCreator, self).createUnit()
         unit = self.unit()
@@ -63,10 +56,9 @@ class JointCreator(rigScripts.JointCreator):
         )
 
     def process(self):
-        r'''
-            @brief  ジョイント作成プロセスとしてコールされる。
-            @return None
-        '''
+        r"""
+            ジョイント作成プロセスとしてコールされる。
+        """
         name = self.basenameObject()
         parent = self.parent()
 
@@ -105,10 +97,9 @@ class JointCreator(rigScripts.JointCreator):
         head.select()
 
     def finalize(self):
-        r'''
-            @brief  ジョイントのファイナライズ時にコールされる。
-            @return None
-        '''
+        r"""
+            ジョイントのファイナライズ時にコールされる。
+        """
         unit = self.unit()
         if_bent = unit('bendCtrl') if unit.hasAttr('bendCtrl') else True
         if not if_bent:
@@ -131,17 +122,10 @@ class JointCreator(rigScripts.JointCreator):
             joint.rename(name())
 
 class RigCreator(rigScripts.RigCreator):
-    r'''
-        @brief       ここに説明文を記入
-        @inheritance rigScripts.RigCreator
-        @date        2017/02/01 1:04[Eske](eske3g@gmail.com)
-        @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        腕のコントローラを作成する機能を提供するクラス。
+    """
     def process(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
         unit = self.unit()
         unitname = self.unitName()
         basename = unitname.name()

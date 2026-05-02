@@ -1582,11 +1582,13 @@ def createDistanceSystem(
         Returns:
             tuple:(開始ノード、終了ノード、distantノード)
     """
-    start_node = createNode('transform', n=startName, p=startParent)
-    start_loc = createNode('locator', n='%sShape' % start_node, p=start_node)
+    start_node = node.createNode('transform', n=startName, p=startParent)
+    start_loc = node.createNode(
+        'locator', n='%sShape' % start_node, p=start_node
+    )
 
-    end_node = createNode('transform', n=endName, p=endParent)
-    end_loc = createNode('locator', n='%sShape' % end_node, p=end_node)
+    end_node = node.createNode('transform', n=endName, p=endParent)
+    end_loc = node.createNode('locator', n='%sShape' % end_node, p=end_node)
 
     dist_node = node.createNode(
         'transform', n=distanceNodeName, p=distanceNodeParent

@@ -3740,7 +3740,7 @@ class ImplicitObject(Shape):
             Args:
                 size (float or list):
         """
-        if not isinstance(size, (list, tupe)):
+        if not isinstance(size, (list, tuple)):
             size =  [size, size, size]
         self('size', size)
 

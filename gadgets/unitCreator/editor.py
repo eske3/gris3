@@ -219,6 +219,7 @@ class UnitLister(QtWidgets.QWidget):
         self.__view = QtWidgets.QListView()
         self.__view.setModel(model)
         self.__view.setSelectionModel(sel_model)
+        self.__view.setEditTriggers(QtWidgets.QListView.NoEditTriggers)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(label)

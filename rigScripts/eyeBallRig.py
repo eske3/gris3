@@ -7,6 +7,16 @@ cmds = func.cmds
 
 Sides = ['L', 'R']
 
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMember('root')
+        self.addMember('eyeL')
+        self.addMember('targetL')
+        self.addMember('eyeR')
+        self.addMember('targetR')
+
+
 class JointCreator(rigScripts.JointCreator):
     def process(self):
         from gris3.tools import jointEditor

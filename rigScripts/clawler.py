@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    クローラ（キャタピラ）を実現するリグモジュール。
+    クローラ（キャタピラ）を実現するリグモジュール。(開発中）
     
     Dates:
         date:2017/02/01 1:01[Eske](eske3g@gmail.com)
@@ -13,14 +13,13 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-import string
-
 from .. import rigScripts, func, node, verutil
 from ..tools import jointEditor
 cmds = func.cmds
 
 Category = 'Vehicle'
 BaseName = 'clawler'
+IgnoreLoad = False
 
 
 class JointCreator(rigScripts.JointCreator):

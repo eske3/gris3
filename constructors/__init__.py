@@ -18,9 +18,13 @@ r"""
 """
 import os
 import re
+from threading import Timer
+
+from .. import lib, node, func, core, grisNode, rigScripts, settings, verutil
+from .. import buildInfo
 from ..factoryModules import ModuleInfo
 from ..tools import cleanup
-from .. import lib, node, func, core, grisNode, rigScripts, settings, verutil
+
 cmds = func.cmds
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -472,6 +476,7 @@ class ExtraConstructorManager(object):
         """
         self.__extraConstructors = []
         self.__constructor = constructor
+        self.__build_timer = None
 
     def constructor(self):
         r"""
@@ -527,6 +532,24 @@ class ExtraConstructorManager(object):
         verutil.reload_module(mod)
         return self.addExtraConstructor(mod.ExtraConstructor)
 
+    def setBuildTimer(self, buildTimer=None):
+        r"""
+            ビルド時間計測用タイマーオブジェクトをセットする。
+
+            Args:
+                buildTimer (buildInfo.BuildTimer):
+        """
+        self.__build_timer = buildTimer
+
+    def buildTimer(self):
+        r"""
+            設定されたビルド時間計測用タイマーオブジェクトを返す。
+
+            Returns:
+                buildInfo.BuildTimer:
+        """
+        return self.__build_timer
+
     def createSetupParts(self):
         for cst in self.extraConstructors():
             cst.createSetupParts()
@@ -554,9 +577,18 @@ class ExtraConstructorManager(object):
             Args:
                 method (str):実行するメソッド名。
         """
+        timer = self.buildTimer()
         for cst in self.extraConstructors():
             if hasattr(cst, method):
+                cst_name = '{}.{}'.format(
+                    cst.__class__.__module__.replace('.', '/'),
+                    method
+                )
+                if timer:
+                    timer.startSubProcess(cst_name)
                 getattr(cst, method)()
+                if timer:
+                    timer.endSubProcess(cst_name)
 
 
 class BasicConstructor(rigScripts.BaseCreator):
@@ -644,6 +676,7 @@ class BasicConstructor(rigScripts.BaseCreator):
         self.__jointbbsize = (100, 100, 30)
         self.setCtrlTagAttached(True)
         self.__extraConstructor = ExtraConstructorManager(self)
+        self.__build_timer = None
         for method in (
             'installExtraConstructor', 'addExtraConstructor',
             'extraConstructorUtilities', 
@@ -669,6 +702,25 @@ class BasicConstructor(rigScripts.BaseCreator):
         module = inspect.getmodule(self.__class__)
         self.__lod = module.__name__.rsplit('.', 1)[-1].split('_', 1)[-1]
         return self.__lod
+
+    def createBuildTimer(self):
+        r"""
+            ビルド時間計測用タイマーオブジェクトを作成して返す。
+
+            Returns:
+                buildInfo.BuildTimer:
+        """
+        self.__build_timer = buildInfo.BuildTimer()
+        return self.__build_timer
+
+    def buildTimer(self):
+        r"""
+            処理実行時に作成されたビルド時間計測用タイマーオブジェクトを返す。
+
+            Returns:
+                buildInfo.BuildTimer:
+        """
+        return self.__build_timer
 
     def setModelGroup(self, grp):
         r"""
@@ -1302,8 +1354,6 @@ class BasicConstructor(rigScripts.BaseCreator):
                     list:
             """
             result = []
-            matrixlist = []
-            calcflags = []
             num_spaces = len(spacers)+1
             if isinstance(calcSpaces, (list, tuple)):
                 if num_spaces != len(calcSpaces):
@@ -1793,7 +1843,7 @@ class BasicConstructor(rigScripts.BaseCreator):
         if not topJoints:
             topJoints = self.__binded_joints
         else:
-            if isinstance(topJoint, (list, tuple)):
+            if isinstance(topJoints, (list, tuple)):
                 topJoints = [topJoints]
         for joint in topJoints:
             func.connectToBindJoint(joint)
@@ -1838,7 +1888,7 @@ class BasicConstructor(rigScripts.BaseCreator):
         except:
             return
 
-        if self.__jointbbsize[0] > 0 or self.__jointbbsize(bb) > 0:
+        if self.__jointbbsize[0] > 0 or self.__jointbbsize[1] > 0:
             return        
         bb = cmds.xform(joint_root, q=True, ws=True, bb=True)
         bb = [(bb[x+3] - bb[x]) for x in range(3)]
@@ -2209,29 +2259,37 @@ class BasicConstructor(rigScripts.BaseCreator):
         """
         global LatestExecutedConstructor
         LatestExecutedConstructor = self
-        import time
-        starttime = time.time()
+        timer = self.createBuildTimer()
+        timer.start()
 
         print('# Start to setup.')
+        timer.startProcess('Setup')
         self.loadSettings()
         self.initialize()
         self.printProgress('Done to initialize.', 2)
 
+        extra_constructor = self.extraConstructorManager()
+        extra_constructor.setBuildTimer(timer)
+
         for process, pre_comment, post_comment in self.ProcessList:
+                timer.startProcess(process)
                 if pre_comment:
                     self.printProgress(pre_comment)
-                self.extraConstructorManager().executeMethod('_'+process)
+                extra_constructor.executeMethod('_'+process)
                 if hasattr(self, process):
+                    timer.startSubProcess('main')
                     getattr(self, process)()
-                self.extraConstructorManager().executeMethod(process)
+                    timer.endSubProcess('main')
+                extra_constructor.executeMethod(process)
                 if post_comment :
                     self.printProgress(post_comment , 2)
-    
-        endtime = time.time()
+
+        extra_constructor.setBuildTimer()
+        timer.stop()
         print('')
         print('/' * 80)
-        print('Construction was done : %s' % self.lod())
-        print('   Setup time : %s' % round((endtime - starttime), 2))
+        print('Construction was done : {}'.format(self.lod()))
+        print('   Setup time : {}'.format(timer.elapsedTime()))
         print('/' * 80)    
         return
 
@@ -2273,7 +2331,7 @@ class McpConstructor(BasicConstructor):
         r"""
             ジョイントをHumanIK用のものに変換する。
         """
-        from gris3 import toHumanIK
+        from .. import toHumanIK
         verutil.reload_module(toHumanIK)
         self.__converter = toHumanIK.HumanIK()
         self.__converter.convert()
@@ -2291,7 +2349,7 @@ class McpConstructor(BasicConstructor):
         r"""
             命名規則の変換を行いつつHumanIK用の骨にモデルをペアレントする。
         """
-        from gris3 import toHumanIK
+        from .. import toHumanIK
         toHumanIK.parentMCPGeometry()
 
     def finalizeSetup(self):

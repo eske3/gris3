@@ -345,10 +345,14 @@ class BasicExporter(object):
 
 class JsonExporter(BasicExporter):
     Version = '1.0.0'
+
     def __init__(self):
         super(JsonExporter, self).__init__()
         self.setExtension('json')
         self.__main_data = None
+
+    def dataType(self):
+        return None
 
     def setMainData(self, data):
         self.__main_data = data
@@ -361,6 +365,9 @@ class JsonExporter(BasicExporter):
 
     def export(self, file):
         data = getMayaJsonMeta(self.Version)
+        data_type = self.dataType()
+        if data_type:
+            data['dataType'] = data_type
         data['datalist'] = self.makeData()
         self.setMainData(data)
         import json

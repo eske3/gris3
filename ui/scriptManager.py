@@ -624,9 +624,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
                 debugMode (str):デバッグモードの内容。
         """
         c =self.getConstructor(moduleName, True)
-        c.IsDebugMode = debugMode is not None
-        c.DebugMode = debugMode
-        c.execute()
+        factoryModules.execConstructor(c, debugMode)
 
     def execute(self, debugMode=None):
         r"""

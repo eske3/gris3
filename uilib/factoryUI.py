@@ -14,11 +14,11 @@ r"""
         Proprietary and confidential
 """
 import os
-import subprocess
 import time
 
-from gris3.fileUtil import fileManager
 from gris3 import uilib, fileUtil
+from gris3.fileUtil import fileManager
+
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -247,7 +247,7 @@ class BrowserContext(uilib.ConstantWidget):
         """
         self.__manager.setExtensions(extensions)
 
-    def extensions():
+    def extensions(self):
         r"""
             対象拡張子のリストを返す
 

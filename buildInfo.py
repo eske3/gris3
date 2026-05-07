@@ -13,11 +13,11 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-import time, datetime, json, os
+import time, datetime, json, os, copy
 from . import info
 from .exporter import core
 
-def formatTime(seconds):
+def formatTime(seconds, numDigits=2):
     r"""
         与えられた浮動小数点を読みやすい時間表示にして文字列として返す。
 
@@ -28,7 +28,7 @@ def formatTime(seconds):
             str:
     """
     if seconds < 60:
-        return '{} sec'.format(round(seconds, 2))
+        return '{} sec'.format(round(seconds, numDigits))
     else:
         h, rem = divmod(seconds, 3600)
         m, s = divmod(rem, 60)
@@ -37,9 +37,19 @@ def formatTime(seconds):
 
 class BuildTimer(object):
     def __init__(self):
-        self.starttime = 0
-        self.endtime = 0
+        self.__starttime = 0.0
+        self.__endtime = 0.0
+        self.__num_digits = 2
         self.process_list = []
+
+    def setNumberDigits(self, numDigits):
+        self.__num_digits = numDigits
+
+    def setStartTime(self, startTime):
+        self.__starttime = startTime
+
+    def setEndTime(self, endTime):
+        self.__endtime = endTime
 
     @staticmethod
     def _end_proc(datalist):
@@ -79,26 +89,71 @@ class BuildTimer(object):
         self._end_proc(last_data['subProcesses'])
 
     def start(self):
-        self.starttime = time.time()
+        self.setStartTime(time.time())
         self.process_list = []
 
     def stop(self):
         self.endProcess()
-        self.endtime = time.time()
+        self.setEndTime(time.time())
 
     def elapsedTime(self, isFormating=True):
-        total_time = self.endtime - self.starttime
+        total_time = self.__endtime - self.__starttime
         if not isFormating:
             return total_time
-        return formatTime(total_time)
+        return formatTime(total_time, self.__num_digits)
 
     def elapsedTimeList(self):
-        import copy
         return copy.deepcopy(self.process_list)
+
+    def listProcesses(self):
+        r"""
+            各プロセスでの経過時間を持つ辞書オブジェクトを返す。
+            本クラスでは各プロセスの開始時間と終了時間をデータとして持つが、このメソッドが
+            返す情報は経過時間のみ。
+            戻り値はOrderedDict、経過プロセス順にデータを返す。
+
+            Returns:
+                OrderedDict:
+        """
+        from collections import OrderedDict
+        def get_proc_data(datalist):
+            temp = {}
+            for data in datalist:
+                elapsed = formatTime(
+                    data['endTime'] - data['startTime'], self.__num_digits
+                )
+                key = data['name']
+                l = temp.setdefault(data['startTime'], [])
+                l.append({'name':key, 'elapsed':elapsed, 'subProcesses':None})
+
+                if len(data['subProcesses']) <= 1:
+                    continue
+                l[-1]['subProcesses'] = get_proc_data(data['subProcesses'])
+
+            keys = list(temp.keys())
+            keys.sort()
+            result = OrderedDict()
+            for key in keys:
+                for val in temp[key]:
+                    result[val['name']] = {
+                        'elapsed':val['elapsed'],
+                        'subProcesses':val['subProcesses']
+                    }
+            return result
+
+        return get_proc_data(self.process_list)
 
 
 class BuildInfoManager(core.JsonExporter):
     Version = '1.0.0'
+    DataTags = [
+        'grisVersion',
+        'appVersion',
+        'builtDay',
+        'debugMode',
+        'buildTime',
+        'buildTimeData',
+    ]
 
     def __init__(self):
         super(BuildInfoManager, self).__init__()
@@ -139,28 +194,68 @@ class BuildInfoManager(core.JsonExporter):
         gris_ver = info.Version
         current_time = datetime.datetime.now().strftime("%Y/%m/%d-%H:%M:%S")
         debug_mode = '-' if debugMode is None else debugMode
-        data = {
-            'grisVersion': gris_ver,
-            'appVersion': self.getAppVersion(),
-            'builtDay': current_time,
-            'buildTime': buildTimer.elapsedTime(isFormating=False),
-            'buildTimeData': buildTimer.elapsedTimeList(),
-            'debugMode': debug_mode,
-        }
+        data = {}
+        for tag, val in zip(
+            self.DataTags, (
+                    gris_ver, self.getAppVersion(),
+                    current_time,
+                    debug_mode,
+                    buildTimer.elapsedTime(isFormating=False),
+                    buildTimer.elapsedTimeList(),
+                )
+        ):
+            data[tag] = val
+
         self.__data[lod] = data
         return data
 
+    def listLods(self):
+        return list(self.__data.keys())
+
+    def getLodData(self, lod):
+        data = self.__data.get(lod)
+        if not data:
+            return None
+        data = copy.deepcopy(data)
+        build_time_data = data.pop(self.DataTags[5])
+        build_time  = data.pop(self.DataTags[4])
+        build_timer = BuildTimer()
+        build_timer.setEndTime(build_time)
+        build_timer.process_list = build_time_data
+        data['buildTimer'] = build_timer
+        return data
+
     def makeData(self):
+        r"""
+            書き出し用の上書きメソッド。
+            各lodのビルド情報を持つ辞書を返す。
+
+            Returns:
+                dict:
+        """
         return self.__data
 
     def load(self, file):
+        r"""
+            ビルドログファイルを読み込む。
+            指定のファイルがない場合は-1、指定のファイルが指定の‐フォマットではなかった
+            場合は0、読み込みに成功した場合は1を返す。
+
+            Args:
+                file (str):ビルドログのファイルパス
+
+            Returns:
+                int:
+        """
+        self.__data = {}
         if not os.path.exists(file):
-            self.__data = {}
-            return
+            return -1
         with open(file, 'r') as f:
             data = json.load(f)
             if data.get('dataType') != self.dataType():
-                raise TypeError(
-                    'The given file is not build data : {}'.format(file)
-                )
+                return 0
+                # raise TypeError(
+                #     'The given file is not build data : {}'.format(file)
+                # )
         self.__data = data.get('datalist', {})
+        return 1

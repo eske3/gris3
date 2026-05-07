@@ -3,23 +3,18 @@
 # old_style:google style:google
 r"""
     Factoryのデータを取扱うクラスを提供するモジュール。
-    
+    こちらのモジュールではfactoryModules内のものより、より低レベルなクラスを提供する。
+
     Dates:
         date:2017/07/08 8:23[Eske](eske3g@gmail.com)
         update:2020/10/20 05:56 eske yoshinob[eske3g@gmail.com]
-        
-    Brief:
-        こちらのモジュールではfactoryModules内のものより、より低レベルな
-        
-        クラスを提供する。
-        
+
     License:
         Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
 import os
-
 from . import lib, xmlUtil, verutil, buildInfo
 
 
@@ -501,17 +496,17 @@ class FactoryData(object):
             factoryModules.execConstructor(c, debugMode)
 
 
-def createFactoryDirectory(factotySettings):
+def createFactoryDirectory(factorySettings):
     r"""
-        引数factotySettingsからディレクトリを作成する
+        引数factorySettingsからディレクトリを作成する
         
         Args:
-            factotySettings (factoryModules.FactorySettings):
+            factorySettings (factoryModules.FactorySettings):
     """
-    root = factotySettings.rootPath()
-    directory_list = [factotySettings.assetPrefix()]
+    root = factorySettings.rootPath()
+    directory_list = [factorySettings.assetPrefix()]
 
-    for dirnames in factotySettings.listModulesAsDict().values():
+    for dirnames in factorySettings.listModulesAsDict().values():
         directory_list.extend([x.name() for x in dirnames])
 
     directories = [

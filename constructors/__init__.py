@@ -2263,7 +2263,7 @@ class BasicConstructor(rigScripts.BaseCreator):
         timer.start()
 
         print('# Start to setup.')
-        timer.startProcess('Setup')
+        timer.startProcess('initialize')
         self.loadSettings()
         self.initialize()
         self.printProgress('Done to initialize.', 2)

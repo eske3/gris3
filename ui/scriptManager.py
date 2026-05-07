@@ -396,7 +396,22 @@ class ConstructorOperator(QtWidgets.QTabWidget):
         self.execButtonClicked = exe_btn.clicked
         self.debugButtonClicked = dbg_btn.clicked
 
-        self.addTab(exec_commands, 'Build Operator')
+        log_view = QtWidgets.QGroupBox('Reports')
+        rep_btn = uilib.OButton(uilib.IconPath('uiBtn_view'))
+        rep_btn.setSize(40)
+        self.logButtonClicked = rep_btn.clicked
+        layout = QtWidgets.QFormLayout(log_view)
+        layout.addRow('View Build Log', rep_btn)
+
+        w = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout(w)
+        layout.addWidget(exec_commands)
+        layout.addWidget(log_view)
+        layout.setStretchFactor(exec_commands, 1)
+
+        self.addTab(w, 'Build Operator')
+
+        self.__exec_buttons = [exe_btn, dbg_btn]
         # =====================================================================
         
         # Extra Constructor Utility.===========================================
@@ -415,14 +430,28 @@ class ConstructorOperator(QtWidgets.QTabWidget):
         # =====================================================================
         
         self.currentChanged.connect(self.updateExtraConstUtil)
+        self.updateGui(False)
 
-    def updateGui(self, debugModeList, extraConstructorUtils):
+    def updateGui(self, enabled, debugModeList=None, extraConstructorUtils=None):
+        r"""
+            GUIの更新を行う。
+            enabledがFalseの場合、実行ボタンが非アクティブになる。
+
+            Args:
+                enabled (bool): 実行ボタンをアクティブにするかどうか
+                debugModeList (list): デバッグモードのリスト
+                extraConstructorUtils (list): ユーティリティ一覧
+        """
+        debug_mode_list = debugModeList or []
+        ext_cst_utils = extraConstructorUtils or []
         self.__debug_level.clear()
         uilib.clearLayout(self.__ext_cst_layout)
-        if debugModeList:
-            self.__debug_level.addItems(debugModeList)
-        self.__ext_cst_utils = extraConstructorUtils
+        if debug_mode_list:
+            self.__debug_level.addItems(debug_mode_list)
+        self.__ext_cst_utils = ext_cst_utils
         self.updateExtraConstUtil(self.currentIndex())
+        for btn in self.__exec_buttons:
+            btn.setEnabled(enabled)
 
     def updateExtraConstUtil(self, index):
         if index != 1:
@@ -449,6 +478,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         """
         super(ScriptManager, self).__init__(parent)
         self.customInit()
+        self.__build_log = None
 
         # ビルド実行用のモジュール一覧と、実行用のGUIを作成。==================
         self.__view = factoryUI.ModuleBrowserWidget()
@@ -462,6 +492,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         self.__cst_op = ConstructorOperator()
         self.__cst_op.execButtonClicked.connect(self.executeScript)
         self.__cst_op.debugButtonClicked.connect(self.debugScript)
+        self.__cst_op.logButtonClicked.connect(self.viewBuildLog)
 
         exec_gui = QtWidgets.QSplitter()
         exec_gui.addWidget(self.__view)
@@ -514,6 +545,18 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         """
         return self.__view
 
+    def buildLogViewer(self):
+        r"""
+            ビルド情報のログを表示するビューワを返す。
+
+            Returns:
+                buildInfoViewer.MainGUI:
+        """
+        if not self.__build_log:
+            from . import buildInfoViewer
+            self.__build_log = buildInfoViewer.MainGUI(self)
+        return self.__build_log
+
     def scriptName(self):
         r"""
             スクリプトを格納しているディレクトリ名を返す。
@@ -532,6 +575,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         """
         fs = factoryModules.FactorySettings()
         self.view().setPath(fs.subDirPath(self.scriptName()))
+        self.__cst_op.updateGui(False)
 
     def setup(self):
         r"""
@@ -609,11 +653,13 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         cst = self.listConstructorMethods(index)
         debug_mode_list = []
         ext_cst_utils = []
+        enabled = False
         if cst:
             if getattr(cst, 'listDebugModes'):
                 debug_mode_list = cst.listDebugModes()
             ext_cst_utils = cst.extraConstructorUtilities()
-        self.__cst_op.updateGui(debug_mode_list, ext_cst_utils)
+            enabled = True
+        self.__cst_op.updateGui(enabled, debug_mode_list, ext_cst_utils)
 
     def executeModule(self, moduleName, debugMode):
         r"""
@@ -658,3 +704,9 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         debug_level = self.__cst_op.debugLevel()
         self.execute(debug_level)
 
+    def viewBuildLog(self):
+        fs = factoryModules.FactorySettings()
+        file = fs.buildLogFile()
+        lv = self.buildLogViewer()
+        lv.loadBuildInfo(file)
+        lv.show()

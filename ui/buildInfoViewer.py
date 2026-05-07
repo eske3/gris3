@@ -16,10 +16,97 @@ r"""
 import os
 import re
 
+from PySide2.QtWidgets import QStyle
+
 from ..uilib import factoryUI, extendedUI
 from .. import lib, uilib, buildInfo, style
 from ..gadgets import scriptViewer
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
+
+
+class BuildInfoViewStyle(QtWidgets.QStyledItemDelegate):
+    ExtraColor = QtGui.QColor(*uilib.Color.SubColor)
+
+    def __init__(self, parent=None):
+        super(BuildInfoViewStyle, self).__init__(parent)
+        self.__border_row = -1
+
+    def setBorderRow(self, row):
+        self.__border_row = row
+
+    def sizeHint(self, option, index):
+        depth = index.data(QtCore.Qt.UserRole + 2)
+        if depth and depth > 0:
+            factor = 2.5
+        else:
+            factor = 2
+        height = int(option.fontMetrics.boundingRect('f').height() * factor)
+        return QtCore.QSize(option.rect.width(), height)
+
+    def paint(self, painter, option, index):
+        opt = type(option)(option)
+        self.initStyleOption(opt, index)
+        opt.text = ''
+        opt.icon = QtGui.QIcon()
+        style = (
+            opt.widget.style() if opt.widget else QtWidgets.QApplication.style()
+        )
+        style.drawControl(
+            QtWidgets.QStyle.CE_ItemViewItem, opt, painter, opt.widget
+        )
+        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        pen = painter.pen()
+        default_color = painter.pen().color()
+
+        text = index.data()
+        ext_cst = ''
+        data = index.data(QtCore.Qt.UserRole + 1)
+        font = QtGui.QFont(option.font)
+        font_m = QtGui.QFontMetrics(font)
+        offset = font_m.boundingRect('K').width()
+        rect = QtCore.QRect(option.rect)
+        is_top = not index.parent().isValid()
+
+        # 境界線の描画
+        if self.__border_row == index.row() and is_top:
+            painter.drawLine(
+                option.rect.bottomLeft(), option.rect.bottomRight()
+            )
+
+        alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+        if index.column() == 0:
+            # alignment = QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+            # rect.setRight(rect.right() - offset)
+            # if is_top:
+            #     pen.setColor(self.FontColor)
+            font.setBold(is_top)
+            depth = index.data(QtCore.Qt.UserRole + 2)
+            if depth and depth > 0:
+                buffer = data.split('.')
+                text = buffer[-1]
+                ext_cst = '.'.join(buffer[:-1])
+                if ext_cst:
+                    alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom
+                    rect.setLeft(rect.left() + offset * 2)
+        else:
+            # alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+            rect.setLeft(rect.left() + offset)
+            font.setBold(False)
+        painter.setPen(pen)
+        painter.setFont(font)
+        painter.drawText(rect, alignment, text)
+
+        if ext_cst:
+            pen.setColor(self.ExtraColor)
+            painter.setPen(pen)
+            painter.drawText(
+                option.rect, QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop, ext_cst
+            )
+
+        pen.setColor(default_color)
+        painter.setPen(pen)
+
+
 
 class BuildInfoView(QtWidgets.QTreeView):
     def __init__(self, parent=None):
@@ -28,11 +115,15 @@ class BuildInfoView(QtWidgets.QTreeView):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(BuildInfoView, self).__init__(parent)
+        self.setItemDelegate(BuildInfoViewStyle())
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        self.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         model = QtGui.QStandardItemModel(0, 2)
         model.setHeaderData(0, QtCore.Qt.Horizontal, 'Category')
         model.setHeaderData(1, QtCore.Qt.Horizontal, 'Data')
         self.setModel(model)
+        self.setColumnWidth(0, 300)
 
     def setLogData(self, logData):
         r"""
@@ -41,10 +132,15 @@ class BuildInfoView(QtWidgets.QTreeView):
         """
         model = self.model()
         model.removeRows(0, model.rowCount())
+        delegate : BuildInfoViewStyle = self.itemDelegate()
+        delegate.setBorderRow(-1)
+
         row = 0
         for tag in buildInfo.BuildInfoManager.DataTags[:-2]:
             val = logData.get(tag)
-            tag_item = QtGui.QStandardItem(lib.title(tag))
+            tag_item = QtGui.QStandardItem()
+            tag_item.setText(lib.title(tag))
+            tag_item.setData(tag)
             val_item = QtGui.QStandardItem(val)
             model.setItem(row, 0, tag_item)
             model.setItem(row, 1, val_item)
@@ -54,27 +150,39 @@ class BuildInfoView(QtWidgets.QTreeView):
         if not build_timer:
             return
         tag_item = QtGui.QStandardItem('Build Time')
+        tag_item.setData('buildTime')
         val_item = QtGui.QStandardItem(build_timer.elapsedTime())
         model.setItem(row, 0, tag_item)
         model.setItem(row, 1, val_item)
+        delegate.setBorderRow(row)
         row += 1
 
         process_item = QtGui.QStandardItem('Build Process Time')
+        process_item.setData('buildProcessTime')
         model.setItem(row, 0, process_item)
 
-        def add_process_items(parent_item, process):
+        def add_process_items(parent_item, process, depth):
             row = 0
             for key, proc_data in process.items():
                 label_item = QtGui.QStandardItem(lib.title(key))
+                label_item.setData(key)
                 parent_item.setChild(row, 0, label_item)
                 sub_proc = proc_data.get('subProcesses')
                 if not sub_proc:
-                    val_item = QtGui.QStandardItem(proc_data['elapsed'])
-                    parent_item.setChild(row, 1, val_item)
+                    label_item.setData(depth, QtCore.Qt.UserRole + 2)
+                    c_val_item = QtGui.QStandardItem(proc_data['elapsed'])
+                    c_val_item.setData(proc_data['elapsed'])
+                    c_val_item.setData(depth, QtCore.Qt.UserRole + 2)
+                    parent_item.setChild(row, 1, c_val_item)
                 else:
-                    add_process_items(label_item, sub_proc)
+                    add_process_items(label_item, sub_proc, depth+1)
                 row += 1
-        add_process_items(process_item, build_timer.listProcesses())
+        add_process_items(process_item, build_timer.listProcesses(), 0)
+        self.expandAll()
+
+    def drawBranches(self, painter, rect, index):
+        if index.model().hasChildren(index):
+            super(BuildInfoView, self).drawBranches(painter, rect, index)
 
 
 class BuildInfoViewer(QtWidgets.QTabWidget):

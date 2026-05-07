@@ -396,24 +396,23 @@ class ConstructorOperator(QtWidgets.QTabWidget):
         self.execButtonClicked = exe_btn.clicked
         self.debugButtonClicked = dbg_btn.clicked
 
-        log_view = QtWidgets.QGroupBox('Reports')
-        rep_btn = uilib.OButton(uilib.IconPath('uiBtn_view'))
-        rep_btn.setSize(40)
-        self.logButtonClicked = rep_btn.clicked
-        layout = QtWidgets.QFormLayout(log_view)
-        layout.addRow('View Build Log', rep_btn)
-
-        w = QtWidgets.QWidget()
-        layout = QtWidgets.QHBoxLayout(w)
-        layout.addWidget(exec_commands)
-        layout.addWidget(log_view)
-        layout.setStretchFactor(exec_commands, 1)
-
-        self.addTab(w, 'Build Operator')
+        self.addTab(exec_commands, 'Build Operator')
 
         self.__exec_buttons = [exe_btn, dbg_btn]
         # =====================================================================
-        
+
+        # Log Viewer.==========================================================
+        reports = QtWidgets.QGroupBox('Reports')
+        rep_btn = uilib.OButton(uilib.IconPath('uiBtn_view'))
+        rep_btn.setSize(40)
+        self.logButtonClicked = rep_btn.clicked
+        layout = QtWidgets.QFormLayout(reports)
+        layout.addRow('View Build Log', rep_btn)
+
+        self.addTab(reports, 'Reports')
+        # =====================================================================
+
+
         # Extra Constructor Utility.===========================================
         ext_cst_util = QtWidgets.QScrollArea()
         ext_cst_util.setWidgetResizable(True)
@@ -708,5 +707,6 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         fs = factoryModules.FactorySettings()
         file = fs.buildLogFile()
         lv = self.buildLogViewer()
+        lv.setModulePrefix(self.scriptName())
         lv.loadBuildInfo(file)
         lv.show()

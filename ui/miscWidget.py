@@ -16,6 +16,7 @@ r"""
 from gris3 import uilib, factoryModules
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
+
 class UnitTester(QtWidgets.QGroupBox):
     r"""
         ユニットのテスト実行を行うための機能を提供するクラス。
@@ -23,7 +24,7 @@ class UnitTester(QtWidgets.QGroupBox):
     def __init__(self, parent=None):
         r"""
             Args:
-                parent (QtWidgets.QWidget):
+                parent (QtWidgets.QWidget):親ウィジェット
         """
         super(UnitTester, self).__init__('Module Tester', parent)
 
@@ -52,6 +53,7 @@ class UnitTester(QtWidgets.QGroupBox):
         with core.Do:
             core.createRigForAllUnit()
 
+
 class MiscWidget(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
     r"""
         メインGUI。
@@ -59,7 +61,7 @@ class MiscWidget(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
     def __init__(self, parent=None):
         r"""
             Args:
-                parent (any):(QtWidgets.QWidget) : 親ウィジェット
+                parent (QtWidgets.QWidget):親ウィジェット
         """
         super(MiscWidget, self).__init__(parent)
         self.customInit()

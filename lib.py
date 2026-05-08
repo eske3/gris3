@@ -110,7 +110,7 @@ class ListDict(dict):
                 'extend method requeires a type "list" or "tuple".'
             )
         if key in self:
-            self[key].extend(value)
+            self[key].extend(values)
         else:
             super(ListDict, self).__setitem__(key, list(values))
 

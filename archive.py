@@ -126,15 +126,9 @@ def writeToZip(dirname, zip, filter):
 def archiveProject():
     r"""
         プロジェクトデータをzipアーカイブする。
-        
-        Returns:
-            any:
-            
-        Brief:
-            どのプロジェクトをアーカイブするかは
-            
+        どのプロジェクトをアーカイブするかは
             factoryModules:.FactorySettings
-            による
+        による
     """
     def currentFilter(rootpath, namelist):
         r"""
@@ -172,7 +166,7 @@ def archiveProject():
         # =====================================================================
         return filelist
 
-    from gris3 import factoryModules
+    from . import factoryModules
     st = factoryModules.FactorySettings()
     if not st.settingTest():
         raise RuntimeError(

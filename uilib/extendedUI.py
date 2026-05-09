@@ -103,11 +103,6 @@ class FilteredView(QtWidgets.QWidget):
             Args:
                 text (str):フィルタ文字列
         """
-        # reg_exp = QtCore.QRegExp(
-            # text, QtCore.Qt.CaseInsensitive, QtCore.QRegExp.Wildcard
-        # )
-        # proxy = self.view().model()
-        # proxy.setFilterRegExp(reg_exp)
         reg_exp = QtCore.QRegularExpression(text)
         reg_exp.setPatternOptions(
             QtCore.QRegularExpression.CaseInsensitiveOption
@@ -139,7 +134,6 @@ class FilteredView(QtWidgets.QWidget):
         if key == QtCore.Qt.Key_Tab:
             self.__field.show()
             self.__field.setFocus(QtCore.Qt.ShortcutFocusReason)
-            # self.__field.keyPressEvent(event)
             return True
         return False
 

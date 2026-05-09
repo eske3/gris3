@@ -14,8 +14,7 @@ r"""
         Proprietary and confidential
 """
 import time
-from gris3.uilib import mayaUIlib
-from gris3 import lib, uilib, node
+from .. import uilib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -32,7 +31,7 @@ MODELING_TOOL = (
         (36, 80, 180),
         uilib.IconPath('unit')
 )
-SELETION_TOOL = (
+SELECTION_TOOL = (
         'gris3.gadgets.selectionSupporter.SelectionUtilWidget',
         (36, 80, 180),
         uilib.IconPath('uiBtn_select')
@@ -51,7 +50,7 @@ POSE_TOOL = (
 STANDALONE_TOOLBAR = [
     CLEANUP_TOOL,
     None,
-    SELETION_TOOL,
+    SELECTION_TOOL,
     MODELING_TOOL,
     None,
     (
@@ -80,12 +79,14 @@ STANDALONE_TOOLBAR = [
         'gris3.gadgets.gadgetsLauncher.Launcher',
         (180, 96, 15),
         uilib.IconPath('uiBtn_view'),
+        False,
+        'applicationLaunched'
     ),
 ]
 
 FACTORY_TOOLBAR = [
     CLEANUP_TOOL,
-    SELETION_TOOL,
+    SELECTION_TOOL,
     MODELING_TOOL,
     None,
     SIM_TOOL,
@@ -226,13 +227,14 @@ class ToolbarView(QtWidgets.QWidget):
             Args:
                 event (QtCore.QEvent):
         """
+        self.__lock = False
         if self.__pre_parent_pos:
             p = self.parent()
             if p.mapToGlobal(p.pos()) != self.__pre_parent_pos:
                 self.hide()
                 return
         parent = self.parent()
-        while(parent):
+        while parent:
             if not parent.isVisible():
                 self.hide()
                 return
@@ -255,6 +257,7 @@ class ToolbarView(QtWidgets.QWidget):
             self.__lock = True
         if self.__lock:
             return
+
         self.hide()
 
     def paintEvent(self, event):
@@ -381,7 +384,10 @@ class Toolbar(QtWidgets.QWidget):
             self.layout().count() - (1 + self.__widget_count), separator
         )
 
-    def addButton(self, widgetType, color=None, icon=None, withStretch=False):
+    def addButton(
+            self, widgetType, color=None, icon=None, withStretch=False,
+            closingSignal=None
+        ):
         r"""
             ウィジェットと呼び出すボタンを追加する。
             引き数widgetTypeにはビューに追加したウィジェットを表す文字列を
@@ -394,6 +400,7 @@ class Toolbar(QtWidgets.QWidget):
                 color (tuple):R,G,Bの３つを持つタプル
                 icon (str):ボタンに表示するアイコンパス。
                 withStretch (bool):
+                closingSignal (bool):ビューを非表示にするためのシグナル
         """
         module_name, class_name = widgetType.rsplit('.', 1)
         import importlib
@@ -412,8 +419,11 @@ class Toolbar(QtWidgets.QWidget):
             self.layout().count() - (1 + self.__widget_count), tb
         )
         self.__btnlist.append(tb)
-        
-        self.__attached_view.addWidget(type_obj(), withStretch)
+        widget = type_obj()
+        self.__attached_view.addWidget(widget, withStretch)
+        if closingSignal and hasattr(widget, closingSignal):
+            signal = getattr(widget, closingSignal)
+            signal.connect(self.__attached_view.hide)
 
     def addPreset(self, preset):
         r"""
@@ -426,8 +436,10 @@ class Toolbar(QtWidgets.QWidget):
             if not isinstance(data, (tuple, list)):
                 self.addSeparator()
                 continue
-            s = data[3] if len(data) == 4 else False
-            self.addButton(data[0], data[1], data[2], s)
+            num_data = len(data)
+            s = data[3] if num_data >= 4 else False
+            signal = data[4] if num_data >=5 else None
+            self.addButton(data[0], data[1], data[2], s, signal)
 
     def showView(self, widget):
         r"""
@@ -499,7 +511,7 @@ def showWindow():
         Returns:
             MainGUI:
     """
-    from gris3.uilib import mayaUIlib
+    from ..uilib import mayaUIlib
     widget = MainGUI(mayaUIlib.MainWindow)
     m = uilib.hires(2)
     widget.layout().setContentsMargins(m, m, m, m)

@@ -15,16 +15,17 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '3.1.2.0'
+Version = '3.1.2.1'
 LastModified = 20260510
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
-('3.1.2.0',
+('3.1.2.1',
 (
     (
         'toolbarと、toolbarのappLaucherの挙動を調整。',
+        'tools/facialMemoryManager.FacialMemoryManagerRootにデータ更新用のメソッドを追加。',
     ),
 )
 ),

@@ -267,6 +267,7 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
     def updateExpressionFromDataList(self, expressionlist, status=1):
         r"""
             引数expressionlistで指定された表情名のリストで更新を行う。
+            （表情名の更新のみ、表情に対応するデータの更新は行わない）
             expressionlist内に既存の表情があった場合、その値は保持する。
             既存の表情リストとexpressionlistが順番も含めて全く同じだった場合は
             何もせずに0を返す。
@@ -409,6 +410,67 @@ class FacialMemoryManagerRoot(grisNode.AbstractTopGroup):
         if isSettingRange:
             cmds.playbackOptions(min=startFrame, max=frame-1)
 
+    def updateDataList(self, datalist, status=2):
+        r"""
+            引数datalistで指定した辞書データを元に、既存の表情データを更新する。
+            updateExpressionFromDataListメソッドと違い、こちらは表情名と対応データも
+            更新を行う。
+            datalistの表情がすでにある場合は既存の内容を上書きする。
+            ない場合は何も処理をしない。
+            datalistになく、既存の表情データはそのままにする。
+
+            datalistは
+            　キー：表情名
+            　値：表情に対応するblendShapeのアトリビュート名と値の辞書
+            を持つ。
+
+            Args:
+                datalist (dict):
+                status (int):登録状態を指定する
+
+            Returns:
+                list: 更新された表情名のリスト
+        """
+        orig_datalist = self.listExpressions()
+        result = []
+        for expression, data in datalist.items():
+            exp: DataTransform = orig_datalist.get(expression)
+            if not exp:
+                continue
+            exp.setValues(data)
+            exp.setStatus(status)
+            result.append(exp)
+        return result
+
+    def addDataList(self, datalist, status=2):
+        r"""
+            引数datalistで指定した辞書データを元に、既存の表情データに追加する。
+            datalistの表情が既存の表情データにない場合のみ追加を行う。
+
+            datalistは
+            　キー：表情名
+            　値：表情に対応するblendShapeのアトリビュート名と値の辞書
+            を持つ。
+
+            Args:
+                datalist (dict):
+                status (int):登録状態を指定する
+
+            Returns:
+                list: された表情名のリスト
+        """
+        orig_datalist = self.listExpressions()
+        result = []
+        additional_datalist = OrderedDict()
+        for expression, data in datalist.items():
+            exp: DataTransform = orig_datalist.get(expression)
+            if exp:
+                continue
+            additional_datalist[expression] = data
+            result.append(exp)
+        if additional_datalist:
+            self.setExpressionFromDataList(additional_datalist, status)
+        return result
 
 class DataTransform(node.Transform, grisNode.AbstractGrisNode):
     r"""

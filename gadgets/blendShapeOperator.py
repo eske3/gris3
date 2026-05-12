@@ -11,13 +11,11 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from .. import lib, uilib, node
+from .. import uilib, node
 from ..tools import blendShapeUtil
 from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
-from importlib import reload
-reload(blendShapeUtil)
 
 TargetListTemplate = '''eye_wink_facialGrp_L
 eye_wink_facialGrp_R

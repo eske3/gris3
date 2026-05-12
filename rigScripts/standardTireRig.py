@@ -5,6 +5,7 @@ func = rigScripts.func
 cmds = func.cmds
 
 Category = 'Vehicle'
+IgnoreLoad = False
 
 class JointCreator(rigScripts.JointCreator):
     r"""

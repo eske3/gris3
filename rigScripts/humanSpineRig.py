@@ -1,16 +1,20 @@
-# -*- coding:utf-8 -*-
-r'''
-    @file     unitySpineRig.py
-    @brief    UNITY用の背骨を作成するための機能を提供するモジュール。
-    @class    JointCreator : 背骨のジョイント作成機能を提供するクラス。
-    @class    RigCreator : ここに説明文を記入
-    @date        2017/02/01 1:03[Eske](eske3g@gmail.com)
-    @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# old_style:google style:google
+r"""
+    背骨を作成するための機能を提供するモジュール
+
+    Dates:
+        date:2017/02/01 1:03[Eske](eske3g@gmail.com)
+        update:2017/02/01 1:04 eske yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
+
+
 from .. import rigScripts, node
 func = rigScripts.func
 cmds = func.cmds
@@ -18,18 +22,18 @@ cmds = func.cmds
 Category = 'Basic Human'
 BaseName = 'spine'
 
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMember('hip', asRoot=True)
+        self.addMember('spineEnd')
+
+
 class JointCreator(rigScripts.JointCreator):
-    r'''
-        @brief       背骨のジョイント作成機能を提供するクラス。
-        @inheritance rigScripts.JointCreator
-        @date        2017/02/01 1:03[Eske](eske3g@gmail.com)
-        @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        背骨のジョイント作成機能を提供するクラス。
+    """
     def process(self):
-        r'''
-            @brief  ジョイント作成プロセスとしてコールされる。
-            @return None
-        '''
         from gris3.tools import jointEditor
         name = self.basenameObject()
         parent = self.parent()
@@ -73,19 +77,11 @@ class JointCreator(rigScripts.JointCreator):
         spineC.select()
 
 
-
 class RigCreator(rigScripts.RigCreator):
-    r'''
-        @brief       ここに説明文を記入
-        @inheritance rigScripts.RigCreator
-        @date        2017/02/01 1:03[Eske](eske3g@gmail.com)
-        @update      2017/02/01 1:04[Eske](eske3g@gmail.com)
-    '''
+    r"""
+        背骨のリグ作成機能を提供するクラス。
+    """
     def process(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
         unit = self.unit()
         unitname = self.unitName()
         basename = unitname.name()

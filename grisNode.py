@@ -15,6 +15,10 @@ r"""
 """
 from . import node, info, system
 
+
+class GrisRootError(Exception):
+    pass
+
 class AbstractGrisNode(object):
     r"""
         GrisNodeの基底クラス。必ずnode.AbstractNodeと合わせて
@@ -606,7 +610,7 @@ class Unit(AbstractTopGroup):
             アトリビュートが作成される。
             
             Args:
-                label (str):[]作成されるアトリビュート名
+                label (str):作成されるアトリビュート名
                 nodes (str or list):メンバーとなるノードの名前のリスト
         """
         is_list = isinstance(nodes, (list, tuple))
@@ -621,6 +625,24 @@ class Unit(AbstractTopGroup):
         else:
             nodes+'.message' >> attr
 
+    def setMember(self, attr, target):
+        r"""
+            引数attrで指定されたアトリビュートにtargetを紐付ける。
+            アトリビュートが存在しない場合は何もせずにFalseを返す。
+
+            Args:
+                attr (str):
+                target (str):
+
+            Returns:
+                bool: 紐づけが行えた場合はTrue、失敗の場合はFalse
+        """
+        if not self.hasAttr(attr):
+            return False
+        attr = self.attr(attr)
+        '{}.message'.format(target) >> attr
+        return True
+
     def getMember(self, keyword):
         r"""
             引数keywordで指定されたアトリビュートに紐付けされているノードを返す。
@@ -629,7 +651,7 @@ class Unit(AbstractTopGroup):
                 keyword (str):
         """
         if not self.hasAttr(keyword):
-            return
+            return []
         attr = self.attr(keyword)
         connections = node.cmds.listConnections(self/keyword, s=True, d=False)
         if not connections:
@@ -1084,9 +1106,9 @@ def getGrisRoot():
     """
     roots = listGrisRoots()
     if not roots:
-        raise RuntimeError('No gris root is not in the current scene.')
+        raise GrisRootError('No gris root is not in the current scene.')
     if len(roots) > 1:
-        raise RuntimeError('More than one gris root are in the scene.')
+        raise GrisRootError('More than one gris root are in the scene.')
     return roots[0]
 # /////////////////////////////////////////////////////////////////////////////
 #                                                                            //

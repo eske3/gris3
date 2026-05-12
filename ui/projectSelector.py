@@ -14,7 +14,8 @@ r"""
         Proprietary and confidential
 """
 import os
-from gris3 import uilib, factory
+from .. import uilib, factory
+from ..uilib import extendedUI
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 class FileHistoryView(QtWidgets.QTreeView):
@@ -140,7 +141,7 @@ class ProjectSelector(uilib.BlackoutPopup):
         label_layout.addWidget(close_btn)
         # =====================================================================
         
-        self.__project_path = QtWidgets.QLineEdit()
+        self.__project_path = extendedUI.DirectorySelector('Project Path')
         apply_btn = uilib.OButton()
         apply_btn.setIcon(uilib.IconPath('uiBtn_setProject'))
         apply_btn.setToolTip('Set project')
@@ -153,14 +154,13 @@ class ProjectSelector(uilib.BlackoutPopup):
         self.__limit =  uilib.Spiner()
         self.__limit.setRange(1, 99)
         self.__view = FileHistoryView()
-        self.__view.itemSelected.connect(self.__project_path.setText)
+        self.__view.itemSelected.connect(self.__project_path.setPath)
         self.__view.doubleClicked.connect(self.setProject)
         # =====================================================================
         
         layout = QtWidgets.QGridLayout(self.centerWidget())
         layout.addLayout(label_layout, 0, 0, 1, 4)
-        layout.addWidget(QtWidgets.QLabel('Path'), 1, 0, 1, 1)
-        layout.addWidget(self.__project_path, 1, 1, 1, 2)
+        layout.addWidget(self.__project_path, 1, 0, 1, 3)
         layout.addWidget(apply_btn, 1, 3, 2, 1)
         layout.addWidget(history_label, 2, 0, 1, 1)
         layout.addWidget(limit_label, 2, 1, 1, 1)
@@ -194,7 +194,7 @@ class ProjectSelector(uilib.BlackoutPopup):
         r"""
             あたえられたパスをプロジェクトとしてセットする
         """
-        project_path = self.__project_path.text()
+        project_path = self.__project_path.path()
         if not project_path:
             self.error('No directory is not specified.')
             return
@@ -226,5 +226,5 @@ class ProjectSelector(uilib.BlackoutPopup):
                 projectPath (str):
         """
         self.loadSettings()
-        self.__project_path.setText(projectPath)
+        self.__project_path.setPath(projectPath)
         super(ProjectSelector, self).showDialog()

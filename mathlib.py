@@ -30,6 +30,23 @@ def isnum(n):
     return isinstance(n, (int, float, verutil.Long, complex))
 
 
+
+def getNumberOfDecimals(value):
+    r"""
+        与えられた値が浮動小数点の場合、小数点以下の桁数を返す。
+        
+        Args:
+            value (float):
+
+        Returns:
+            int: 小数付きではない場合は0を返す。
+    """
+    v = str(value)
+    if not '.' in v:
+        return 0
+    return len(v.split('.')[-1])
+
+
 # /////////////////////////////////////////////////////////////////////////////
 # Vector class.                                                              //
 # /////////////////////////////////////////////////////////////////////////////

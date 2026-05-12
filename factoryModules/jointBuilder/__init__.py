@@ -40,7 +40,7 @@ class JointManager(factoryModules.AbstractDepartmentGUI):
         btn.setBgColor(*tab.ToolColor)
 
         btn = tab.addTab(
-            unitCreator.Creator(), uilib.IconPath('unit.png'), 'Unit'
+            unitCreator.Manager(), uilib.IconPath('unit.png'), 'Unit'
         )
         btn.setBgColor(48, 129, 152)
 

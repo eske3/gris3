@@ -550,8 +550,9 @@ class GraphicsItemView(QtWidgets.QGraphicsView):
 
         self.setCacheMode(QtWidgets.QGraphicsView.CacheBackground)
         self.setRenderHints(
-            QtGui.QPainter.Antialiasing | QtGui.QPainter.SmoothPixmapTransform |
-            QtGui.QPainter.TextAntialiasing
+            QtGui.QPainter.RenderHint.Antialiasing |
+            QtGui.QPainter.RenderHint.SmoothPixmapTransform |
+            QtGui.QPainter.RenderHint.TextAntialiasing
         )
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)

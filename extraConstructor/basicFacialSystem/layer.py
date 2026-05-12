@@ -17,6 +17,13 @@ from ... import node, func
 cmds = node.cmds
 
 
+ColorData = {
+    'L': (0.044, 0.011, 0.88),
+    'R': (0.973, 0.02, 0.115),
+    'C': (0.7, 0.873, 0.207),
+}
+
+
 class LayerOperator(object):
     r"""
         フェイシャルの構造をレイヤー化するための機能を提供するためのクラス。
@@ -145,6 +152,12 @@ class LayerOperator(object):
         r"""
             レイヤー用のフェイシャルジオメトリの設定が完了した後に呼び出される。
             上書き専用メソッド。
+        """
+        pass
+
+    def postPreSetup(self):
+        r"""
+            ConstructorのpreSetup完了後に呼ばれる上書き専用メソッド。
         """
         pass
 
@@ -311,14 +324,28 @@ class LayerManager(object):
             r.extend(copyNode(child, prefix, r[1]))
         return r
 
-    def setup(self, facialGrp, rootGroup, cageGroup, ctrlParent, animSet):
+    def setup(
+        self,
+        facialGrp, rootGroup, cageGroup, ctrlParent, animSet,
+        layerInitializer=None
+        
+    ):
         r"""
+            facialGrpに対し、登録されたlayerOperator毎に複製を作成する。
+            また、その際各layerOperatorのインスタンスを作成し後の処理のために
+            保持する処理も行う。
+            
+            引数layerInitializerは関数オブジェクトを受け取る。
+            この関数は各layerOperatorインスタン時に呼ばれ、layerOperatorの
+            インスタンスに対して初期化処理を加えたい場合に用いる。
+
             Args:
                 facialGrp (node.Transform):コピー元となる顔メッシュのグループ
                 rootGroup (node.Transform):フェイシャルをまとめるためのグループ
                 cageGroup (node.Transform):ケージを格納するためのグループ
-                ctrlParent (any):
+                ctrlParent (node.Transform):コントローラの親となるノード
                 animSet (grisNode.AnimSet): コントローラを登録するanimSet
+                layerInitializer (function): layerOperatorインスタンス編集用関数
         """
         copied_list = []
         self.__process_objects = []
@@ -337,6 +364,8 @@ class LayerManager(object):
                 lo_obj = l_operator(
                     self.__constructor, self.__extCst, animSet, rootGroup
                 )
+                if layerInitializer:
+                    layerInitializer(lo_obj)
                 lo_obj.setCtrlParent(ctrlParent)
                 self.__process_objects.append(lo_obj)
                 pfx = lo_obj.prefix()
@@ -361,6 +390,13 @@ class LayerManager(object):
         """
         for lo_obj in self.processObjects():
             lo_obj.preSetup()
+
+    def postPreSetupLayers(self):
+        r"""
+            登録済みレイヤーのpostPreSetupを呼び出す。
+        """
+        for lo_obj in self.processObjects():
+            lo_obj.postPreSetup()
 
     def setupLayers(self):
         r"""

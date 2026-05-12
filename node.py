@@ -21,6 +21,7 @@ import re
 from maya import cmds
 from maya import OpenMaya, OpenMayaAnim
 from maya.api import OpenMaya as OpenMaya2
+from maya.api import OpenMayaAnim as OpenMayaAnim2
 sutil = OpenMaya.MScriptUtil()
 #from gris3.mayaCmds import parent as c_parent
 from . import mayaCmds, colorUtil, mathlib, verutil
@@ -2316,6 +2317,30 @@ class SkinCluster(AbstractNode):
         if isRefresh:
             cmds.dgdirty(a=True)
 
+    def listWeightValues(self, shape):
+        r"""
+            このスキンクラスターが影響させるshapeのウェイトリストをリストで返す。
+            戻り値はコンポーネントのインデックス順に、各コンポーネントのウェイトのリストを持つリスト。
+            API仕様のためlistWeightsより高速。
+            
+            Args:
+                shape (str):このスキンクラスターが影響しているシェイプ名
+
+            Returns:
+                list:
+        """
+        sel = OpenMaya2.MSelectionList()
+        sel.add(self())
+        sel.add(shape)
+        mfn_sc = OpenMayaAnim2.MFnSkinCluster(sel.getDependNode(0))
+        shape_obj, comp_obj = sel.getComponent(1)
+        weights = mfn_sc.getWeights(shape_obj, comp_obj)
+        wlist = list(weights[0])
+        num = weights[1]
+        weightlist = [wlist[x:x+num] for x in range(0, len(wlist), num)]
+        return weightlist
+
+
     def listWeights(self):
         r"""
             このスキンクラスターのウェイトリストを辞書で返す。
@@ -3715,7 +3740,7 @@ class ImplicitObject(Shape):
             Args:
                 size (float or list):
         """
-        if not isinstance(size, (list, tupe)):
+        if not isinstance(size, (list, tuple)):
             size =  [size, size, size]
         self('size', size)
 

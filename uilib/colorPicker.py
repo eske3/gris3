@@ -4,15 +4,15 @@
 r"""
     Dates:
         date:2020/06/12 13:49 eske yoshinob[eske3g@gmail.com]
-        update:2020/06/13 07:50 eske yoshinob[eske3g@gmail.com]
+        update:2025/11/08 17:49 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2020 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import uilib, style
-from gris3.uilib import mayaUIlib
+from .. import uilib, style
+from . import mayaUIlib
 MainWindow = mayaUIlib.MainWindow
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
@@ -108,7 +108,7 @@ class ColorSlider(QtWidgets.QWidget):
         rect = self.rect()
         # ベース部分の描画。===================================================
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         pen = QtGui.QPen()
         pen.setColor(QtGui.QColor(0, 0, 0))
         painter.setPen(pen)
@@ -118,7 +118,7 @@ class ColorSlider(QtWidgets.QWidget):
         # =====================================================================
 
         # カーソルの描画。=====================================================
-        painter.setRenderHints(QtGui.QPainter.Antialiasing, 0)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing, 0)
         painter.setBrush(QtCore.Qt.NoBrush)
         pos = rect.width() * self.value()
         rect.setWidth(style.scaled(5))
@@ -322,6 +322,7 @@ class HsvSliderGroup(ColorSliderGroup):
         self.updateSliderGradient()
         super(HsvSliderGroup, self).emitValues(*args)
 
+
 class RgbSliderGroup(HsvSliderGroup):
     r"""
         RGB用カラースライダのGUIを提供するクラス。
@@ -479,7 +480,7 @@ class ColorPalette(QtWidgets.QWidget):
                 event (QtCore.QEvent):
         """
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setPen(QtGui.QPen())
 
         rect = self.rect()
@@ -713,6 +714,7 @@ class ColorPicker(uilib.SingletonWidget):
         r"""
             ガンマ値を設定する。
             設定を変更するとGUIにも反映される。
+            
             Args:
                 gamma (float):
         """
@@ -722,6 +724,7 @@ class ColorPicker(uilib.SingletonWidget):
     def gamma(self):
         r"""
             設定されているガンマ値を返す。
+            
             Returns:
                 float:
         """
@@ -834,8 +837,30 @@ class ColorPickerWidget(ColorPalette):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(ColorPickerWidget, self).__init__(parent)
+        self.__color_as_float = False
         self.clicked.connect(self.showColorPicker)
         self.setGamma(2.2)
+
+    def setColorAsFloat(self, state):
+        r"""
+            ColorPickerを選択した際に送出されるcolorIsSetシグナルに渡される
+            引数をfloatにするかどうかを設定する。
+            デフォルトは0～255のint。
+
+            Args:
+                state (bool):
+        """
+        self.__color_as_float = bool(state)
+
+    def isColorAsFloat(self):
+        r"""
+            ColorPickerを選択した際に送出されるcolorIsSetシグナルに渡される
+            引数がfloatかどうかを返す。
+
+            Returns:
+                bool:
+        """
+        return self.__color_as_float
 
     def showColorPicker(self):
         r"""
@@ -844,10 +869,17 @@ class ColorPickerWidget(ColorPalette):
         cp = ColorPicker(MainWindow)
         cp.setGamma(self.gamma())
         result = cp.exec_(self.colorRgb())
-        if result:
-            self.setColorRgb(cp.color())
-            self.setGamma(cp.gamma())
-            self.colorIsSet.emit(*[x*255 for x in cp.color()])
+        if not result:
+            return False
+        self.setColorRgb(cp.color())
+        self.setGamma(cp.gamma())
+        if self.isColorAsFloat():
+            data = [x for x in cp.color()]
+        else:
+            data = [x*255 for x in cp.color()]
+        self.colorIsSet.emit(*data)
+        return True
+
 
 def showPicker():
     cp = ColorPicker(MainWindow)

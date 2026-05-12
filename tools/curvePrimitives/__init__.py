@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/02/19 9:25[Eske](eske3g@gmail.com)
-        update:2024/11/12 12:31 Eske Yoshinob[eske3g@gmail.com]
+        update:2025/11/08 19:14 Eske Yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -70,7 +70,7 @@ else:
             )
 
 
-def addCurveWidthCtrlAttr(*curves):
+def addCurveWidthCtrlAttr(curves, applyValueFromOrigin=True):
     r"""
         任意のnurbsCurveにラインの太さを制御するカスタムアトリビュートを追加し、
         lineWidthにコネクトする。
@@ -80,32 +80,49 @@ def addCurveWidthCtrlAttr(*curves):
         
         戻り値はカスタムアトリービュートの接続処理を行わなかったnurbsCurveの
         リスト。
-
-        Args:
-            *curves (str):操作対象カーブのリスト
         
+        Args:
+            curves (list):
+            applyValueFromOrigin (bool):
+            
         Returns:
             list:
     """
-    not_processed = []
+    processed = []
     for curve in curves:
         for crv in node.getShapes(curve, 'nurbsCurve'):
+            processed.append(crv)
             if crv.attr('lineWidth').source():
-                not_processed.append(crv)
                 continue
             if not crv.hasAttr(CurveWidthAttr):
                 crv.addFloatAttr(
                     CurveWidthAttr, min=None, max=None, default=-1, k=False
                 )
-            crv(CurveWidthAttr, crv('lineWidth'))
+            if applyValueFromOrigin:
+                crv(CurveWidthAttr, crv('lineWidth'))
             crv.attr(CurveWidthAttr) >> crv/'lineWidth'
-    return not_processed
+    return processed
 
 
-def addWireColorCtrlAttr(*curves):
-    not_processed = []
+def addWireColorCtrlAttr(curves, applyValueFromOrigin=True):
+    r"""
+        ワイヤーカラーを制御するアトリビュートを追加する。
+        すでにwireColorRGBに何かが接続されている場合は無視する。
+        
+        戻り値はカスタムアトリービュートの接続処理を行なったnurbsCurveの
+        シェイプのリスト。
+        
+        Args:
+            curves (list):
+            applyValueFromOrigin (bool):
+            
+        Returns:
+            list:
+    """
+    processed = []
     for curve in curves:
         for crv in node.getShapes(curve, 'nurbsCurve'):
+            processed.append(crv)
             if not crv.hasAttr(CurveColorAttr):
                 cmds.addAttr(
                     crv, ln=CurveColorAttr, at='float3', usedAsColor=True
@@ -123,9 +140,58 @@ def addWireColorCtrlAttr(*curves):
                         break
                 if not attr:
                     continue
-            crv(CurveColorAttr, crv('wireColorRGB')[0])
+            if applyValueFromOrigin:
+                crv(CurveColorAttr, crv('wireColorRGB')[0])
             crv('useObjectColor', 2)
             ~crv.attr(CurveColorAttr) >> ~crv.attr('wireColorRGB')
+    return processed
+
+
+def fixCurveAppearance(curves):
+    r"""
+        gris仕様のライン幅とラインカラーのコネクションを再接続する。
+
+        Args:
+            curves (list):
+    """
+    apply_lines = []
+    apply_colors = []
+    for curve in curves:
+        for crv in node.getShapes(curve, 'nurbsCurve'):
+            if crv.hasAttr(CurveWidthAttr):
+                apply_lines.append(crv)
+            if crv.hasAttr(CurveColorAttr):
+                apply_colors.append(crv)
+    addCurveWidthCtrlAttr(apply_lines, applyValueFromOrigin=False)
+    addWireColorCtrlAttr(apply_colors, applyValueFromOrigin=False)
+
+
+def applyLineWidth(width, curves=None):
+    r"""
+        カーブにgris仕様のライン幅を適用する。
+
+        Args:
+            width (float): ラインの幅
+            curves (list):
+    """
+    curves = node.selected(curves)
+    curves = addCurveWidthCtrlAttr(curves, False)
+    for curve in curves:
+        curve(CurveWidthAttr, width)
+
+
+def applyWireColor(color, curves=None):
+    r"""
+        カーブにgris仕様のラインカラーを適用する。
+
+        Args:
+            color (list): r, g, bを表すlistまたはtuple
+            curves (list):
+    """
+    curves = node.selected(curves)
+    curves = addWireColorCtrlAttr(curves, False)
+    for curve in curves:
+        curve(CurveColorAttr, color)
 
 
 def createCurvePrimitive(curveType, parentNode=None, **keywords):
@@ -167,7 +233,7 @@ def createCurvePrimitive(curveType, parentNode=None, **keywords):
     return Primitive(node)
 
 
-def mirrorCurve(curveList=None, axis='x', world=True):
+def mirrorCurve(curveList=None, axis='x', world=True, fixCrvAppearance=True):
     r"""
         curveListのカーブをミラーリングする。
         
@@ -175,29 +241,9 @@ def mirrorCurve(curveList=None, axis='x', world=True):
             curveList (list):
             axis (str):ミラーリングする軸
             world (bool):ワールド空間でのミラーかどうか
+            fixCrvAppearance (any):
     """
     axislist = {'x':0, 'y':5, 'z':10}
-    def getCurveShape(node):
-        r"""
-            与えられたノードのカーブシェイプを返す。
-            
-            Args:
-                node (node.Transform):
-                
-            Returns:
-                node.NurbsCurve:
-        """
-        if node.isType('nurbsCurve'):
-            return [node]
-        elif cmds.ls(node(), type='transform'):
-            curves = node.shapes(typ='nurbsCurve')
-            if curves:
-                return curves
-
-        raise RuntimeError(
-            'The node "%s" must be a "nurbsCurve".' % node
-        )
-
     def appplyMirrorCurve(src_curve, dst_curve, axis, world):
         r"""
             ミラーリングを実行する。
@@ -240,9 +286,10 @@ def mirrorCurve(curveList=None, axis='x', world=True):
             'A curves you want to mirror must be a list that incluses'
             'a couple of curves.'
         )
+    processed = []
     for i in range(0, len(curveList), 2):
-        src_curves = getCurveShape(curveList[i])
-        dst_curves = getCurveShape(curveList[i+1])
+        src_curves = node.getShapes(curveList[i], 'nurbsCurve')
+        dst_curves = node.getShapes(curveList[i+1], 'nurbsCurve')
         if len(src_curves) != len(dst_curves):
             raise RuntimeError(
                 'A number of the source curves is not match as the '
@@ -250,22 +297,25 @@ def mirrorCurve(curveList=None, axis='x', world=True):
             )
         for src, dst in zip(src_curves, dst_curves):
             appplyMirrorCurve(src, dst, axis, world)
-
+            processed.append(dst)
+    if fixCrvAppearance:
+        fixCurveAppearance(processed)
     if pre_selection:
         cmds.select(pre_selection, ne=True, r=True)
 
 
-def mirrorCurveByName(curveList=None):
+def mirrorCurveByName(curveList=None, fixCrvAppearance=True):
     r"""
         名前から判断してミラーリングを行う。
         
         Args:
             curveList (list):
+            fixCrvAppearance (any):
     """
     curveList = node.selected(curveList)
     if not curveList:
         return
-    from gris3 import system
+    from ... import system
     name_rule = system.GlobalSys().nameRule()
     pl = name_rule.positionList()
     coupled = {pl[2]:[], pl[4]:[], pl[6]:[]}
@@ -278,7 +328,7 @@ def mirrorCurveByName(curveList=None):
     for p, a in zip((pl[2], pl[4], pl[6]), ('x', 'y', 'z')):
         if not coupled[p]:
             continue
-        mirrorCurve(coupled[p], axis=a)
+        mirrorCurve(coupled[p], axis=a, fixCrvAppearance=fixCrvAppearance)
 
 
 class PrimitiveCreator(object):
@@ -492,7 +542,7 @@ class PrimitiveCreator(object):
 
         if self.colorIndex():
             shape.setColorIndex(self.colorIndex())
-        addCurveWidthCtrlAttr(*shape.shapes())
+        addCurveWidthCtrlAttr(shape.shapes())
         shape.setLineWidth(self.lineWidth())
 
         self.__setSizeRatio()
@@ -636,7 +686,7 @@ class Primitive(object):
             addCurveWidthCtrlAttrによりカスタムアトリビュートが設定されて
             いる場合はカスタムアトリビュートを、設定されていない場合はlineWidth
             アトリビュートに値を設定する。
-
+            
             Args:
                 lineWidth (float):
         """
@@ -653,13 +703,16 @@ class Primitive(object):
             cmds.setAttr(shape + '.' + attr, lineWidth)
 
 
-def transferCurveShape(srcCrv=None, dstCrv=None):
+def transferCurveShape(srcCrv=None, dstCrv=None, fixCrvAppearance=True):
     r"""
-        srcCrvの形状をdstCrvへ転送する
+        srcCrvの形状をdstCrvへ転送する。
+        fixCrvAppearanceがTrueの場合かつ、カーブの太さや色のアトリビュートが
+        存在した場合、それらの情報を復元する。
         
         Args:
             srcCrv (str):転送元のカーブの名前
             dstCrv (str):転送先のカーブの名前
+            fixCrvAppearance (bool):カーブの太さや色などの情報がある場合修復する
     """
     # エラーチェック。=========================================================
     if not srcCrv or not dstCrv:
@@ -697,6 +750,9 @@ def transferCurveShape(srcCrv=None, dstCrv=None):
     tmp_mltmtx.attr('matrixSum') >> tmp_trsgeo.attr('transform')
     tmp_trsgeo.attr('outputGeometry') >> curves[1].attr('create')
     cmds.delete(curves[1], ch=True)
+    
+    if fixCrvAppearance:
+        fixCurveAppearance([curves[1]])
     
     cmds.select(srcCrv)
 

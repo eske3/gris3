@@ -190,7 +190,7 @@ class SeparatedWindow(uilib.AbstractSeparatedWindow):
                 event (QtCore.QEvent):
         """
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setPen(QtGui.QPen(QtGui.QColor(0, 0, 0)))
         painter.setBrush(QtGui.QColor(60, 60, 60))
         painter.drawRect(self.rect())

@@ -13,7 +13,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import uilib
+from gris3 import uilib, desktop
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 class PopupMenuManager(QtWidgets.QWidget):
@@ -38,10 +38,7 @@ class PopupMenuManager(QtWidgets.QWidget):
             Args:
                 pos (QtCore.QPoint):
         """
-        desktop = QtWidgets.QApplication.desktop()
-        desktop_rect = desktop.availableGeometry(
-            desktop.screenNumber(self.parent())
-        )
+        desktop_rect = desktop.DesktopInfo().getAvailableGeometry()
         self.setGeometry(desktop_rect)
         super(PopupMenuManager, self).show()
         self.activateWindow()
@@ -70,12 +67,12 @@ class PopupMenuManager(QtWidgets.QWidget):
 
 class PopupButton(uilib.OButton):
     r"""
-        ここに説明文を記入
+        ボタン上でクリックするとポップアップメニューを表示するGUI
     """
     def __init__(self, icon=None):
         r"""
             Args:
-                icon (None):[edit]
+                icon (str):ボタンに表示するアイコンのパス
         """
         super(PopupButton, self).__init__(icon)
         self.__popup_menu_manager = PopupMenuManager(self)

@@ -61,7 +61,7 @@ class LayerStatusStyle(QtWidgets.QStyledItemDelegate):
             super(LayerStatusStyle, self).paint(painter, option, index)
             return
         data = index.data()
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         
         d_pen = painter.pen()
         d_brush = painter.brush()
@@ -158,12 +158,6 @@ class DisplayerLayerView(QtWidgets.QTreeView):
         self.clicked.connect(self.updateSelectedStatus)
         self.setItemDelegate(LayerStatusStyle())
 
-        # model = QtGui.QStandardItemModel(0, 1)
-        # model.setHeaderData(0, QtCore.Qt.Horizontal, 'displayLayer')
-        # sel_model = QtCore.QItemSelectionModel(model)
-        # self.setSelectionModel(sel_model)
-        # self.setModel(model)
-
     def listDisplayLayers(self):
         r"""
             シーン中のディスプレイレイヤーをリストする。
@@ -253,7 +247,7 @@ class DisplayerLayerView(QtWidgets.QTreeView):
             layers.append(index.data(QtCore.Qt.UserRole + 1))
         return layers
 
-    def drawBranches(self, painter, option,  index):
+    def drawBranches(self, painter, option, index):
         return
 
 

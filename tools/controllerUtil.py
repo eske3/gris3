@@ -14,7 +14,8 @@ r"""
         Proprietary and confidential
 """
 import re
-from gris3 import node, system
+from .. import node, system
+
 
 class DefaultAttrManager(object):
     r"""
@@ -137,6 +138,7 @@ class DefaultAttrManager(object):
             for error in error_reports:
                 print('    [%s] %s' % (error[0], error[1]))
 
+
 def restoreToDefault(nodelist=None, filter='.*'):
     r"""
         選択ノード（または引数nodelistで指定されたノードのリスト）に
@@ -150,6 +152,7 @@ def restoreToDefault(nodelist=None, filter='.*'):
     for n in nodelist:
         m = DefaultAttrManager(n)
         m.restoreData(filter)
+
 
 def __reverseCtrl():
     r"""

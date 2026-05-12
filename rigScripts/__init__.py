@@ -7,7 +7,7 @@ r"""
     Dates:
         date:2017/01/22 0:01[Eske](eske3g@gmail.com)
         update:2020/10/20 14:18 eske yoshinob[eske3g@gmail.com]
-        
+
     License:
         Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
@@ -19,6 +19,67 @@ from .. import grisNode, func, node, lib, system, verutil
 cmds = func.cmds
 
 RigNamePattern = re.compile('Rig[A-Z]*$')
+
+
+def setRootForUnit(unit, *joints):
+    r"""
+        引数jointsで指定したノードを引数unitで指定したユニットのルートとして登録する。
+
+        Args:
+            unit (grisNode.Unit): 対象となるユニットオブジェクト
+            *joints (tuple):ジョイント名のリスト
+        
+        Returns:
+            list: 
+    """
+    shapes = []
+    namerule = system.GlobalSys().nameRule()
+    for joint in node.toObjects(joints):
+        name = namerule(joint.shortName())
+        name.setNodeType('unitRoot')
+        loc = node.createNode('locator', n=name(), p=joint)
+        if joint.isType('joint'):
+            joint.attr('radius') >> ~loc.attr('localScale')
+        ~joint.attr('rotatePivot') >> ~loc.attr('localPosition')
+
+        loc.applyColor((1, 0.62, 0.02))
+        for attr in ('localScale', 'localPosition'):
+            for axis in 'XYZ':
+                plug = loc.attr(attr + axis)
+                plug.setChannelBox(False)
+                plug.setKeyable(False)
+        msg_plug = loc.addMessageAttr('unitRoot')
+        unit / 'message' >> msg_plug
+
+        shapes.append(loc)
+    return shapes
+
+
+def unsetRootForUnit(unit, *joints):
+    r"""
+        引数jointsで指定したノードを引数unitで指定したユニットのルートから解除する。
+
+        Args:
+            unit (grisNode.Unit): 対象となるユニットオブジェクト
+            *joints (tuple):ジョイント名のリスト
+
+        Returns:
+            list:
+    """
+    deleting_list = []
+    deleted = []
+    for joint in node.toObjects(joints):
+        for loc in joint.children(typ='locator'):
+            if not loc.hasAttr('unitRoot'):
+                continue
+            source = loc.attr('unitRoot').source()
+            if unit and source and source != unit():
+                continue
+            deleting_list.append(loc)
+            deleted.append(joint)
+    if deleting_list:
+        cmds.delete(deleting_list)
+    return deleted
 
 class BaseCreator(object):
     r"""
@@ -168,7 +229,7 @@ class BaseCreator(object):
         """
         node_chain = func.listNodeChain(self.jointRoot(), baseJoint)
         if len(node_chain) < 2:
-            return
+            return None
 
         node_chain.reverse()
         mltmtx = func.createUtil('multMatrix')
@@ -195,12 +256,12 @@ class BaseCreator(object):
         if not mltmtx:
             # １階層しかない場合は、直接コネクトする。
             func.connectKeyableAttr(parentBaseJoint, node)
-            return
+            return None
         decmtx = func.createDecomposeMatrix(
             nodes[0], [mltmtx/'matrixSum'], False
         )[0]
         if len(nodes) > 1:
-            func.makeDecomposeMatrixConnection(dexmtx, nodes[1:])
+            func.makeDecomposeMatrixConnection(decmtx, nodes[1:])
         return [decmtx, mltmtx]
 
     def createBaseJointProxy(self, srcNode, name='transform', parent=None):
@@ -215,13 +276,13 @@ class BaseCreator(object):
             Returns:
                 node.Transform:
         """
-        srcNode = node.asObject(srcNode)
+        src_node = node.asObject(srcNode)
         parent = node.asObject(parent) if parent else self.unitRigGroup()
 
-        proxy = node.createNode(srcNode.type(), n=name, p=parent)
+        proxy = node.createNode(src_node.type(), n=name, p=parent)
         if hasattr(proxy, 'hideDisplay'):
             proxy.hideDisplay()
-        proxy.setMatrix(srcNode.matrix())
+        proxy.setMatrix(src_node.matrix())
         return proxy
 
     def createParentProxy(self, srcNode, name='transform', parent=None):
@@ -236,10 +297,10 @@ class BaseCreator(object):
             Returns:
                 node.Transform:
         """
-        srcNode = node.asObject(srcNode)
-        if not srcNode.hasParent():
-            return
-        return self.createBaseJointProxy(srcNode.parent(), name, parent)
+        src_node = node.asObject(srcNode)
+        if not src_node.hasParent():
+            return None
+        return self.createBaseJointProxy(src_node.parent(), name, parent)
 
     def createRigParentProxy(self, srcNode, name, position=None):
         r"""
@@ -307,7 +368,7 @@ class BaseCreator(object):
         if not self.LockControllerColor:
             return
         from ..tools import curvePrimitives
-        curvePrimitives.addWireColorCtrlAttr(*self.allAnimSet().allChildren())
+        curvePrimitives.addWireColorCtrlAttr(self.allAnimSet().allChildren())
 
 
 
@@ -498,26 +559,7 @@ class JointCreator(StandardCreator):
                 *joints (tuple):ジョイント名のリスト
         """
         unit = self.unit()
-        shapes = []
-        namerule = system.GlobalSys().nameRule()
-        for joint in node.toObjects(joints):
-            name = namerule(joint.shortName())
-            name.setNodeType('unitRoot')
-            loc = node.createNode('locator', n=name(), p=joint)
-            if joint.isType('joint'):
-                joint.attr('radius') >> ~loc.attr('localScale')
-            ~joint.attr('rotatePivot') >> ~loc.attr('localPosition')
-                
-            loc.applyColor((1, 0.62, 0.02))
-            for attr in ('localScale', 'localPosition'):
-                for axis in 'XYZ':
-                    plug = loc.attr(attr+axis)
-                    plug.setChannelBox(False)
-                    plug.setKeyable(False)
-            msg_plug = loc.addMessageAttr('unitRoot')
-            unit/'message' >> msg_plug
-
-            shapes.append(loc)
+        setRootForUnit(unit, *joints)
 
     def unitType(self):
         r"""
@@ -573,9 +615,7 @@ class JointCreator(StandardCreator):
         name.setName(self.name())
         name.setNodeType('unit')
         name.setPosition(self.position())
-        position_list = name.positionList()
 
-        # unit = node.createNode('transform', n=name(), p=unit_grp())
         unit = grisNode.createNode(grisNode.Unit, n=name(), p=unit_grp())
         unit.lockTransform()
 
@@ -614,7 +654,7 @@ class JointCreator(StandardCreator):
             Args:
                 parent (str):作成する際のターゲットとなる親の名前
         """
-        unit = self.createUnit()
+        self.createUnit()
         self.setParent(parent)
         self.process()
         self.postProcess()
@@ -758,6 +798,7 @@ class RigCreator(StandardCreator):
         self.process()
         self.postProcess()
 
+
 class Option(object):
     r"""
         ユニット作成時のオプションを定義するクラス。
@@ -773,7 +814,14 @@ class Option(object):
         """
         pass
 
-    def addFloatOption(self, attributeName, default=1.0, min=0.0, max=1.0):
+    def _add_attr(self, attr_type, *values):
+        v = list(values)
+        v.insert(0, attr_type)
+        self.__attributelist.append(v)
+
+    def addFloatOption(
+        self, attributeName, default=1.0, min=0.0, max=1.0
+    ):
         r"""
             float型のオプションを作成する。
             
@@ -781,11 +829,9 @@ class Option(object):
                 attributeName (str):
                 default (float):
                 min (float):
-                max (float):
+                max (fl
         """
-        self.__attributelist.append(
-            ['float', attributeName, default, min, max]
-        )
+        self._add_attr('float', attributeName, default, min, max)
 
     def addIntOption(self, attributeName, default=1, min=0, max=1):
         r"""
@@ -797,9 +843,7 @@ class Option(object):
                 min (int):
                 max (int):
         """
-        self.__attributelist.append(
-            ['int', attributeName, default, min, max]
-        )
+        self._add_attr('int', attributeName, default, min, max)
 
     def addBoolOption(self, attributeName, default=1):
         r"""
@@ -809,7 +853,7 @@ class Option(object):
                 attributeName (str):
                 default (bool):
         """
-        self.__attributelist.append(['bool', attributeName, default])
+        self._add_attr('bool', attributeName, default)
 
     def addEnumOption(self, attributeName, default=0, enumerations=[]):
         r"""
@@ -820,9 +864,7 @@ class Option(object):
                 default (int):
                 enumerations (list):列挙する文字列のリスト。
         """
-        self.__attributelist.append(
-            ['enum', attributeName, default, enumerations]
-        )
+        self._add_attr('enum', attributeName, default, enumerations)
 
     def addStringOption(self, attributeName, default=''):
         r"""
@@ -832,9 +874,7 @@ class Option(object):
                 attributeName (str):[]
                 default (str):
         """
-        self.__attributelist.append(
-            ['string', attributeName, default]
-        )
+        self._add_attr('string', attributeName, default)
 
     def optionlist(self):
         r"""
@@ -844,6 +884,101 @@ class Option(object):
                 list:
         """
         return self.__attributelist
+
+
+class Editor(Option):
+    r"""
+        作成済みユニット編集用のオプションを定義するクラス。
+    """
+    def __init__(self, option=None):
+        r"""
+            引数optionにはOptionクラスを指定することができる。
+            optionが指定された場合、その内容をそのまま自身に移植した上でdefineメソッドを
+            呼ぶ。
+
+            Args:
+                option (Option):
+        """
+        self.__members = []
+        self.__mult_members = []
+        # Superクラスの初期化内でdefineを一時的に呼べないようにするための処理。----------
+        _define_method = self.define
+        self.define = lambda :None
+        # ---------------------------------------------------------------------
+        super(Editor, self).__init__()
+        self.define = _define_method
+
+        for opt in (option, self.inheritedOption()):
+            if not opt:
+                continue
+            for optlist in opt.optionlist():
+                self._add_attr(optlist[0], *optlist[1:])
+        self.define()
+
+    def inheritedOption(self):
+        r"""
+            このクラスの初期化時に内容をコピーしたいOptionクラスのインスタンスを返す。
+            上書き専用メソッド。
+
+            Returns:
+                Option:
+        """
+        return None
+
+    def addMember(self, *members, **options):
+        r"""
+            メッセージで接続しているアトリビュートを、編集するためのGUIに登録する、
+            引数membersはメッセージアトリビュート名のリスト。
+            引数でasRoot=Trueと設定すると、追加されたメンバーはルート扱いとなる。
+
+            Args:
+                members (str):アトリビュート名
+                options (dict):
+        """
+        as_root = options.get('asRoot', False)
+        self.__members.extend([(x, as_root) for x in members])
+
+    def addMultMember(self, *members, **options):
+        r"""
+            複数メッセージを接続しているマルチアトリビュートを、編集するためのGUIに登録する、
+            引数membersはメッセージアトリビュート名のリスト。
+            引数でasRoot=Trueと設定すると、追加されたメンバーはルート扱いとなる。
+
+            Args:
+                members (str):アトリビュート名
+                options (dict):
+        """
+        as_root = options.get('asRoot', False)
+        self.__mult_members.extend([(x, as_root) for x in members])
+
+    def listMemberAttrs(self):
+        r"""
+            memberとmultMemberに登録されているアトリビュートのリストを返す。
+            戻り値の各リストは本体が保持するリストのコピー
+
+            Returns:
+                tuple:memberアトリビュートのリストとmultMemberアトリビュートのリスト
+        """
+        return self.__members[:], self.__mult_members[:]
+
+    def _add_attr(self, attr_type, *values):
+        r"""
+            引数optionにはOptionクラスを指定することができる。
+            optionが指定された場合、その内容をそのまま自身に移植した上でdefineメソッドを
+            呼ぶ。
+
+            Args:
+                option (Option):
+        """
+        keys = {x[1]: x for x in self.optionlist()}
+        if values[0] in keys:
+            v = list(values)
+            v.insert(0, attr_type)
+            keys[values[0]].clear()
+            keys[values[0]].extend(v)
+            return
+        super(Editor, self)._add_attr(attr_type, *values)
+
 
 def rigModuleList(loadMode=0):
     r"""
@@ -1002,9 +1137,9 @@ class Preset(BaseCreator):
         modules = OrderedDict()
         for preset in self.includes():
             mod = getRigModule(preset.unitName(), True)
-            name = (
-                mod.BaseName if hasattr(mod, 'BaseName') else preset.unitName()
-            )
+            # name = (
+            #     mod.BaseName if hasattr(mod, 'BaseName') else preset.unitName()
+            # )
             creator = mod.JointCreator()
             creator.setName(mod.BaseName)
             creator.setPosition(preset.position())

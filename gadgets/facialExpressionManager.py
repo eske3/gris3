@@ -18,7 +18,7 @@ from collections import OrderedDict
 import bisect
 from ..tools import facialMemoryManager
 from ..uilib import mayaUIlib
-from .. import uilib, node, style
+from .. import uilib, node
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -102,6 +102,7 @@ class Settings(QtWidgets.QGroupBox):
         表情制御用ブレンドシェイプの設定や表情リストの編集ボタンなどの
         各種設定用GUIを提供するクラス。
     """
+    setKeyframeButtonClicked = QtCore.Signal(str)
     reloadButtonClicked = QtCore.Signal(str)
 
     def __init__(self, parent=None):
@@ -125,6 +126,11 @@ class Settings(QtWidgets.QGroupBox):
         reset_btn.setToolTip('Reset all attributes for blend shape')
         reset_btn.clicked.connect(self.resetBlendShape)
         
+        key_btn = uilib.OButton(uilib.IconPath('uiBtn_keyframe'))
+        key_btn.setToolTip('Set keyframe for all facial expressions.')
+        key_btn.setBgColor(150, 65, 85)
+        key_btn.clicked.connect(self._emit_setkey)
+        
         edit_btn = uilib.OButton(uilib.IconPath('uiBtn_edit'))
         edit_btn.setToolTip('Edit facial expression list')
         self.editButtonClicked = edit_btn.clicked
@@ -139,6 +145,8 @@ class Settings(QtWidgets.QGroupBox):
         layout.setContentsMargins(uilib.ZeroMargins)
         layout.addWidget(sel_btn)
         layout.addWidget(reset_btn)
+        layout.addSpacing(10)
+        layout.addWidget(key_btn)
         layout.addStretch()
         layout.addWidget(edit_btn)
         layout.addWidget(rel_btn)
@@ -172,6 +180,9 @@ class Settings(QtWidgets.QGroupBox):
             return
         with node.DoCommand():
             bs.setAllWeightAttr(0)
+
+    def _emit_setkey(self):
+        self.setKeyframeButtonClicked.emit(self.blendShape())
         
     def _emit_reloading(self):
         self.reloadButtonClicked.emit(self.blendShape())
@@ -322,7 +333,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         """
         button = event.button()
         self.__start_pos = None
-        if button == QtCore.Qt.MidButton:
+        if button == QtCore.Qt.MiddleButton:
             self.__start_pos = event.pos()
         elif button == QtCore.Qt.RightButton:
             mod = event.modifiers()
@@ -399,7 +410,7 @@ class VirtualSliderButton(QtWidgets.QPushButton):
         rect = event.rect()
         pen = QtGui.QPen(QtGui.QColor(210, 210, 210), 2)
         painter = QtGui.QPainter(self)
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
         painter.setPen(pen)
         painter.setBrush(QtGui.QBrush(QtGui.QColor(64, 64, 64)))
         painter.drawRoundedRect(rect, offset, offset)
@@ -985,6 +996,9 @@ class FacialExpressionManager(QtWidgets.QWidget):
         
         self.__f_view = FacialExpressionView()
         self.__settings.reloadButtonClicked.connect(self.reloadView)
+        self.__settings.setKeyframeButtonClicked.connect(
+            self.setKeyframeOfAllExpressions
+        )
         
         self.__exp_editor = ExpressionEditor()
         self.__exp_editor.editingFinished.connect(self.expressionListMode)
@@ -1073,6 +1087,11 @@ class FacialExpressionManager(QtWidgets.QWidget):
                 expressionList (list):
         """
         self.facialView().updateButtonStatus(expressionList)
+
+    def setKeyframeOfAllExpressions(self):
+        root = self.managerEngine().getManagerNode()
+        with node.DoCommand():
+            root.setKeyframeOfAllExpressions()
 
     def setBlendShape(self, blendShapeName):
         r"""

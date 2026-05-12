@@ -13,12 +13,19 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import rigScripts, node
+from .. import rigScripts, node
 func = rigScripts.func
 cmds = func.cmds
 
 Category = 'Basic Human'
 BaseName = 'hand'
+
+
+class Editor(rigScripts.Editor):
+    def define(self):
+        self.addMultMember('thumbBase', asRoot=True)
+        self.addMultMember('extraBase', asRoot=True)
+
 
 class JointCreator(rigScripts.JointCreator):
     r"""
@@ -353,7 +360,7 @@ class RigCreator(rigScripts.RigCreator):
 
         parents = set([x.parent() for x in alljoints])
         if not parents:
-            raise RunttimeError('No parent node was not found for the hand.')
+            raise RuntimeError('No parent node was not found for the hand.')
         if len(parents) > 1:
             raise RuntimeError(
                 'A multiple parent nodes  were found for the hand.'

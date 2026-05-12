@@ -13,7 +13,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from .. import uilib
+from .. import uilib, desktop
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 class Line(QtWidgets.QGraphicsPathItem):
@@ -200,9 +200,9 @@ class DirectionView(QtWidgets.QGraphicsView):
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setRenderHints(
-            QtGui.QPainter.Antialiasing |
-            QtGui.QPainter.SmoothPixmapTransform |
-            QtGui.QPainter.TextAntialiasing
+            QtGui.QPainter.RenderHint.Antialiasing |
+            QtGui.QPainter.RenderHint.SmoothPixmapTransform |
+            QtGui.QPainter.RenderHint.TextAntialiasing
         )
         self.__basePlane = self.XYPlane
 
@@ -280,9 +280,7 @@ class DirectionScreen(DirectionView):
         self.viewport().setStyleSheet('background:rgba(0, 0, 0, 25);')
 
     def show(self):
-        d = QtWidgets.QApplication.desktop()
-        drect = d.availableGeometry(d.screenNumber())
-        self.setGeometry(drect)
+        self.setGeometry(desktop.DesktopInfo().getAvailableGeometry())
         super(DirectionScreen, self).show()
 
     def execOperation(self, newVector, start, end, mouseButton, modifiers):

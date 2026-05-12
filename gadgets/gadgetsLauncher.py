@@ -13,8 +13,9 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from ..uilib import mayaUIlib, extendedUI
 from .. import lib, uilib, documentUtil
+from ..uilib import extendedUI
+
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -71,16 +72,12 @@ class FunctionListStyle(QtWidgets.QStyledItemDelegate):
                 option (QtWidgets.QStyleOptionViewItem):
                 index (QtCore.QModelIndex):
         """
-        # super(FunctionListStyle, self).paint(painter, option, index)
-        # return
         text = index.data()
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.setRenderHints(QtGui.QPainter.RenderHint.Antialiasing)
 
         font = painter.font()
         font_m = QtGui.QFontMetrics(font)
         text_rect = font_m.boundingRect('K')
-        d_pen = painter.pen()
-        d_brush = painter.brush()
         rect = QtCore.QRect(option.rect)
 
         t_font = QtGui.QFont(font)
@@ -90,7 +87,6 @@ class FunctionListStyle(QtWidgets.QStyledItemDelegate):
         t_rect.setHeight(int(font.pixelSize() * 2))
         painter.setPen(QtCore.Qt.NoPen)
         bg_color = self.BgColor
-        t_font_color = self.TitleColor
         if option.state & QtWidgets.QStyle.State_Selected:
             bg_color = self.SelectedBgColor
         elif option.state & QtWidgets.QStyle.State_MouseOver:
@@ -98,7 +94,6 @@ class FunctionListStyle(QtWidgets.QStyledItemDelegate):
         painter.setBrush(bg_color)
         painter.drawRect(rect)
         offset = text_rect.width()
-        
 
         # タイトルの表示。
         t_rect.setLeft(offset)
@@ -125,6 +120,8 @@ class FunctionListStyle(QtWidgets.QStyledItemDelegate):
 
 
 class AppViewer(extendedUI.FilteredView):
+    enterPressed = QtCore.Signal(QtCore.QModelIndex)
+
     def createView(self):
         view = QtWidgets.QListView()
         view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
@@ -137,12 +134,25 @@ class AppViewer(extendedUI.FilteredView):
         model = QtGui.QStandardItemModel(0, 1)
         return model
 
+    def __emit_enter_pressed(self):
+        model: QtCore.QSortFilterProxyModel = self.view().model()
+        start_index = model.index(0, 0)
+        self.enterPressed.emit(start_index)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QtCore.QEvent.KeyPress:
+            if event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return):
+                self.__emit_enter_pressed()
+                return True
+        return super(AppViewer, self).eventFilter(obj, event)
+
 
 class Launcher(QtWidgets.QWidget):
     DisabledFunctions = [
         'openGagetsLauncher', 'openToolbar', 'openPolyHalfRemover',
         'openPolyMirror', 'openPolyCutter', 'openCheckTools'
     ]
+    applicationLaunched = QtCore.Signal()
 
     def __init__(self, parent=None):
         r"""
@@ -155,6 +165,8 @@ class Launcher(QtWidgets.QWidget):
 
         self.__view = AppViewer()
         self.__view.view().clicked.connect(self.execCommand)
+        self.__view.installEventFilter(self)
+        self.__view.enterPressed.connect(self.execCommand)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.__view)
@@ -187,6 +199,7 @@ class Launcher(QtWidgets.QWidget):
         f = self.__functions.get(f_name)
         if f:
             f()
+            self.applicationLaunched.emit()
 
 
 class MainGUI(uilib.AbstractSeparatedWindow):

@@ -682,7 +682,7 @@ class FactoryWidget(QtWidgets.QWidget):
         main = self.mainGUI()
         count = 1 if forceUpdate else 0
         if directoryPath:
-            from gris3 import settings
+            from .. import settings
             settings.addPathToHistory(directoryPath)
             if main.setRootPath(directoryPath, False):
                 count += 1

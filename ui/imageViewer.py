@@ -37,6 +37,7 @@ class ImageViewer(QtWidgets.QListView):
         self.__oldpos = None
         self.__start_pos = None
         self.__pressed_button = None
+        self.__drag_mode = False
         self.setAlternatingRowColors(True)
         self.setViewMode(QtWidgets.QListView.IconMode)
         self.setSelectionMode(QtWidgets.QListView.NoSelection)
@@ -111,11 +112,12 @@ class ImageViewer(QtWidgets.QListView):
                 event (QtCore.QEvent):
         """
         self.__start_pos = event.pos()
-        self.__pressed_button = event.buttons()
-        if self.__pressed_button == QtCore.Qt.RightButton:
-            self.__oldpos = event.pos()
-            return
         self.__oldpos = None
+        # self.__drag_mode = self.dragEnabled()
+        self.__pressed_button = event.buttons()
+        if self.__pressed_button & QtCore.Qt.RightButton:
+            self.__oldpos = event.pos()
+            # self.setDragEnabled(False)
         super(ImageViewer, self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -145,12 +147,15 @@ class ImageViewer(QtWidgets.QListView):
             if is_starting_daragging():
                 super(ImageViewer, self).mouseMoveEvent(event)
                 return
+            if not self.__start_pos:
+                return
             mimedata = self.model().mimeData(
                 self.selectionModel().selectedIndexes()
             )
             drag = QtGui.QDrag(self)
             drag.setMimeData(mimedata)
             drop_action = drag.exec_(QtCore.Qt.CopyAction)
+            self.mouseReleaseEvent(event)
 
     def mouseReleaseEvent(self, event):
         r"""
@@ -163,7 +168,7 @@ class ImageViewer(QtWidgets.QListView):
         self.__start_pos = None
         self.__pressed_button = None
         if isvalid:
-            if pressed == QtCore.Qt.RightButton:
+            if pressed & QtCore.Qt.RightButton:
                 index = self.indexAt(event.pos())
                 if not index.model():
                     return
@@ -187,3 +192,12 @@ class ImageViewer(QtWidgets.QListView):
                 self.deleteSelected()
                 return
         super(ImageViewer, self).keyPressEvent(event)
+
+    def eventFilter(self, obj, event):
+        if obj == self.viewport():
+            print('%s : %s' % (event.type(), QtCore.QEvent.MouseMove))
+            if event.type() == QtCore.QEvent.MouseMove:
+                self.mouseMoveEvent(event)
+        return super(ImageViewer, self).eventFilter(obj, event)
+        
+        

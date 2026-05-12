@@ -2,15 +2,15 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    aiToolsのマスターモデルと連動したフェイシャルセットアップを行うための
-    ExtraConstructor。
+    フェイシャルの仕込みが入った顔ジオメトリとボディジオメトリを結合する機能
+    を提供するモジュール。
     
     Dates:
         date:2017/02/25 13:10[Eske](eske3g@gmail.com)
-        update:2021/08/18 05:49 noriyoshi tsujimoto[tensoftware@hotmail.co.jp]
+        update:2025/06/22 23:52 Eske Yoshinob[eske3g@gmail.com]
         
     License:
-        Copyright 2017 noriyoshi tsujimoto[tensoftware@hotmail.co.jp] - All Rights Reserved
+        Copyright 2017 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
@@ -19,9 +19,20 @@ from gris3 import node
 from gris3.tools import modelingSupporter
 cmds = node.cmds
 
+
 def combineFace(face, sub_objects, parent):
+    r"""
+        Args:
+            face (str):
+            sub_objects (list):
+            parent (str):
+    """
     ptn = re.compile('\[(\d+)\]')
     def list_pfxtoons(*objectlist):
+        r"""
+            Args:
+                *objectlist (list):
+        """
         result = {}
         for obj in objectlist:
             pfx_toon_plugs = obj.attr('outMesh').destinations(
@@ -45,15 +56,15 @@ def combineFace(face, sub_objects, parent):
                 
         return result
 
-    face = node.asObject(face)
-    if not face:
+    face_geo = node.asObject(face)
+    if not face_geo:
         raise RuntimeError(
-            '[aiToolsFacialSetup] This scene does not contain a "face_geo".'
+            '[FacialSetup] This scene does not contain a "{}".'.format(face)
         )
     sub_objects = node.toObjects(sub_objects)
-    pfx_toons = list_pfxtoons(face, *sub_objects)
+    pfx_toons = list_pfxtoons(face_geo, *sub_objects)
 
-    c = modelingSupporter.Combine([face] + sub_objects)
+    c = modelingSupporter.Combine([face_geo] + sub_objects)
     c.setParent(parent)
     c.setName('bodyAll_geo')
     c.operate()
@@ -71,7 +82,7 @@ def combineFace(face, sub_objects, parent):
         attr = tgt_obj+'.outMesh'
         mtx_attr = tgt_obj+'.worldMatrix'
         for in_p, in_mtx_p, out_p, meshs in pfx_toon_plugs:
-            if obj != face:
+            if obj != face_geo:
                 cmds.delete(meshs)
                 continue
             attr >> in_p
@@ -80,9 +91,17 @@ def combineFace(face, sub_objects, parent):
                 out_p >> mesh+'.inMesh'
     return tgt_obj
 
+
 def combineFaceCage(face_cage, sub_objects, parent):
+    r"""
+        Args:
+            face_cage (str):
+            sub_objects (list):
+            parent (str):
+    """
     face_cage = node.asObject(face_cage)
     combined =  modelingSupporter.unitePolygons(
         [face_cage]+sub_objects, 'bodyAll_cage'
     )
     return node.parent(combined, parent)[0]
+

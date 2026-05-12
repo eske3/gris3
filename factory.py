@@ -3,30 +3,27 @@
 # old_style:google style:google
 r"""
     Factoryのデータを取扱うクラスを提供するモジュール。
-    
+    こちらのモジュールではfactoryModules内のものより、より低レベルなクラスを提供する。
+
     Dates:
         date:2017/07/08 8:23[Eske](eske3g@gmail.com)
         update:2020/10/20 05:56 eske yoshinob[eske3g@gmail.com]
-        
-    Brief:
-        こちらのモジュールではfactoryModules内のものより、より低レベルな
-        
-        クラスを提供する。
-        
+
     License:
         Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
 import os
-import inspect
-from gris3 import lib, xmlUtil
+from . import lib, xmlUtil, verutil, buildInfo
+
 
 class ProjectSettingError(Exception):
     r"""
         プロジェクト設定を失敗したときに返す例外クラス。
     """
     pass
+
 
 class ModuleInfo(object):
     r"""
@@ -93,11 +90,13 @@ class ModuleInfo(object):
         """
         return self.__tag
 
+
 class FactoryData(object):
     r"""
         Factoryの設定を保持・参照できる機能を提供するクラス。
     """
     TagName = 'grisFactoryWorkspace'
+    BuildLog = 'buildLog'
     def __init__(self):
         self.__rootpath = ''
         self.__xml_name = self.TagName + '.xml'
@@ -414,7 +413,7 @@ class FactoryData(object):
         with factoryModules.startManualy(self):
             mod = lib.importModule(self.assetPrefix()+'.'+name)
             if isReload:
-                reload(mod)
+                verutil.reload_module(mod)
         return mod
 
     def listScripts(self, isReload=False):
@@ -440,7 +439,46 @@ class FactoryData(object):
             result.append(mod_name)
         return result
 
-    def execScript(self, scriptName, isDebugMode=False, isReload=False):
+    def buildLogFile(self):
+        r"""
+            プロジェクトディレクトリ内のログ情報ファイルのパスを返す。
+
+            Returns:
+                str:
+        """
+        return os.path.join(self.rootPath(), self.BuildLog+'.json')
+
+    def buildLogInfo(self):
+        r"""
+            プロジェクトディレクトリ内のログ情報オブジェクトを返す。
+
+            Returns:
+                buildInfo.BuildInfoManager:
+        """
+        log_file = self.buildLogFile()
+        bim = buildInfo.BuildInfoManager()
+        bim.load(log_file)
+        return bim
+
+    def updateBuildInfo(self, constructor):
+        r"""
+            ビルド情報を更新する。
+            更新するにはビルド後のコンストラクタオブジェクトが必要となる。
+
+            Args:
+                constructor (constructors.BasicConstructor):ビルドしたコンストラクタ
+        """
+        lod = constructor.lod()
+        buildTimer = constructor.buildTimer()
+        debugMode = constructor.debugMode()
+        from . import buildInfo
+        log_file = self.buildLogFile()
+        bim = buildInfo.BuildInfoManager()
+        bim.load(log_file)
+        bim.setInformation(lod, buildTimer, debugMode)
+        bim.export(log_file)
+
+    def execScript(self, scriptName, debugMode=None, isReload=False):
         r"""
             リグビルド用のスクリプトを実行する。
             引数scriptNameに使用できる文字列はlistScriptsの戻り値によって
@@ -448,26 +486,27 @@ class FactoryData(object):
             
             Args:
                 scriptName (str):実行するスクリプト
-                isDebugMode (bool):デバッグモードかどうか
+                debugMode (str):デバッグモードの内容を表す文字列
                 isReload (bool):スクリプトをリロードするかどうか
         """
         mod = self.importScriptModule(scriptName, isReload)
         from . import factoryModules
         with factoryModules.startManualy(self):
             c = mod.Constructor()
-            c.execute()
+            factoryModules.execConstructor(c, debugMode)
 
-def createFactoryDirectory(factotySettings):
+
+def createFactoryDirectory(factorySettings):
     r"""
-        引数factotySettingsからディレクトリを作成する
+        引数factorySettingsからディレクトリを作成する
         
         Args:
-            factotySettings (factoryModules.FactorySettings):
+            factorySettings (factoryModules.FactorySettings):
     """
-    root = factotySettings.rootPath()
-    directory_list = [factotySettings.assetPrefix()]
+    root = factorySettings.rootPath()
+    directory_list = [factorySettings.assetPrefix()]
 
-    for dirnames in factotySettings.listModulesAsDict().values():
+    for dirnames in factorySettings.listModulesAsDict().values():
         directory_list.extend([x.name() for x in dirnames])
 
     directories = [

@@ -15,12 +15,145 @@ r"""
 """
 # Grisに関する情報を登録している固定変数。/////////////////////////////////////
 Author = 'eske3g@gmail.com'
-Version = '2.0.4.0'
-LastModified = 20250902
+Version = '3.1.2.1'
+LastModified = 20260510
 # /////////////////////////////////////////////////////////////////////////////
 
 
 ReleaseNote = [
+('3.1.2.1',
+(
+    (
+        'toolbarと、toolbarのappLaucherの挙動を調整。',
+        'tools/facialMemoryManager.FacialMemoryManagerRootにデータ更新用のメソッドを追加。',
+    ),
+)
+),
+
+('3.1.1.1',
+(
+    (
+        '一部モジュールの表記不具合の修正やコメントの修正。',
+    ),
+)
+),
+
+('3.1.1.0',
+(
+    (
+        'ビルド時のGrisのバージョンやアプリバージョン、ビルド時間などのログを残す機能を追加。',
+        '合わせてログを表示するビューワをFactoryのScriptsタブに追加。',
+    ),
+)
+),
+
+('3.1.0.0',
+(
+    (
+        'リグモジュールの編集機能GUIを追加。',
+        'それに伴い各リグモジュールも編集機能GUIに対応。',
+    ),
+)
+),
+
+('3.0.3.0',
+(
+    (
+        'jointEditorのミラーにradiusを反映させるオプションを追加。',
+    ),
+)
+),
+
+('3.0.2.5',
+(
+    (
+        'faicalMemoryManagerに、各表情のキーを打つ機能を追加。',
+        'modelingSupporterにスムースメッシュプレビューのコピーを作成する機能を追加。'
+    ),
+)
+),
+
+('3.0.0.0',
+(
+    (
+        'QRegExpをPySide6互換のためにQReqularExpressionに変更。これにより初代PySide版はサポート終了。'
+        'pyside_module内のPySide互換用コードはまだ残しているが、将来的には削除予定。'
+    ),
+)
+),
+
+('2.0.9.2',
+(
+    'selectionSupporter.SelectionUtilWidgetに文字列による選択フィルタを追加。',
+    'selectionUtil.ConditionalSelectionに文字列による選択フィルタを追加。'
+)
+),
+
+
+('2.0.9.0',
+(
+    (
+        'skinningEditorをパッケージに変更に伴い、SkinningEditorクラスにアクセスできなくなってしまったため、'
+        '__init__内にSkinningEditorクラスを読み込み過去コードの互換性を保持。'
+    ),
+)
+),
+
+('2.0.8.2',
+(
+    'tools.selectionUtilにConditionalSelectionクラスを追加。',
+    'gadgets.selectionSupporterにConditionalSelectionWidgetを追加。',
+)
+),
+
+('2.0.8.0',
+(
+    'skinningEditorをパッケージに変更＋bindingObjectList、influenceUtilityWidgetを追加',
+    'scriptExecutorの起動コマンドをgadgetモジュールに追加',
+)
+),
+
+
+('2.0.7.0',
+(
+    'スクリプトを登録・実行するためのガジェット「Script Executor」を追加。',
+)
+),
+
+('2.0.6.7',
+(
+    'settings.GlobalPrefにプレファレンスディレクトリを返す関数を追加。',
+)
+),
+
+('2.0.6.6',
+(
+    'skinUtilityのstoreWeightModelとrestoreWightModel使用時にアウトライナーカラーを変更するように機能追加。',
+)
+),
+
+('2.0.6.5',
+(
+    'polyHairCreator内でmayaUIlib.NodePickerを導入したことによって発生したバグへの対処。',
+    'pyside_module内でPySideのバージョン違いを整数で比較できるようにVersion変数（int)を追加。',
+    'desktopモジュールを追加。デスクトップ情報に関する操作をこのモジュールに集約。',
+)
+),
+
+('2.0.6.1',
+(
+    'gadgetsにmaterialManagerを追加。',
+    'displayLayerViewerのコメントアウトしていた箇所を削除。',
+)
+),
+
+('2.0.5.0',
+(
+    'uilib.extendedUIにFileSelector、SavePathSelector、DirectorySelectorを追加。',
+    '上記に合わせて、Factoryのプロジェクト選択ウィジェットのQLineEditをDirectorySelectorに変更。',
+)
+),
+
 ('2.0.4.1',
 (
     'checkToolsにTransformCheckerを追加。',

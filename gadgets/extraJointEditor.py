@@ -289,7 +289,7 @@ def showWindow():
         Returns:
             MainGUI:
     """
-    from gris3.uilib import mayaUIlib
+    from ..uilib import mayaUIlib
     widget = MainGUI(mayaUIlib.MainWindow)
     widget.resize(400, 350)
     widget.show()

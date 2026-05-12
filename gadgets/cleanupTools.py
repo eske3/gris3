@@ -13,8 +13,8 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3.tools import modelChecker
-from gris3 import uilib
+from ..tools import modelChecker
+from .. import uilib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -28,9 +28,9 @@ class CleanupPlugins(QtWidgets.QGroupBox):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(CleanupPlugins, self).__init__('Cleanup Plugins', parent)
-        from gris3.tools import cleanup
+        from ..tools import cleanup
 
-        del_unknowns = QtWidgets.QPushButton('Delete All unknonw nodes')
+        del_unknowns = QtWidgets.QPushButton('Delete All unkknown nodes')
         del_unknowns.clicked.connect(cleanup.deleteAllUnknownNodes)
         rem_info_btn = QtWidgets.QPushButton('Remove all plugin info')
         rem_info_btn.clicked.connect(cleanup.removeUnknownPlugins)
@@ -65,8 +65,8 @@ class CleanupObject(QtWidgets.QGroupBox):
         layout.addWidget(btn)
 
     def doCleanup(self):
-        from gris3.tools import cleanup
-        from gris3 import func
+        from ..tools import cleanup
+        from .. import func
         methods = [
             cleanup.deleteUnusedIO, cleanup.deleteUnusedUserDefinedAttr,
             func.unlockTransform, func.setRenderStats
@@ -102,8 +102,8 @@ class CleanupMesh(QtWidgets.QGroupBox):
         layout.addWidget(self.__th_field, 0, 1, 1, 1)
 
     def convHardedge(self):
-        from gris3.tools import modelingSupporter
-        from gris3 import func
+        from ..tools import modelingSupporter
+        from .. import func
         with func.Do:
             modelingSupporter.unlockAndSetNormal(
                 threshold=self.__th_field.value()
@@ -310,7 +310,7 @@ class CleanupToolWidget(QtWidgets.QWidget):
         self.setWindowTitle('+Cleaup Tools')
         
         # Mult-Renamer起動ボタン。=============================================
-        from gris3 import gadgets
+        from .. import gadgets
         btn = uilib.OButton()
         btn.setSize(32)
         btn.setBgColor(64, 160, 96)
@@ -369,7 +369,7 @@ def showWindow():
         Returns:
             MainGUI:
     """
-    from gris3.uilib import mayaUIlib
+    from ..uilib import mayaUIlib
     widget = MainGUI(mayaUIlib.MainWindow)
     widget.resize(uilib.hiRes(300), uilib.hires(450))
     widget.show()

@@ -320,7 +320,6 @@ class AxisChooser(QtWidgets.QWidget):
         return jointEditor.Axislist[self.__group.checkedId()]
 
 
-# class JointAxisEditor(uilib.ClosableGroup):
 class JointAxisEditor(uilib.ClosableGroup):
     r"""
         ジョイントの軸を編集するためのUIを低居するクラス。

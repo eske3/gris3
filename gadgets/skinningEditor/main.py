@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # old_style:google style:google
 r"""
-    ジョイントの編集機能を提供するGUI。
+    スキニングに関する便利機能を提供するガジェット
     
     Dates:
         date:2017/06/15 16:35[Eske](eske3g@gmail.com)
@@ -13,235 +13,11 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from ..tools import skinUtility, paintSkinUtility
-from .. import lib, uilib, node
-from ..uilib import extendedUI
+from ...tools import skinUtility, paintSkinUtility
+from ... import lib, uilib, node
+from ...uilib import extendedUI
+from . import bindUtilityWidget, influenceUtilityWidget, valueEditor
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
-
-
-class BindUtility(uilib.ClosableGroup):
-    r"""
-        バインドに関する機能を提供するGUI。
-    """
-    def __init__(self, parent=None):
-        r"""
-            Args:
-                parent (QtWidgets.QWidget):
-        """
-        super(BindUtility, self).__init__('Bind Utility', parent)
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
-        )
-        layout = QtWidgets.QHBoxLayout(self)
-        layout.setSpacing(2)
-        from gris3.exporter import skinWeightExporter
-        from gris3.tools.controllerUtil import restoreToDefault
-        self.__temp_wgt = skinWeightExporter.TemporaryWeight()
-
-        for data in (
-            (
-                skinUtility.showBindSkinOption,
-                'Open bind skin option',
-                (96, 128, 20), 'uiBtn_bindSkinOption'
-            ),
-            (
-                self.bindFromBinded,
-                'Bind skin to selected from last selection that was binded.',
-                (38, 128, 148), 'uiBtn_bindSkin'
-            ),
-            (
-                self.bindToTube,
-                'Set weight from joint chain to selected faces.',
-                (38, 128, 148), 'uiBtn_bindToTube'
-            ),
-            (
-                self.transferObjectsWeights,
-                'Transfer selected weights to last selected object.',
-                (38, 128, 148), 'uiBtn_extractFace'
-            ),
-            10,
-            (
-                self.tempExportWeight,
-                'Export weight of selected node temporarily.',
-                (11, 68, 128), 'uiBtn_export'
-            ),
-            (
-                self.tempImportWeight,
-                'Import weight of selected node temporarily.',
-                (11, 68, 128), 'uiBtn_import'
-            ),
-            10,
-            (
-                restoreToDefault,
-                'Reset selected controllers.',
-                (91, 82, 182), 'uiBtn_reset'
-            ),
-        ):
-            if isinstance(data, int):
-                layout.addSpacing(data)
-                continue
-            cmd, tooltip, color, icon = data
-            btn = uilib.OButton()
-            btn.setToolTip(tooltip)
-            btn.setBgColor(*color)
-            btn.setIcon(uilib.IconPath(icon))
-            btn.setSize(38)
-            btn.clicked.connect(cmd)
-            layout.addWidget(btn)
-        layout.addStretch()
-
-    def bindFromBinded(self):
-        r"""
-            バインド済みオブジェクトのバインド情報を他のオブジェクトに移す。
-        """
-        with node.DoCommand():
-            selected = node.selected()
-            skinUtility.bindFromBinded(selected[:-1], selected[-1])
-
-    def bindToTube(self):
-        r"""
-            ジョイントチェーン用いてをチューブ上の形状に柔らかくウェイトを
-            セットする。
-        """
-        with node.DoCommand():
-            selected = node.selected()
-            skinUtility.bindToFace()
-
-    def transferObjectsWeights(self):
-        r"""
-            任意の複数オブジェクトのウェイトをターゲットに写す
-        """
-        with node.DoCommand():
-            skinUtility.transferObjectsWeights()
-
-    def tempExportWeight(self):
-        r"""
-            テンポラリに現在選択しているオブジェクトのウェイトを書き出す
-        """
-        self.__temp_wgt.save()
-
-    def tempImportWeight(self):
-        r"""
-            テンポラリのウェイトを読み込む
-        """
-        self.__temp_wgt.restore()
-
-
-class ValueEditor(uilib.ConstantWidget):
-    r"""
-        ペイントのOpacityを編集するウィジェット
-    """
-    def buildUI(self):
-        r"""
-            GUIの構築を行う。
-        """
-        margin = 40
-        self.setHiddenTrigger(self.HideByCursorOut)
-        self.setScalable(False)
-        self.resize(300, 150)
-        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
-        self.__skincluster = None
-        self.__operation = None
-
-        from .. import style
-        title = QtWidgets.QLabel('+ Edit Value')
-        title.setStyleSheet(style.TitleLabel)
-        self.setTitle = title.setText
-        
-        label = QtWidgets.QLabel('Opacity')
-        editor = QtWidgets.QDoubleSpinBox()
-        editor.setRange(0, 1)
-        editor.setSingleStep(0.02)
-        editor.valueChanged.connect(self.updateOpacity)
-        self.setValue = editor.setValue
-        self.selectField = editor.selectAll
-        
-        layout = QtWidgets.QGridLayout(self)
-        layout.setContentsMargins(margin, margin, margin, margin)
-        layout.setSpacing(20)
-        layout.addWidget(title, 0, 0, 1, 2)
-        layout.addWidget(label, 1, 0, 1, 1, QtCore.Qt.AlignRight)
-        layout.addWidget(editor, 1, 1, 1, 1)
-        layout.setRowStretch(2, 1)
-
-    def setup(self, skinCluster, operation):
-        r"""
-            編集対象をセットする
-            
-            Args:
-                skinCluster (str):スキンクラスタ名
-                operation (str):操作タイプ
-        """
-        self.__skincluster = skinCluster
-        self.__operation = operation
-        self.setTitle('+ Edit %s Value' % lib.title(operation))
-        self.setValue(
-            paintSkinUtility.getOperationOpacity(operation, skinCluster)
-        )
-
-    def updateOpacity(self, value):
-        r"""
-            Args:
-                value (float):
-        """
-        paintSkinUtility.changeOperationOpacity(
-            self.__operation, value, self.__skincluster
-        )
-
-    def show(self):
-        r"""
-            スキンクラスタと操作タイプが設定されている時だけ表示する
-        """
-        if not self.__skincluster or not self.__operation:
-            return
-        self.selectField()
-        super(ValueEditor, self).show()
-
-    def paintEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEvent):
-        """
-        painter = QtGui.QPainter(self)
-        painter.setPen(QtCore.Qt.NoPen)
-        painter.setBrush(QtGui.QColor(0, 20, 55, 190))
-        painter.drawRoundedRect(self.rect(), 8, 8)
-
-
-class PaintValueButton(QtWidgets.QPushButton):
-    r"""
-        右ボタンをクリックされた事を検知する拡張ボタン
-    """
-    rightButtonPressed = QtCore.Signal()
-    def __init__(self, *args, **keywords):
-        r"""
-            Args:
-                *args (tuple):QPushButtonに渡す引数と同じ
-                **keywords (dict):QPushButtonに渡す引数と同じ
-        """
-        super(PaintValueButton, self).__init__(*args, **keywords)
-        self.setToolTip(
-            'Hit by right button then show an editor to change a value.'
-        )
-        self.__is_right_clicked = False
-
-    def mousePressEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEVent):
-        """
-        self.__is_right_clicked = event.button() == QtCore.Qt.RightButton
-        if self.__is_right_clicked:
-            self.rightButtonPressed.emit()
-        super(PaintValueButton, self).mousePressEvent(event)
-
-    def mouseReleaseEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEVent):
-        """
-        if not self.__is_right_clicked:
-            super(PaintValueButton, self).mouseReleaseEvent(event)
 
 
 class PaintUtility(QtWidgets.QGroupBox):
@@ -255,7 +31,7 @@ class PaintUtility(QtWidgets.QGroupBox):
         """
         super(PaintUtility, self).__init__('Paint', parent)
         self.__skincluster = None
-        self.__editor = ValueEditor(self)
+        self.__editor = valueEditor.ValueEditor(self)
         layout = QtWidgets.QGridLayout(self)
         layout.setVerticalSpacing(1)
         layout.setHorizontalSpacing(20)
@@ -285,7 +61,7 @@ class PaintUtility(QtWidgets.QGroupBox):
             p_layout.setContentsMargins(0, 0, 0, 0)
             p_layout.setSpacing(1)
             for i, st in zip((0.1, 0.5, 1.0), styles):
-                btn = PaintValueButton(str(i))
+                btn = valueEditor.PaintValueButton(str(i))
                 btn.setStyleSheet(st)
                 btn.setSizePolicy(
                     QtWidgets.QSizePolicy.Expanding,
@@ -763,13 +539,15 @@ class SkinningEditor(QtWidgets.QWidget):
         """
         super(SkinningEditor, self).__init__(parent)
         self.setWindowTitle('+Skinning Editor')
-        bind_util = BindUtility()
+        bind_util = bindUtilityWidget.BindUtility()
+        inf_util = influenceUtilityWidget.InfluenceUtility()
         skin_editor = SkinClusterEditor()
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setSpacing(2)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(bind_util)
+        layout.addWidget(inf_util)
         layout.addWidget(skin_editor)
         layout.setStretchFactor(skin_editor, 1)
         layout.addStretch()
@@ -785,17 +563,3 @@ class MainGUI(uilib.AbstractSeparatedWindow):
                 SkinningEditor:
         """
         return SkinningEditor()
-
-
-def showWindow():
-    r"""
-        ウィンドウを作成するためのエントリ関数。
-        
-        Returns:
-            QtWidgets.QWidget:
-    """
-    from gris3.uilib import mayaUIlib
-    widget = MainGUI(mayaUIlib.MainWindow)
-    widget.resize(350, 600)
-    widget.show()
-    return widget

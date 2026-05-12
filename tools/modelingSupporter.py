@@ -442,7 +442,7 @@ def polyBoolean(operation):
 #                                                                            //
 # /////////////////////////////////////////////////////////////////////////////
 
-def reassignMaterial(nodelist):
+def reassignMaterial(nodelist=None):
     r"""
         オブジェクトにアサインされているマテリアルが一つの場合
         そのマテリアルを再アサインしてファセットアサイン状態を解消する。
@@ -460,7 +460,7 @@ def reassignMaterial(nodelist):
 
 def extractPolyFace(isDuplicated=False, faces=None):
     r"""
-        現在請託されている面を剥離またはコピーする。
+        現在選択されている面を剥離またはコピーする。
         
         Args:
             isDuplicated (bool):面をコピーするかどうか。
@@ -1800,8 +1800,15 @@ def unlockAndSetNormal(nodelist=None, threshold=0.995):
         
 def duplicateConnectedClone(targets=None):
     r"""
+        任意のメッシュのをコピーし、元メッシュのoutMeshをコピー後のinMeshに接続する。
+        コピーの際、コピーされたメッシュは一度クリーンナップされる。
+        戻り値はコピーされたメッシュ名のリスト。
+
         Args:
             targets (list):
+        
+        Returns:
+            list:
     """
     targets = node.selected(targets, type=['transform', 'mesh'])
     created = []
@@ -1829,6 +1836,42 @@ def duplicateConnectedClone(targets=None):
     if created:
         cmds.select(created)
     return created
+
+
+def createSmoothedMesh(targets=None):
+    r"""
+        smoothMeshPreview状態でフリーズした状態のメッシュを複製し、コネクションを形成する。
+
+        Args:
+            targets (list):
+    
+        Returns:
+            list:作成済みハイポリゴンのリスト
+    """
+    targets = node.selected(targets)
+    smoothed = []
+    for n in targets:
+        shape = node.getShapes(n, 'mesh')
+        if not shape:
+            continue
+        try:
+            name = func.Name(n)
+            t = name.type()
+            new_t = 'sbdv{}{}'.format(t[0].upper(), t[1:])
+            name = name.convertType(new_t)()
+        except:
+            name = n + '_smoothed'
+        new_mesh = node.rename(cmds.duplicate(n)[0], name)
+        cmds.deformer(new_mesh, type='cluster')
+        cmds.delete(new_mesh, ch=True)
+        shape[0].attr('outSmoothMesh') >> new_mesh/'inMesh'
+        smoothed.append(new_mesh)
+
+    if smoothed:
+        cleanup.deleteUnusedIO(smoothed)
+        cleanup.deleteUnusedUserDefinedAttr(smoothed)
+        cmds.select(smoothed, r=True)
+    return smoothed
     
 
 def idMtxGroup(targets=None):

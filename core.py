@@ -197,10 +197,7 @@ def createRig(unit):
         指定したユニットのリグ作成メソッドを呼び出す関数。
         
         Args:
-            unit (any):[str]grisNode.Unit
-            
-        Returns:
-            any:
+            unit (grisNode.Unit):
     """
     unitType = unit('unitName')
     side = unit('position')

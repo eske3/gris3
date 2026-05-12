@@ -142,20 +142,23 @@ class AbstractAssetChecker(AbstractChecker):
         r"""
             設定されたターゲットオブジェクトに対してチェックを行い、結果を返す。
             戻り値は
-                チェック対象オブジェクト名、[CheckResult(エラー内容)...]
+                チェック対象オブジェクト名、[CheckedResult(エラー内容)...]
             となる。
 
             Returns:
                 list:
         """
         targets = self.targets()
-        if not targets:
-            raise RuntimeError(
-                '[{}] No targets to check was not specified.'.format(
-                    self.category()
-                )
-            )
         result = []
+        if not targets:
+            checked = [
+                CheckedResult(
+                    '[{}] No targets to check was specified.'.format(
+                            self.category()
+                    )
+                )
+            ]
+            return [('???', checked)]
         for target in targets:
             result.extend(self.search(target))
         return result
@@ -322,6 +325,9 @@ class DataBasedHierarchyChecker(AbstractAssetChecker):
             Args:
                 targets (list):走査対象ノードのリスト
                 priorityFilter (function):priority値を設定する際のフィルタ関数
+            
+            Returns:
+                dict:
         """
         def _g(targets, data, priorityFilter):
             r"""
@@ -343,6 +349,29 @@ class DataBasedHierarchyChecker(AbstractAssetChecker):
         data = {}
         _g(targets, data, priorityFilter)
         return data
+
+    @staticmethod
+    def listAllNodes(data, priority=0):
+        r"""
+            Args:
+                data (dict):
+                priority (int):
+
+            Returns:
+                list:
+        """
+        def search(d, p):
+            results = []
+            for name, sub_data in d.items():
+                if sub_data.get('priority', 0) <= p:
+                    results.append(name)
+                children = sub_data.get('children')
+                if children:
+                    results.extend(search(children, p))
+            return results
+
+        return search(data, priority)
+
     
     def checkObject(self, name, data, parent):
         r"""

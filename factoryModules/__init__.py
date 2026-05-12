@@ -24,6 +24,25 @@ ModuleInfo = factory.ModuleInfo
 # /////////////////////////////////////////////////////////////////////////////
 # Factoryに関する情報を格納、制御するクラスおよび関数。                      //
 # /////////////////////////////////////////////////////////////////////////////
+
+
+def execConstructor(constructor, debugMode=None, writeBuildInfo=True):
+    r"""
+        Args:
+            constructor (constructors.BasicConstructor):実行するコンストラクタ
+            debugMode (str):デバッグモードの内容を表す文字列
+            writeBuildInfo (bool):ビルドの履歴を記述するかどうか
+    """
+    constructor.IsDebugMode = debugMode is not None
+    constructor.DebugMode = debugMode
+    constructor.execute()
+    if not writeBuildInfo:
+        return
+    fs = FactorySettings()
+    fs.updateBuildInfo(constructor)
+        # constructor.lod(), constructor.buildTimer(), debugMode)
+
+
 class startManualy(object):
     r"""
         通常FactorySettingsはシングルトンインスタンスだが、このクラスを使用して

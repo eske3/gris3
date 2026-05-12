@@ -11,7 +11,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3.tools import checkUtil
+from ...tools import checkUtil
 from ... import uilib, lib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 

@@ -16,10 +16,8 @@ from ..tools import blendShapeUtil
 from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
-DefaultBlendShapeName = 'facial_bs'
-DefaultTargetContainer = 'facialMorph_grp'
-DefaultTargetGeometory = 'face_geo'
-
+from importlib import reload
+reload(blendShapeUtil)
 
 TargetListTemplate = '''eye_wink_facialGrp_L
 eye_wink_facialGrp_R
@@ -78,14 +76,13 @@ pupil_decrease_facialGrp_C
 pupil_lookat_facialGrp_C
 '''
 
-
 class TargetListEditor(QtWidgets.QWidget):
     edittingFinished = QtCore.Signal(list)
 
     def __init__(self, parent=None):
         r"""
             Args:
-                parent (any):
+                parent (QtWidgets.QWidget):親ウィジェト
         """
         super(TargetListEditor, self).__init__(parent)
         self.__default_template = TargetListTemplate
@@ -128,7 +125,10 @@ class TargetListEditor(QtWidgets.QWidget):
         self.__editor.setPlainText('\n'.join(tgt_list))
 
     def makeTargetList(self):
-        targetlist = self.__editor.toPlainText().split('\n')
+        targetlist = [
+            x.strip() for x in self.__editor.toPlainText().split('\n')
+            if x
+        ]
         self.edittingFinished.emit(targetlist)
 
 
@@ -179,7 +179,7 @@ class BlendShapeOption(uilib.ClosableGroup):
         self.geometry.setNodeTypes('transform')
         self.geometry.setPickMode(mayaUIlib.NodePicker.SingleSelection)
 
-        self.bs = QtWidgets.QLineEdit(DefaultBlendShapeName)
+        self.bs = QtWidgets.QLineEdit(blendShapeUtil.DefaultBlendShapeName)
 
         layout = QtWidgets.QFormLayout(self)
         layout.addRow('Target Geometry', self.geometry)
@@ -225,7 +225,7 @@ class BlendShapeOption(uilib.ClosableGroup):
         self.bs.setText(blendShapeName)
 
 
-class Operator(uilib.ClosableGroup):
+class Operator(QtWidgets.QGroupBox):
     def __init__(self, parent=None):
         r"""
             Args:
@@ -301,6 +301,8 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
         """
         super(BlendShapeUtil, self).__init__(parent)
         self.setWindowTitle('+Blend Shape Util')
+        self.setBlendShapeManager()
+        self.setBSNameEngine()
 
         w = QtWidgets.QWidget()
         self.tgt_grp = TargetContainerSetting()
@@ -308,7 +310,7 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
 
         operator = Operator()
         operator.editButtonClicked.connect(self.editTargetList)
-        # operator.createTargetsButtonClicked.connect(self.createTargets)
+        operator.createTargetButtonClicked.connect(self.createTargets)
         operator.createBlendShapeButtonClicked.connect(self.createBlendShape)
         operator.duplicateButtonClicked.connect(self.duplicateTargets)
 
@@ -375,7 +377,7 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
     def setDefaultTargetList(self, targetListText):
         r"""
             Args:
-                targetListText (any):
+                targetListText (list):
         """
         self.__target_list_editor.setTemplateText(targetListText)
 
@@ -389,27 +391,70 @@ class BlendShapeUtil(uilib.ScrolledStackedWidget):
     def finishEditting(self, targetShapeList=None):
         if targetShapeList:
             data = self.getData()
-            blendShapeUtil.makeShapeTargets(
-                data['targetGroup'], targetShapeList
-            )
+            with node.DoCommand():
+                blendShapeUtil.makeShapeTargetGroup(
+                    data['targetGroup'], targetShapeList
+                )
         self.moveTo(0)
 
+    def setBlendShapeManager(self, bsManager=None):
+        if bsManager is None:
+            bsManager = blendShapeUtil.BasicFacialBSManager
+        self.__bs_manager = bsManager
+
+    def blendShapeManager(self):
+        return self.__bs_manager
+
+    def setBSNameEngine(self, bsNameEngine=None):
+        bsNameEngine = (
+            bsNameEngine
+            if bsNameEngine else blendShapeUtil.BasicFacialBSNameEngine
+        )
+        self.__bs_name_engine = bsNameEngine
+
+    def BSNameEngine(self):
+        return self.__bs_name_engine
+
+    def getBSManager(self):
+        manager_cls = self.blendShapeManager()
+        data = self.getData()
+        return manager_cls(
+            data['geometry'], data['bsName'], data['targetGroup'],
+            self.BSNameEngine()
+        )
+
     def createTargets(self):
-        pass
+        # DEBUG用 .............................................................
+        from importlib import reload
+        reload(blendShapeUtil)
+        self.setBlendShapeManager()
+        # .....................................................................
+        with node.DoCommand():
+            bsm = self.getBSManager()
+            bsm.makeTargets()
 
     def createBlendShape(self):
+        # DEBUG用 .............................................................
+        from importlib import reload
+        reload(blendShapeUtil)
+        self.setBlendShapeManager()
+        # .....................................................................
         data = self.getData()
         with node.DoCommand():
-            blendShapeUtil.createBlendShapeForFacial(
-                data['geometry'], data['bsName'], data['targetGroup']
-            )
+            bsm = self.getBSManager()
+            bsm.createBlendShape()
 
     def duplicateTargets(self):
-        data = self.getData()
+        # DEBUG用 .............................................................
+        from importlib import reload
+        reload(blendShapeUtil)
+        self.setBlendShapeManager()
+        # .....................................................................
+
+        # data = self.getData()
         with node.DoCommand():
-            blendShapeUtil.duplicateTargets(
-                data['geometry'], data['bsName'], data['targetGroup']
-            )
+            bsm = self.getBSManager()
+            bsm.duplicateTargets()
 
     def addAnimForCheck(self, interval):
         r"""
@@ -441,7 +486,9 @@ class MainGUI(uilib.AbstractSeparatedWindow):
 
 
 def showWindow(
-    blendShapeName='', targetGeometry='', targetShapeContainer='',
+    blendShapeName=blendShapeUtil.DefaultBlendShapeName,
+    targetGeometry=blendShapeUtil.DefaultTargetGeometory,
+    targetShapeContainer=blendShapeUtil.DefaultTargetContainer,
     defaultTargetListTemplate=TargetListTemplate
 ):
     r"""
@@ -457,7 +504,7 @@ def showWindow(
             QtWidgets.QWidget:
     """
     widget = MainGUI(mayaUIlib.MainWindow)
-    widget.resize(640, 420)
+    widget.resize(420, 640)
     m = widget.main()
     m.setBlendShape(blendShapeName)
     m.setTargetGeometry(targetGeometry)
@@ -465,3 +512,4 @@ def showWindow(
     m.setDefaultTargetList(defaultTargetListTemplate)
     widget.show()
     return widget
+

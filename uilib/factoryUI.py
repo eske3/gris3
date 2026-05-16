@@ -16,8 +16,9 @@ r"""
 import os
 import time
 
-from gris3 import uilib, fileUtil
-from gris3.fileUtil import fileManager
+from .. import uilib, fileUtil
+from ..fileUtil import fileManager
+from ..uilib import extendedUI
 
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
@@ -390,7 +391,7 @@ class ModuleBrowserModel(QtGui.QStandardItemModel):
     r"""
         ModuleBrowser専用のItemModelを提供するクラス。
     """
-    def __init__(self, itemview):
+    def __init__(self, itemview=None):
         r"""
             Args:
                 itemview (QtWidgets.QAbstractItemView):
@@ -399,6 +400,24 @@ class ModuleBrowserModel(QtGui.QStandardItemModel):
         self.setHeaderData(0, QtCore.Qt.Horizontal, 'File')
         self.setHeaderData(1, QtCore.Qt.Horizontal, 'Date')
         self.__itemview = itemview
+
+    def setItemView(self, itemview):
+        r"""
+            ModuleBrowserをセットする。
+
+            Args:
+                itemview (ModuleBrowser):
+        """
+        self.__itemview = itemview
+
+    def itemView(self):
+        r"""
+            セットされているModuleBrowserを返す。
+
+            Returns:
+                ModuleBrowser:
+        """
+        return self.__itemview
 
     def mimeData(self, indexes):
         r"""
@@ -421,7 +440,7 @@ class ModuleBrowserModel(QtGui.QStandardItemModel):
         return mimedata
 
 
-class ModuleBrowser(QtWidgets.QTreeView):
+class ModuleBrowser(extendedUI.FilteredView):
     r"""
         ファイルを一覧するためのクラス。
     """
@@ -449,17 +468,7 @@ class ModuleBrowser(QtWidgets.QTreeView):
             Args:
                 parent (QtWidgets.QWidget):親ウィジェット
         """
-        icon_size = uilib.hires(28)
         super(ModuleBrowser, self).__init__(parent)
-        self.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
-        self.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
-        self.setAlternatingRowColors(True)
-        self.setSelectionMode(QtWidgets.QTreeView.ExtendedSelection)
-        self.setDragEnabled(True)
-        self.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.clicked.connect(self.setPathToChild)
-        self.doubleClicked.connect(self.openInExplorer)
-        self.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
         self.__child = None
         self.__path = ''
         self.__customFilters = []
@@ -468,17 +477,37 @@ class ModuleBrowser(QtWidgets.QTreeView):
         self.__context = None
         self.__extra_context = None
         self.__browser_context = BrowserContext
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.showContext)
         self.setVersionFormat(fileManager.VersionFileReTemplte)
         self.setExtensionVisibles(False)
 
-        model = ModuleBrowserModel(self)
-        self.setModel(model)
-        self.setColumnWidth(0, uilib.hires(220))
+        view = self.view()
+        view.setColumnWidth(0, uilib.hires(220))
+        view.model().sourceModel().setItemView(self)
+        self.clicked = view.clicked
+        self.doubleClicked = view.doubleClicked
 
-        sel_model = QtCore.QItemSelectionModel(model)
-        self.setSelectionModel(sel_model)
+    def createView(self):
+        r"""
+            Returns:
+                QtWidgets.QTreeView:
+        """
+        icon_size = uilib.hires(28)
+        view = QtWidgets.QTreeView()
+        view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
+        view.setAlternatingRowColors(True)
+        view.setSelectionMode(QtWidgets.QTreeView.ExtendedSelection)
+        view.setDragEnabled(True)
+        view.setIconSize(QtCore.QSize(icon_size, icon_size))
+        view.clicked.connect(self.setPathToChild)
+        view.doubleClicked.connect(self.openInExplorer)
+        view.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
+        view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        view.customContextMenuRequested.connect(self.showContext)
+        return view
+
+    def createModel(self):
+        return ModuleBrowserModel()
 
     def setLabel(self, label):
         r"""
@@ -679,7 +708,7 @@ class ModuleBrowser(QtWidgets.QTreeView):
                         parentItem.setChild(row, 1, QtGui.QStandardItem())
             # =================================================================
 
-        model = self.model()
+        model = self.view().model().sourceModel()
         model.removeRows(0, model.rowCount())
         root_item = model.invisibleRootItem()
         if not os.path.isdir(self.path()):
@@ -727,7 +756,7 @@ class ModuleBrowser(QtWidgets.QTreeView):
                 list:
         """
         path = self.path()
-        selectionModel = self.selectionModel()
+        selectionModel = self.view().selectionModel()
         pathlist = []
         for index in [
             x for x in selectionModel.selectedIndexes() if x.column() == 0
@@ -746,7 +775,7 @@ class ModuleBrowser(QtWidgets.QTreeView):
             Returns:
                 list:
         """
-        selectionModel = self.selectionModel()
+        selectionModel = self.view().selectionModel()
         # 子階層を含まない場合。===============================================
         if not includeChildren:
             return [
@@ -755,8 +784,7 @@ class ModuleBrowser(QtWidgets.QTreeView):
             ]
         # =====================================================================
 
-        model = self.model()
-        root_index = self.model().indexFromItem(model.invisibleRootItem())
+        model = self.view().model()
         items = []
         for index in selectionModel.selectedIndexes():
             if index.column() != 0:

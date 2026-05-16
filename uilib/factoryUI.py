@@ -6,7 +6,7 @@ r"""
     
     Dates:
         date:2017/01/21 23:48[Eske](eske3g@gmail.com)
-        update:2021/04/23 09:27 eske yoshinob[eske3g@gmail.com]
+        update:2026/05/16 19:13 eske yoshinob[eske3g@gmail.com]
         
     License:
         Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
@@ -187,14 +187,14 @@ class BrowserContext(uilib.ConstantWidget):
         )
         
         # Discardボタン。
-        discard_btn = uilib.OButton(uilib.IconPath('uiBtn_discarded'))
+        discard_btn = uilib.OButton(uilib.IconPath('uiBtn_trush'))
         discard_btn.setSize(btn_size)
         discard_btn.setBgColor(180, 49, 11)
         discard_btn.setToolTip('Discard selected files.')
         discard_btn.clicked.connect(self.discard)
         
         # Restore用マネージャ起動ボタン。
-        disman_btn = uilib.OButton(uilib.IconPath('uiBtn_discardedBack'))
+        disman_btn = uilib.OButton(uilib.IconPath('uiBtn_discarded'))
         disman_btn.setSize(btn_size)
         disman_btn.setBgColor(25, 111, 160)
         disman_btn.setToolTip('Show discarded file manager.')
@@ -303,7 +303,7 @@ class BrowserContext(uilib.ConstantWidget):
             ゴミ箱処理されたファイルの操作を行うGUIを表示する
         """
         if not self.__discarded_manager:
-            from gris3.ui import discardedFileManager
+            from ..ui import discardedFileManager
             self.__discarded_manager = discardedFileManager.MainGUI(self)
             self.__discarded_manager.resize(
                 uilib.hires(600), uilib.hires(600)
@@ -485,6 +485,7 @@ class ModuleBrowser(extendedUI.FilteredView):
         view.model().sourceModel().setItemView(self)
         self.clicked = view.clicked
         self.doubleClicked = view.doubleClicked
+        self.setRootIsDecorated = view.setRootIsDecorated
 
     def createView(self):
         r"""

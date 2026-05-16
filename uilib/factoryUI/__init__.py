@@ -13,7 +13,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from .browser import ModuleBrowser, ModuleBrowserWidget
-from .viewer import FileView
+from .browser import ModuleBrowser
+from .viewer import ModuleBrowserWidget, FileView
 from .context import ContextOption, MayaAsciiBrowserContext
 from .toolbar import ToolBar, ToolTabWidget

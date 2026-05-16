@@ -15,10 +15,12 @@ r"""
 """
 import os
 import time
+
 from . import context
-from ... import uilib, fileUtil
+from ... import uilib
 from ...fileUtil import fileManager
 from ...uilib import extendedUI
+
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
@@ -505,102 +507,4 @@ class ModuleBrowser(extendedUI.FilteredView):
         self.__context.setPath(self.path())
         self.__context.setFileNames(self.selectedItems(True))
         self.__context.show()
-
-
-class ModuleBrowserWidget(QtWidgets.QWidget):
-    r"""
-        ModuleBrowserの上位互換ウィジェット。
-        リフレッシュボタンやエクスプローラーで開くボタンなどが追加されている他、
-        メソッド的にもほぼModuleBrowserを踏襲している。
-    """
-
-    def __init__(self, parent=None):
-        r"""
-            Args:
-                parent (QtWidgets.QWidget): 親ウィジェット。
-        """
-        super(ModuleBrowserWidget, self).__init__(parent)
-
-        self.__browser = ModuleBrowser()
-        # ブラウザのメソッドをそのまま移植する。===============================
-        for cmd in (
-                'setLabel', 'installCustomFilter', 'customFilter',
-                'setCoordinator', 'coordinate', 'refresh', 'setPath', 'path',
-                'setExtensions', 'selectedPathes', 'selectedItems',
-                'openInExplorer', 'showContext', 'setBrowserContext', 'clicked',
-                'doubleClicked', 'setExtraContext',
-                'versionFormat', 'setVersionFormat', 'extensionVisibles',
-                'setExtensionVisibles'
-        ):
-            setattr(self, cmd, getattr(self.__browser, cmd))
-        # =====================================================================
-
-        # ツールバー。=========================================================
-        refresh_btn = QtWidgets.QPushButton()
-        refresh_btn.setFlat(True)
-        refresh_btn.setIcon(uilib.Icon('uiBtn_reload'))
-        refresh_btn.setToolTip('Refresh Browser')
-        refresh_btn.clicked.connect(self.refresh)
-
-        open_exp_btn = QtWidgets.QPushButton()
-        open_exp_btn.setFlat(True)
-        open_exp_btn.setIcon(uilib.Icon('uiBtn_directory'))
-        open_exp_btn.setToolTip('Open Directory in Explorer...')
-        open_exp_btn.clicked.connect(self.openRootDir)
-
-        tool_layout = QtWidgets.QHBoxLayout()
-        tool_layout.setContentsMargins(0, 0, 0, 0)
-        tool_layout.setSpacing(2)
-        tool_layout.setDirection(QtWidgets.QBoxLayout.RightToLeft)
-
-        icon_size = uilib.hires(20)
-        max_size = uilib.hires(24)
-        for btn in (refresh_btn, open_exp_btn):
-            btn.setIconSize(QtCore.QSize(icon_size, icon_size))
-            btn.setMaximumSize(QtCore.QSize(max_size, max_size))
-            tool_layout.addWidget(btn)
-        tool_layout.addStretch()
-        # =====================================================================
-
-        layout = QtWidgets.QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
-        layout.setSpacing(2)
-        layout.addLayout(tool_layout)
-        layout.addWidget(self.__browser)
-
-    def browser(self):
-        r"""
-            セットされているブラウザオブジェクトを返すメソッド。
-
-            Returns:
-                ModuleBrowser:
-        """
-        return self.__browser
-
-    def openRootDir(self):
-        r"""
-            ルートパスをExplorerで開くメソッド。
-        """
-        fileUtil.openDir(self.path())
-
-    def copyPath(self):
-        r"""
-            選択ファイルのパスのリストをクリップボードへコピーする
-        """
-        QtWidgets.QApplication.clipboard().setText(
-            '\n'.join(self.selectedPathes())
-        )
-
-    def keyPressEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEvent):
-        """
-        key = event.key()
-        mod = event.modifiers()
-        if mod == QtCore.Qt.ControlModifier:
-            if key == QtCore.Qt.Key_C:
-                self.copyPath()
-                return
-        super(ModuleBrowserWidget, self).keyPressEvent(event)
 

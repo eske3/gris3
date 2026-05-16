@@ -472,11 +472,12 @@ class ModuleBrowser(extendedUI.FilteredView):
         self.__child = None
         self.__path = ''
         self.__customFilters = []
-        self.__coodinator = fileManager.coordinateFiles
+        self.__coordinator = fileManager.coordinateFiles
         self.__extensions = ['ma']
         self.__context = None
         self.__extra_context = None
         self.__browser_context = BrowserContext
+        self.__version_format = ''
         self.setVersionFormat(fileManager.VersionFileReTemplte)
         self.setExtensionVisibles(False)
 
@@ -564,12 +565,27 @@ class ModuleBrowser(extendedUI.FilteredView):
     def setCoordinator(self, function):
         r"""
             ファイルリストのフィルタリング関数をセットするメソッド。
-            セットする関数は特定のデータを持った辞書型を返す必要がある。
-            
+            セットする関数は以下のフォーマットに則っている必要がある。
+            def coordinate(filelist: list, extensions: list, versionFormat:str): -> dict
+            引数
+                files(list): ファイル操作する対象のパスリスト
+                extensions(list): フィルタをかける拡張子のリスト
+                versionFormat(str):バージョン表記となる箇所を特定する正規表現
+            戻り値は辞書型で
+                キー： バージョン表記の無い、各バージョンファイルをまとめる見出しとなる名前
+                値： 各種データを持つ辞書
+            となる。
+            辞書の値には以下のキーを持つ辞書型を定義する。
+                'ver':バージョン番号
+                'sep':バージョンを区切るセパレータ文字
+                'name': 元のファイル名
+                'ext': 拡張子
+                'simpleName': 拡張子を抜いたシンプルな名前
+
             Args:
                 function (function):
         """
-        self.__coodinator = function
+        self.__coordinator = function
 
     def coordinate(self, filelist, extensions, versionFormat):
         r"""
@@ -582,9 +598,9 @@ class ModuleBrowser(extendedUI.FilteredView):
                 versionFormat (str):正規表現
                 
             Returns:
-                any:
+                dict:
         """
-        return self.__coodinator(filelist, extensions, versionFormat)
+        return self.__coordinator(filelist, extensions, versionFormat)
 
     def setVersionFormat(self, format):
         r"""
@@ -845,7 +861,7 @@ class ModuleBrowser(extendedUI.FilteredView):
         """
         if not self.__context:
             self.__context = self.__browser_context(self)
-            self.__context.setCoordinator(self.__coodinator)
+            self.__context.setCoordinator(self.__coordinator)
             self.__context.setExtensions(self.__extensions)
             self.__context.setVersionReTemplate(self.versionFormat())
             self.__context.setContextOption(self.__extra_context)
@@ -869,28 +885,16 @@ class ModuleBrowserWidget(QtWidgets.QWidget):
         
         self.__browser = ModuleBrowser()
         # ブラウザのメソッドをそのまま移植する。===============================
-        self.setLabel = self.__browser.setLabel
-        self.installCustomFilter = self.__browser.installCustomFilter
-        self.customFilter = self.__browser.customFilter
-        self.setCoordinator = self.__browser.setCoordinator
-        self.coordinate = self.__browser.coordinate
-        self.refresh = self.__browser.refresh
-        self.setPath = self.__browser.setPath
-        self.path = self.__browser.path
-        self.setExtensions = self.__browser.setExtensions
-        self.selectedPathes = self.__browser.selectedPathes
-        self.selectedItems = self.__browser.selectedItems
-        self.openInExplorer = self.__browser.openInExplorer
-        self.showContext = self.__browser.showContext
-        self.setBrowserContext = self.__browser.setBrowserContext
-        self.clicked = self.__browser.clicked
-        self.doubleClicked = self.__browser.doubleClicked
-        self.setExtraContext = self.__browser.setExtraContext
-        
-        self.versionFormat = self.__browser.versionFormat
-        self.setVersionFormat = self.__browser.setVersionFormat
-        self.extensionVisibles = self.__browser.extensionVisibles
-        self.setExtensionVisibles = self.__browser.setExtensionVisibles
+        for cmd in (
+                'setLabel', 'installCustomFilter', 'customFilter',
+                'setCoordinator', 'coordinate', 'refresh', 'setPath', 'path',
+                'setExtensions', 'selectedPathes', 'selectedItems',
+                'openInExplorer', 'showContext', 'setBrowserContext', 'clicked',
+                'doubleClicked', 'setExtraContext',
+                'versionFormat', 'setVersionFormat', 'extensionVisibles',
+                'setExtensionVisibles'
+        ):
+            setattr(self, cmd, getattr(self.__browser, cmd))
         # =====================================================================
 
         # ツールバー。=========================================================

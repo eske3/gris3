@@ -55,6 +55,12 @@ def coordinateFiles(files, extensions, extFormat):
     return matched_files
 
 
+class ScriptListView(QtWidgets.QTreeView):
+    def drawBranches(self, painter, rect, index):
+        if not index.parent().isValid() and index.model().hasChildren(index):
+            super(ScriptListView, self).drawBranches(painter, rect, index)
+
+
 class ScriptHelperView(extendedUI.FilteredView):
     r"""
         スクリプトのヘルプを表示するビューワ
@@ -74,7 +80,7 @@ class ScriptHelperView(extendedUI.FilteredView):
             Returns:
                 QTreeView/QListView/QTableView:
         """
-        view = QtWidgets.QTreeView()
+        view = ScriptListView()
         view.setAlternatingRowColors(True)
         view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)

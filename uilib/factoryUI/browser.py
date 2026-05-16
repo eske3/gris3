@@ -88,7 +88,6 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
         if has_children:
             alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop
             font = QtGui.QFont(option.font)
-            # font.setBold(True)
             title_font_height = font.pixelSize() * 1.25
             font.setPixelSize(title_font_height)
 
@@ -115,7 +114,6 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
             painter.drawLine(
                 option.rect.bottomLeft(), option.rect.bottomRight()
             )
-
 
 
 class ModuleBrowserView(QtWidgets.QTreeView):

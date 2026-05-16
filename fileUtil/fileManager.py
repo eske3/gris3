@@ -28,20 +28,20 @@ def coordinateFiles(files, extensions, extFormat=VersionFileReTemplte):
         Args:
             files (list):ファイル操作する対象のパスリスト
             extensions (list):フィルタをかける拡張子のリスト
-            extFormat (str):
+            extFormat (str):バージョン表記となる箇所を特定する正規表現
             
         Returns:
             dict:
     """
     reobj = re.compile(extFormat.format('|'.join(extensions)))
-    matchedFiles = {}
+    matched_files = {}
     files.sort()
     for filepath in files:
         file = os.path.basename(filepath)
         if file.startswith('.'):
             continue
         if os.path.isdir(filepath):
-            matchedFiles.setdefault('/dir', []).append(file)
+            matched_files.setdefault('/dir', []).append(file)
             continue
         r = reobj.search(file)
         if not r:
@@ -50,8 +50,8 @@ def coordinateFiles(files, extensions, extFormat=VersionFileReTemplte):
             'ver':r.group(3), 'sep':r.group(2), 'name':file, 'ext':r.group(3),
             'simpleName':reobj.sub(r'\1\2\3', file)
         }
-        matchedFiles.setdefault(r.group(1), []).append(data)
-    return matchedFiles
+        matched_files.setdefault(r.group(1), []).append(data)
+    return matched_files
 
 
 class FileManager(object):

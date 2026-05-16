@@ -33,12 +33,14 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
                 option (QtWidgets.QStyleOptionViewItem):
                 index(QtCore.QModelIndex):
         """
+        size_hint = super(ModuleBrowserStyle, self).sizeHint(option, index)
         if index.model().hasChildren(index):
             factor = 3.5
         else:
             factor = 2
         height = int(option.fontMetrics.boundingRect('f').height() * factor)
-        return QtCore.QSize(option.rect.width(), height)
+        return QtCore.QSize(size_hint.width(), height)
+        # return QtCore.QSize(option.rect.width(), height)
 
     def paint(self, painter, option, index):
         r"""

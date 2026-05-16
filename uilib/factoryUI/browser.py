@@ -15,6 +15,7 @@ r"""
 """
 import os
 import time
+import math
 
 from . import context
 from ... import uilib
@@ -22,6 +23,163 @@ from ...fileUtil import fileManager
 from ...uilib import extendedUI
 
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
+
+class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
+    ExtraColor = QtGui.QColor(45, 164, 255)
+
+    def sizeHint(self, option, index):
+        r"""
+            Args:
+                option (QtWidgets.QStyleOptionViewItem):
+                index(QtCore.QModelIndex):
+        """
+        if index.model().hasChildren(index):
+            factor = 3.5
+        else:
+            factor = 2
+        height = int(option.fontMetrics.boundingRect('f').height() * factor)
+        return QtCore.QSize(option.rect.width(), height)
+
+    def paint(self, painter, option, index):
+        r"""
+            Args:
+                painter (QtGui.QPainter):
+                option (QtWidgets.QStyleOptionViewItem):
+                index(QtCore.QModelIndex):
+        """
+        opt = type(option)(option)
+        self.initStyleOption(opt, index)
+        opt.text = ''
+        opt.icon = QtGui.QIcon()
+        style = (
+            opt.widget.style() if opt.widget else QtWidgets.QApplication.style()
+        )
+        style.drawControl(
+            QtWidgets.QStyle.CE_ItemViewItem, opt, painter, opt.widget
+        )
+
+        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+        painter.save()
+        rect = QtCore.QRect(option.rect)
+        font_height = option.fontMetrics.boundingRect('f').height()
+        offset = font_height * 0.25
+        rect.setX(rect.x() + offset)
+        rect.setTop(rect.top() + offset)
+        rect.setBottom(rect.bottom() - offset)
+
+        icon = index.data(QtCore.Qt.DecorationRole)
+        has_children = index.model().hasChildren(index)
+        if icon:
+            if has_children:
+                icon_height = rect.height() * 0.6
+            else:
+                icon_height = int(font_height * 1)
+            icon_size = QtCore.QSize(icon_height, icon_height)
+            icon_rect = QtCore.QRect(rect)
+            icon_rect.setY(
+                icon_rect.y() + ((rect.height() - icon_height) * 0.5)
+            )
+            icon_rect.setSize(icon_size)
+            painter.drawPixmap(icon_rect, icon.pixmap(icon_size))
+            rect.setX(rect.x() + icon_height * 1.1)
+            rect.setTop(icon_rect.top())
+
+        alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+        if has_children:
+            alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop
+            font = QtGui.QFont(option.font)
+            # font.setBold(True)
+            title_font_height = font.pixelSize() * 1.25
+            font.setPixelSize(title_font_height)
+
+            ext = index.data(QtCore.Qt.UserRole + 2)
+            num_children = index.model().rowCount(index)
+            text ='Type : {} | {} item{} included'.format(
+                ext, num_children, '' if num_children < 2 else 's'
+            )
+            sub_rect = QtCore.QRect(rect)
+            sub_rect.setTop(sub_rect.top() + offset + title_font_height)
+            pen = painter.pen()
+            pen.setColor(self.ExtraColor)
+            painter.setPen(pen)
+            painter.drawText(sub_rect, alignment, text)
+            painter.restore()
+            painter.setFont(font)
+
+        painter.drawText(rect, alignment, index.data())
+        painter.setFont(option.font)
+        parent = index.parent()
+        if not parent.isValid():
+            return
+        if index.row() == index.model().rowCount(parent) - 1:
+            painter.drawLine(
+                option.rect.bottomLeft(), option.rect.bottomRight()
+            )
+
+
+
+class ModuleBrowserView(QtWidgets.QTreeView):
+    def __init__(self, parent=None):
+        super(ModuleBrowserView, self).__init__(parent)
+        self.setItemDelegate(ModuleBrowserStyle())
+        self.setAnimated(True)
+
+    def _get_triangle_polygon(self, rect, isUp):
+        e = math.sqrt(3)
+        box = min(rect.width(), rect.height()) * 0.5
+        side = min(box, (2.0 / e) * box)
+        cx = rect.center().x()
+        cy = rect.center().y()
+        h = e / 2.0 * side
+
+        left = cx - side / 2.0
+        right = cx + side / 2.0
+
+        if isUp:
+            # 上向き三角形
+            bottom = cy - h / 3.0
+            p1 = QtCore.QPoint(cx, cy + 2.0 * h / 3.0)
+            p2 = QtCore.QPoint(left, bottom)
+            p3 = QtCore.QPoint(right, bottom)
+        else:
+            # 下向き三角形
+            bottom = cy + h / 3.0
+            p1 = QtCore.QPoint(cx, cy - 2.0 * h / 3.0)
+            p2 = QtCore.QPoint(left, bottom)
+            p3 = QtCore.QPoint(right, bottom)
+        return QtGui.QPolygonF([p1, p2, p3])
+
+    def drawBranches(self, painter, rect, index):
+        r"""
+            Args:
+                painter (QtGui.QPainter):
+                rect (QtGui.QRect):
+                index(QtCore.QModelIndex):
+        """
+        if not index.model().hasChildren(index) or not self.rootIsDecorated():
+            return
+        is_expanded = self.isExpanded(index)
+        painter.save()
+        painter.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        pen = painter.pen()
+        brush = pen.color()
+        if is_expanded:
+            brush = QtCore.Qt.NoBrush
+        else:
+            pen = QtCore.Qt.NoPen
+        painter.setBrush(brush)
+        painter.setPen(pen)
+
+        parent_index = index.parent()
+        col = 1
+        while True:
+            if not parent_index.isValid():
+                break
+            parent_index = parent_index.parent()
+            col += 1
+        rect.setX(rect.width() / col * (col - 1))
+        painter.drawPolygon(self._get_triangle_polygon(rect, is_expanded))
+        painter.restore()
 
 
 class ModuleBrowserModel(QtGui.QStandardItemModel):
@@ -132,10 +290,10 @@ class ModuleBrowser(extendedUI.FilteredView):
                 QtWidgets.QTreeView:
         """
         icon_size = uilib.hires(28)
-        view = QtWidgets.QTreeView()
+        view = ModuleBrowserView()
         view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
-        view.setAlternatingRowColors(True)
+        # view.setAlternatingRowColors(True)
         view.setSelectionMode(QtWidgets.QTreeView.ExtendedSelection)
         view.setDragEnabled(True)
         view.setIconSize(QtCore.QSize(icon_size, icon_size))
@@ -291,7 +449,7 @@ class ModuleBrowser(extendedUI.FilteredView):
             内容を更新する。
         """
 
-        def setFiles(dirpath, offset, parentItem):
+        def setFiles(dirpath, offset, parentItem, vFormat):
             r"""
                 ファイルをビューにセットするローカル関数
 
@@ -302,22 +460,32 @@ class ModuleBrowser(extendedUI.FilteredView):
             """
             filedatalist = self.coordinate(
                 [os.path.join(dirpath, x) for x in os.listdir(dirpath)],
-                self.__extensions, self.versionFormat()
+                self.__extensions, vFormat
             )
             if not filedatalist:
                 return
             parent_path = dirpath
             # ディレクトリパスに対する処理。===================================
-            for d in filedatalist.pop('/dir', []):
-                local_dir = os.path.join(offset, d)
-                icon = uilib.Icon(uilib.IconPath('folder'))
-                item = QtGui.QStandardItem(d)
-                item.setIcon(icon)
-                item.setData(local_dir)
-                parentItem.setChild(parentItem.rowCount(), 0, item)
-                setFiles(
-                    os.path.join(dirpath, d), local_dir, item
-                )
+            for key in ('dir', 'file'):
+                for d in filedatalist.pop('/'+key, []):
+                    filepath = os.path.join(dirpath, d)
+                    local_dir = os.path.join(offset, d)
+                    if key == 'dir':
+                        icon = uilib.Icon(uilib.IconPath('folder'))
+                    else:
+                        icon = QtGui.QIcon(
+                            provider.icon(QtCore.QFileInfo(filepath))
+                        )
+                    item = QtGui.QStandardItem(d)
+                    item.setIcon(icon)
+                    item.setData(local_dir)
+                    item.setData(key, QtCore.Qt.UserRole+2)
+                    row = parentItem.rowCount()
+                    parentItem.setChild(row, 0, item)
+                    parentItem.setChild(row, 1, QtGui.QStandardItem())
+
+                    if key == 'dir':
+                        setFiles(filepath, local_dir, item, None)
             # =================================================================
             # 通常ファイルに対する処理。=======================================
             keys = list(filedatalist.keys())
@@ -337,6 +505,7 @@ class ModuleBrowser(extendedUI.FilteredView):
                     if file['ver'] == 'cur':
                         item.setText(filename)
                         item.setData(os.path.join(offset, file['name']))
+                        item.setData(file['ext'], QtCore.Qt.UserRole+2)
                         continue
                     fileitem = QtGui.QStandardItem(file['simpleName'])
                     fileitem.setData(os.path.join(offset, file['name']))
@@ -370,7 +539,7 @@ class ModuleBrowser(extendedUI.FilteredView):
         if not os.path.isdir(self.path()):
             return
         provider = QtWidgets.QFileIconProvider()
-        setFiles(self.path(), '', root_item)
+        setFiles(self.path(), '', root_item, self.versionFormat())
 
     def setPath(self, path):
         r"""
@@ -464,11 +633,11 @@ class ModuleBrowser(extendedUI.FilteredView):
         if len(pathes) != 1:
             return
         name, ext = os.path.splitext(pathes[0])
-        if ext.lower() in ('.mb', '.ma'):
-            from gris3.ui import fileLoader
+        if ext.lower() in ('.mb', '.ma') and os.path.isfile(pathes[0]):
+            from ...ui import fileLoader
             fileLoader.showAssistance(pathes[0], self)
         else:
-            from gris3 import fileUtil
+            from ... import fileUtil
             fileUtil.openFile(pathes[0])
 
     def setPathToChild(self):

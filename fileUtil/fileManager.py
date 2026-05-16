@@ -33,7 +33,10 @@ def coordinateFiles(files, extensions, extFormat=VersionFileReTemplte):
         Returns:
             dict:
     """
-    reobj = re.compile(extFormat.format('|'.join(extensions)))
+    if extFormat is None:
+        reobj = None
+    else:
+        reobj = re.compile(extFormat.format('|'.join(extensions)))
     matched_files = {}
     files.sort()
     for filepath in files:
@@ -43,11 +46,14 @@ def coordinateFiles(files, extensions, extFormat=VersionFileReTemplte):
         if os.path.isdir(filepath):
             matched_files.setdefault('/dir', []).append(file)
             continue
+        if not reobj:
+            matched_files.setdefault('/file', []).append(file)
+            continue
         r = reobj.search(file)
         if not r:
             continue
         data = {
-            'ver':r.group(3), 'sep':r.group(2), 'name':file, 'ext':r.group(3),
+            'ver':r.group(3), 'sep':r.group(2), 'name':file, 'ext':r.group(4),
             'simpleName':reobj.sub(r'\1\2\3', file)
         }
         matched_files.setdefault(r.group(1), []).append(data)

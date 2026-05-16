@@ -13,13 +13,13 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import core, factoryModules, exporter, uilib, func
-from gris3.uilib import factoryUI
-from gris3.gadgets import jointEditorWidget, unitCreator
-from gris3.tools import jointEditor
+from ... import factoryModules, exporter, uilib
+from ...gadgets import jointEditorWidget, unitCreator
+from ...uilib import factoryUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
+
 
 class JointManager(factoryModules.AbstractDepartmentGUI):
     r"""

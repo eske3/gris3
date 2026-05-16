@@ -13,9 +13,9 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import factoryModules, exporter, uilib
-from gris3.gadgets import skinningEditor
-from gris3.uilib import factoryUI
+from ... import factoryModules, exporter, uilib
+from ...gadgets import skinningEditor
+from ...uilib import factoryUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
@@ -86,8 +86,8 @@ class ContextOption(factoryUI.ContextOption):
         splitter.setSizes([280, 250])
         splitter.setStretchFactor(1, 1)
 
-        weightinfo_grp = QtWidgets.QGroupBox('Weight Info')
-        weight_layout = QtWidgets.QVBoxLayout(weightinfo_grp)
+        weight_info_grp = QtWidgets.QGroupBox('Weight Info')
+        weight_layout = QtWidgets.QVBoxLayout(weight_info_grp)
         weight_layout.addWidget(splitter)
         # ---------------------------------------------------------------------
         # =====================================================================
@@ -95,7 +95,7 @@ class ContextOption(factoryUI.ContextOption):
         layout = QtWidgets.QGridLayout(self)
         layout.addWidget(QtWidgets.QLabel('File'), 0, 0, 1, 1)
         layout.addWidget(self.__path_editor, 0, 1, 1, 1)
-        layout.addWidget(weightinfo_grp, 1, 0, 1, 2)
+        layout.addWidget(weight_info_grp, 1, 0, 1, 2)
 
     def isScalable(self):
         r"""
@@ -220,8 +220,8 @@ class WeightEditor(factoryModules.AbstractDepartmentGUI):
             書き出しを行う。
         """
         rootpath = self.workspaceDir()
-        isOverwrite = self.__isOverwrite.isChecked()
-        exporter.exportMultSkinWeights(rootpath, isOverwrite)
+        is_overwrite = self.__isOverwrite.isChecked()
+        exporter.exportMultSkinWeights(rootpath, is_overwrite)
         self.__view.refresh()
 
 

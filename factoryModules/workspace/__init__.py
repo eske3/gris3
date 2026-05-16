@@ -13,8 +13,8 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import factoryModules, exporter, uilib
-from gris3.uilib import factoryUI
+from ... import factoryModules, exporter, uilib
+from ...uilib import factoryUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )

@@ -10,7 +10,7 @@ r'''
     このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
     は一切責任を負いませんのであらかじめご了承ください
 '''
-from gris3 import factoryModules
+from ... import factoryModules
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )

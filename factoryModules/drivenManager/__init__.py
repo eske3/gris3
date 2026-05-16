@@ -13,10 +13,9 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from gris3 import factoryModules, exporter
-from gris3 import uilib
-from gris3.gadgets import drivenManager
-from gris3.uilib import factoryUI
+from ... import factoryModules, exporter
+from ...gadgets import drivenManager
+from ...uilib import factoryUI
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )

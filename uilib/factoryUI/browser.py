@@ -51,26 +51,29 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
         """
         opt = QtWidgets.QStyleOptionViewItem(option)
         self.initStyleOption(opt, index)
-        painter.save()
-        painter.setFont(opt.font)
-
-        opt.text = ''
-        opt.icon = QtGui.QIcon()
         style = (
             opt.widget.style() if opt.widget else QtWidgets.QApplication.style()
         )
+        painter.save()
+
+        bg_opt = QtWidgets.QStyleOptionViewItem(opt)
+        bg_opt.text = ''
+        bg_opt.icon = QtGui.QIcon()
         style.drawControl(
-            QtWidgets.QStyle.CE_ItemViewItem, opt, painter, opt.widget
+            QtWidgets.QStyle.CE_ItemViewItem, bg_opt, painter, bg_opt.widget
         )
+
+        painter.setFont(opt.font)
+        painter.setRenderHints(QtGui.QPainter.Antialiasing)
+
         if opt.state & QtWidgets.QStyle.State_Selected:
             pen_color = opt.palette.color(QtGui.QPalette.HighlightedText)
         else:
             pen_color = opt.palette.color(QtGui.QPalette.Text)
 
-        painter.setRenderHints(QtGui.QPainter.Antialiasing)
         rect = QtCore.QRect(option.rect)
         font_height = opt.fontMetrics.height()
-        offset = font_height * 0.25
+        offset = int(font_height * 0.25)
         rect.setX(rect.x() + offset)
         rect.setTop(rect.top() + offset)
         rect.setBottom(rect.bottom() - offset)
@@ -79,7 +82,7 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
         has_children = index.model().hasChildren(index)
         if icon:
             if has_children:
-                icon_height = rect.height() * 0.6
+                icon_height = int(rect.height() * 0.6)
             else:
                 icon_height = int(font_height * 1)
             icon_size = QtCore.QSize(icon_height, icon_height)
@@ -89,21 +92,21 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
             )
             icon_rect.setSize(icon_size)
             painter.drawPixmap(icon_rect, icon.pixmap(icon_size))
+
             rect.setX(rect.x() + icon_height * 1.1)
             rect.setTop(icon_rect.top())
 
         alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
         if has_children:
             alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop
-            font = QtGui.QFont(opt.font)
-            ps = font.pointSizeF()
+            title_font = QtGui.QFont(opt.font)
+            ps = title_font.pointSizeF()
             if ps > 0:
-                font.setPointSize(ps * 1.25)
+                title_font.setPointSize(ps * 1.25)
             else:
-                px = max(1, font.pixelSize())
-                font.setPixelSize(int(px * 1.25))
-            # title_font_height = font.pixelSize() * 1.25
-            # font.setPixelSize(title_font_height)
+                px = max(1, title_font.pixelSize())
+                title_font.setPixelSize(int(px * 1.25))
+            title_h = QtGui.QFontMetrics(title_font).height()
 
             ext = index.data(QtCore.Qt.UserRole + 2)
             num_children = index.model().rowCount(index)
@@ -111,23 +114,25 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
                 ext, num_children, '' if num_children < 2 else 's'
             )
             sub_rect = QtCore.QRect(rect)
-            sub_rect.setTop(sub_rect.top() + offset + font.pixelSize())
+            sub_rect.setTop(sub_rect.top() + offset + title_h)
             pen = painter.pen()
             pen.setColor(self.ExtraColor)
             painter.setPen(pen)
+            painter.setFont(opt.font)
             painter.drawText(sub_rect, alignment, text)
-            painter.setFont(font)
+
+            painter.setFont(title_font)
 
         painter.setPen(pen_color)
         painter.drawText(rect, alignment, index.data())
-        painter.setFont(option.font)
+
         parent = index.parent()
-        if not parent.isValid():
-            return
-        if index.row() == index.model().rowCount(parent) - 1:
-            painter.drawLine(
-                option.rect.bottomLeft(), option.rect.bottomRight()
-            )
+        if parent.isValid():
+            if index.row() == index.model().rowCount(parent) - 1:
+                painter.drawLine(
+                    option.rect.bottomLeft(), option.rect.bottomRight()
+                )
+
         painter.restore()
 
 

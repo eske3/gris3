@@ -161,6 +161,7 @@ class Launcher(QtWidgets.QWidget):
         """
         super(Launcher, self).__init__(parent)
         self.setWindowTitle('Gris Launcher')
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.__functions = {}
 
         self.__view = AppViewer()

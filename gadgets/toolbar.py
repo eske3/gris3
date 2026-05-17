@@ -113,12 +113,15 @@ class ToolbarView(QtWidgets.QWidget):
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.__anchor = parent
         self.__watched = []
+        self.__pos = None
+        self.__last_height = None
         self.__tab = QtWidgets.QStackedWidget()
         self.__gradient = QtGui.QLinearGradient()
         self.__gradient.setColorAt(0, QtGui.QColor(22, 42, 68, 240))
         self.__gradient.setColorAt(1, QtGui.QColor(0, 0, 0, 175))
 
         layout = QtWidgets.QVBoxLayout(self)
+        layout.addSpacing(20)
         layout.addWidget(self.__tab)
 
         self._installEventFiltersToAll()
@@ -191,22 +194,25 @@ class ToolbarView(QtWidgets.QWidget):
         rect = self.__anchor.rect()
         rect.moveTopLeft(self.__anchor.mapToGlobal(rect.topLeft()))
         rect.moveTop(rect.top() + self.ButtonSize)
-        rect.setHeight(uilib.hires(500))
+        rect.setHeight(
+            self.__last_height if self.__last_height else uilib.hires(500)
+        )
         self.setGeometry(rect)
 
     def eventFilter(self, obj, event):
         et = event.type()
         if obj in self.__watched:
             if et in (
-                    QtCore.QEvent.ParentChange, QtCore.QEvent.ParentAboutToChange
+                    QtCore.QEvent.ParentChange,
+                    QtCore.QEvent.ParentAboutToChange
             ):
                 self._installEventFiltersToAll()
 
-            if et == QtCore.QEvent.Show:
+            if et in (QtCore.QEvent.Show, QtCore.QEvent.Resize):
                 if self.isVisible():
                     self.reposition()
             elif et in (
-                QtCore.QEvent.Move, QtCore.QEvent.Resize,
+                QtCore.QEvent.Move,
                 QtCore.QEvent.Hide, QtCore.QEvent.Close,
             ):
                 self.hide()
@@ -214,6 +220,28 @@ class ToolbarView(QtWidgets.QWidget):
                 self.hide()
 
         return super(ToolbarView, self).eventFilter(obj, event)
+
+    def mousePressEvent(self, event):
+        self.__pos = None
+        if event.buttons() in (QtCore.Qt.RightButton, QtCore.Qt.MiddleButton):
+            self.__pos = [event.globalX(), event.globalY()]
+        super(ToolbarView, self).mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        super(ToolbarView, self).mouseMoveEvent(event)
+        if not self.__pos:
+            return
+        cur_pos = [event.globalX(), event.globalY()]
+        move_value = cur_pos[1] - self.__pos[1]
+        rect = self.geometry()
+        self.__last_height = rect.height() + move_value
+        rect.setHeight(self.__last_height)
+        self.setGeometry(rect)
+        self.__pos = cur_pos
+
+    def mouseReleaseEvent(self, event):
+        self.__pos = None
+        super(ToolbarView, self).mouseReleaseEvent(event)
 
     def paintEvent(self, event):
         r"""

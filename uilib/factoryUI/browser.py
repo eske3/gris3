@@ -33,14 +33,14 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
                 option (QtWidgets.QStyleOptionViewItem):
                 index(QtCore.QModelIndex):
         """
-        size_hint = super(ModuleBrowserStyle, self).sizeHint(option, index)
-        if index.model().hasChildren(index):
-            factor = 3.5
-        else:
-            factor = 2
-        height = int(option.fontMetrics.boundingRect('f').height() * factor)
-        return QtCore.QSize(size_hint.width(), height)
-        # return QtCore.QSize(option.rect.width(), height)
+        opt = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+
+        base = super(ModuleBrowserStyle, self).sizeHint(opt, index)
+        font_h = opt.fontMetrics.height()
+        factor = 3.5 if index.model().hasChildren(index) else 2.0
+        height = int(font_h * factor)
+        return QtCore.QSize(base.width(), height)
 
     def paint(self, painter, option, index):
         r"""
@@ -49,8 +49,11 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
                 option (QtWidgets.QStyleOptionViewItem):
                 index(QtCore.QModelIndex):
         """
-        opt = type(option)(option)
+        opt = QtWidgets.QStyleOptionViewItem(option)
         self.initStyleOption(opt, index)
+        painter.save()
+        painter.setFont(opt.font)
+
         opt.text = ''
         opt.icon = QtGui.QIcon()
         style = (
@@ -59,11 +62,14 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
         style.drawControl(
             QtWidgets.QStyle.CE_ItemViewItem, opt, painter, opt.widget
         )
+        if opt.state & QtWidgets.QStyle.State_Selected:
+            pen_color = opt.palette.color(QtGui.QPalette.HighlightedText)
+        else:
+            pen_color = opt.palette.color(QtGui.QPalette.Text)
 
         painter.setRenderHints(QtGui.QPainter.Antialiasing)
-        painter.save()
         rect = QtCore.QRect(option.rect)
-        font_height = option.fontMetrics.boundingRect('f').height()
+        font_height = opt.fontMetrics.height()
         offset = font_height * 0.25
         rect.setX(rect.x() + offset)
         rect.setTop(rect.top() + offset)
@@ -89,9 +95,15 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
         alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
         if has_children:
             alignment = QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop
-            font = QtGui.QFont(option.font)
-            title_font_height = font.pixelSize() * 1.25
-            font.setPixelSize(title_font_height)
+            font = QtGui.QFont(opt.font)
+            ps = font.pointSizeF()
+            if ps > 0:
+                font.setPointSize(ps * 1.25)
+            else:
+                px = max(1, font.pixelSize())
+                font.setPixelSize(int(px * 1.25))
+            # title_font_height = font.pixelSize() * 1.25
+            # font.setPixelSize(title_font_height)
 
             ext = index.data(QtCore.Qt.UserRole + 2)
             num_children = index.model().rowCount(index)
@@ -99,14 +111,14 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
                 ext, num_children, '' if num_children < 2 else 's'
             )
             sub_rect = QtCore.QRect(rect)
-            sub_rect.setTop(sub_rect.top() + offset + title_font_height)
+            sub_rect.setTop(sub_rect.top() + offset + font.pixelSize())
             pen = painter.pen()
             pen.setColor(self.ExtraColor)
             painter.setPen(pen)
             painter.drawText(sub_rect, alignment, text)
-            painter.restore()
             painter.setFont(font)
 
+        painter.setPen(pen_color)
         painter.drawText(rect, alignment, index.data())
         painter.setFont(option.font)
         parent = index.parent()
@@ -116,6 +128,7 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
             painter.drawLine(
                 option.rect.bottomLeft(), option.rect.bottomRight()
             )
+        painter.restore()
 
 
 class ModuleBrowserView(QtWidgets.QTreeView):

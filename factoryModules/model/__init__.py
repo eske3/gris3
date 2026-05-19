@@ -94,8 +94,9 @@ class ModelManager(factoryModules.AbstractDepartmentGUI):
     def init(self):
         view = ModelFileView()
         view.setRootPath(self.workspaceDir())
+        view.setBrowserContext(factoryUI.MayaAsciiBrowserContext)
         view.exportButtonClicked.connect(self.export)
-
+        
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(view)

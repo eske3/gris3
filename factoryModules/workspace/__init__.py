@@ -53,7 +53,6 @@ class WorkspaceManager(factoryModules.AbstractDepartmentGUI):
         layout.addWidget(view)
 
         self.__view = view
-        # self.__save_module.setIsMakingCurrent(False)
 
     def save(self, rootpath, filename):
         r"""

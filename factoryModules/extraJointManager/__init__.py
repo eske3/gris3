@@ -14,6 +14,8 @@ r"""
         Proprietary and confidential
 """
 import os
+from dataclasses import field
+
 from ... import factoryModules, uilib, core, lib, system
 from ...tools import extraJoint
 from ...gadgets import extraJointEditor
@@ -53,8 +55,10 @@ class ContextOption(factoryUI.ContextOption):
     def refresh(self):
         model = self.__view.model()
         model.removeRows(0, model.rowCount())
-        files = self.fileNames()
-        file = os.path.join(self.path(), files[0])
+        files = self.files(expandLinkedPath=True)
+        if not files:
+            return
+        file = files[0]
         if not os.path.exists(file):
             return
         datalist = extraJointExporter.loadExtraJointData(file)

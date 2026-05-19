@@ -55,15 +55,19 @@ class FileLinker(object):
             return self.__filepath
         return self.Ext_Ptn.sub('', self.__filepath)
 
-    def linkedPath(self):
+    def linkedPath(self, isRelative=False):
         r"""
             リンカーが指しているファイルパスをフルパスで返す。
             戻り値はパス区切りがすべて「/」に変換されて返す。
+
+            Args:
+                isRelative(bool):返すパスを元のリンクファイルからの相対にするかどうか
 
             Returns:
                 str:
         """
         path = self.path(True)
+        parent = os.path.dirname(path)
         if not os.path.isfile(path):
             return None
         with open(path, 'r') as f:
@@ -74,7 +78,9 @@ class FileLinker(object):
         dl = data.get('datalist')
         file = dl.get('target')
         if not os.path.isabs(file):
-            file = os.path.join(os.path.dirname(path), file)
+            file = os.path.join(parent, file)
+        if isRelative:
+            file = os.path.relpath(file, parent)
         return fileUtil.toStandardPath(file)
 
     def makeLink(self, sourceFile):

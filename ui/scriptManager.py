@@ -600,7 +600,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         root_path = view.path()
         path, top_module = os.path.split(root_path)
 
-        modules = view.selectedItems()
+        modules = view.selectedPathes(False)
         if not modules:
             return (None, None)
         module = list(set([x.split('.')[0] for x in modules]))[0]

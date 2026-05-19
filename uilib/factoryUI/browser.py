@@ -613,14 +613,9 @@ class ModuleBrowser(extendedUI.FilteredView):
             result_path = filepath
             if index.data(QtCore.Qt.UserRole+3):
                 fl = fileLinker.FileLinker(filepath)
-                p = fl.linkedPath()
+                p = fl.linkedPath(not isAbsPath)
                 if p:
-                    if not isAbsPath:
-                        cmn = fileUtil.getCommonParentPath(filepath, p)
-                        if cmn[0]:
-                            result_path = cmn[-1]
-                    else:
-                        result_path = p
+                    result_path = p
                 else:
                     result_path = name + fl.Ext_Ptn
             else:
@@ -632,6 +627,11 @@ class ModuleBrowser(extendedUI.FilteredView):
     def selectedItems(self, includeChildren=False):
         r"""
             選択アイテムの中身のデータをリストで返すメソッド。
+            selectedPathesと違い、こちらは
+                ・選択アイテムのパス
+                ・リンクの指すパス（選択アイテムがリンカーの場合）
+                ・子のファイル（includeChildrenがTrueの場合）
+            の３つのデータを持つtupleのリストを返す。
 
             Args:
                 includeChildren (bool):
@@ -639,9 +639,6 @@ class ModuleBrowser(extendedUI.FilteredView):
             Returns:
                 list:
         """
-        if not includeChildren:
-            # 子階層を含まない場合。
-            return self.selectedPathes(False)
 
         parent_path = self.path()
         def get_path_from_index(index):
@@ -656,16 +653,15 @@ class ModuleBrowser(extendedUI.FilteredView):
                     str:
             """
             filename = index.data(QtCore.Qt.UserRole + 1)
+            lnk_path = ''
             if not index.data(QtCore.Qt.UserRole + 3):
-                return filename
+                return filename, lnk_path, []
             filepath = os.path.join(parent_path, filename)
             fl = fileLinker.FileLinker(filepath)
-            p = fl.linkedPath()
+            p = fl.linkedPath(True)
             if p:
-                cmn = fileUtil.getCommonParentPath(filepath, p)
-                if cmn[0]:
-                    return cmn[-1]
-            return filename + fl.Extension
+                lnk_path = p
+            return filename + fl.Extension, lnk_path, []
 
         selection_model = self.view().selectionModel()
         model = self.view().model()
@@ -676,17 +672,20 @@ class ModuleBrowser(extendedUI.FilteredView):
             data = get_path_from_index(index)
             if data not in items:
                 items.append(data)
-            i = 0
 
+            if not includeChildren:
+                continue
+            i = 0
+            sub_items = data[-1]
             while (True):
                 child_index = model.index(i, 0, index)
                 if not child_index.isValid():
                     break
                 i += 1
                 data = get_path_from_index(child_index)
-                if data in items:
+                if data in sub_items:
                     continue
-                items.append(data)
+                sub_items.append(data)
         return items
 
     def openInExplorer(self):
@@ -739,6 +738,6 @@ class ModuleBrowser(extendedUI.FilteredView):
             self.__context.setContextOption(self.__extra_context)
             self.__context.fileChanged.connect(self.refresh)
         self.__context.setPath(self.path())
-        self.__context.setFileNames(self.selectedItems(True))
+        self.__context.setFileData(self.selectedItems(True))
         self.__context.show()
 

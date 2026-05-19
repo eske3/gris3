@@ -668,7 +668,6 @@ class FileDiscarder(object):
             shutil.move(source_file, target_filepath)
         except Exception as e:
             return e
-        print(os.path.exists(target_name))
 
     def cleanup(self):
         r"""

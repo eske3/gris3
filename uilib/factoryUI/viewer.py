@@ -117,8 +117,6 @@ class ModuleBrowserWidget(QtWidgets.QWidget):
         super(ModuleBrowserWidget, self).keyPressEvent(event)
 
 
-
-
 class FileView(QtWidgets.QWidget):
     r"""
         ファイルの一覧および保存をするためのUIを提供するクラス。

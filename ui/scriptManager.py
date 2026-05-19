@@ -17,6 +17,7 @@ import os
 import re
 
 from ..uilib import factoryUI, extendedUI
+from ..fileUtil import fileLinker
 from .. import lib, uilib, factoryModules, verutil, documentUtil
 from ..gadgets import scriptViewer
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
@@ -26,7 +27,7 @@ class NoConstructorError(Exception):
     pass
 
 
-def coordinateFiles(files, extensions, extFormat):
+def coordinateScripts(files, extensions, extFormat):
     r"""
         ScriptManagerに表示するファイルのフィルタ用関数。
         
@@ -40,16 +41,23 @@ def coordinateFiles(files, extensions, extFormat):
     """
     reobj = re.compile(extFormat % '|'.join(extensions))
     matched_files = {}
-    files = [os.path.basename(x) for x in files]
     files.sort()
     for file in files:
-        r = reobj.search(file)
+        linker = fileLinker.getFileLinker(file)
+        if linker:
+            f = linker.path()
+        else:
+            f = file
+        file_name = os.path.basename(f)
+
+        r = reobj.search(file_name)
         if not r:
             continue
         data = {
             'ver':r.group(3) if r.group(3) else 'cur',
-            'sep':r.group(2), 'name':file, 'ext':r.group(3),
-            'simpleName':reobj.sub(r'\1\2\3', file)
+            'sep':r.group(2), 'name':file_name, 'ext':r.group(3),
+            'simpleName':reobj.sub(r'\1\2\3', file_name),
+            'isLinker': bool(linker),
         }
         matched_files.setdefault(r.group(1), []).append(data)
     return matched_files
@@ -486,7 +494,7 @@ class ScriptManager(QtWidgets.QWidget, factoryModules.AbstractFactoryTabMixin):
         # ビルド実行用のモジュール一覧と、実行用のGUIを作成。==================
         self.__view = factoryUI.ModuleBrowserWidget()
         self.__view.setExtensions('py')
-        self.__view.setCoordinator(coordinateFiles)
+        self.__view.setCoordinator(coordinateScripts)
         self.__view.setVersionFormat('^(.*?)(\.|)(v\d+|)\.(%s)$')
         self.__view.setExtraContext(ContextOption)
         self.__view.clicked.connect(self.updateConstructorStats)

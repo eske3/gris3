@@ -100,7 +100,7 @@ class FileLinker(object):
             f.write(text)
 
 
-def getFileLinker(filepath, linkerObj = FileLinker):
+def getFileLinker(filepath, linkerObj=FileLinker):
     r"""
         引数filepathをFileLinkerオブジェクトにして返す。
         もし拡張子がリンカーではなかった場合はNoneを返す。
@@ -116,3 +116,4 @@ def getFileLinker(filepath, linkerObj = FileLinker):
     if linkerObj.Ext_Ptn.search(filepath.lower()):
         return linkerObj(filepath)
     return None
+

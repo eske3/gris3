@@ -43,13 +43,15 @@ def compareEndPath(srcPath, dstFile):
         @param  dstFile : [edit]
         @return bool
     '''
-    return toCompared(srcPath).endswith(toCompared(dstDir))
+    return toCompared(srcPath).endswith(toCompared(dstFile))
+
 
 def openFile(filepath):
     p = subprocess.Popen(
         ['open', os.path.normpath(filepath)],
         shell=False
     )
+
 
 def openDir(filepath):
     p = subprocess.Popen(

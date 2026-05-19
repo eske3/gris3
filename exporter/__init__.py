@@ -18,11 +18,11 @@ import re
 import shutil
 
 from maya import cmds
-from . import core
-from . import skinWeightExporter
+
 from . import animationExporter
+from . import core
 from . import curveExporter
-from .. import func
+from . import skinWeightExporter
 
 class MayaFileExporter(core.BasicExporter):
     r"""

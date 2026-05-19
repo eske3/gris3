@@ -337,10 +337,12 @@ class BasicExporter(object):
 
         if not self.isMakingCurrent():
             return
+        from ..fileUtil import fileLinker
         print('Make current file :')
         print('    ' + latest_file)
         print('    -> %s' % cur_file)
-        shutil.copy2(latest_file, cur_file)
+        fl = fileLinker.FileLinker(cur_file)
+        fl.makeLink(latest_file)
 
 
 class JsonExporter(BasicExporter):

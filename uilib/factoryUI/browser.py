@@ -109,10 +109,11 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
                 title_font.setPixelSize(int(px * 1.25))
             title_h = QtGui.QFontMetrics(title_font).height()
 
-            ext = index.data(QtCore.Qt.UserRole + 2)
+            ext = index.data(QtCore.Qt.UserRole+2)
             num_children = index.model().rowCount(index)
-            text ='Type : {} | {} item{} included'.format(
-                ext, num_children, '' if num_children < 2 else 's'
+            text ='Type : {} | {} item{}'.format(
+                'link' if index.data(QtCore.Qt.UserRole+3) else ext,
+                num_children, '' if num_children < 2 else 's'
             )
             sub_rect = QtCore.QRect(rect)
             sub_rect.setTop(sub_rect.top() + offset + title_h)

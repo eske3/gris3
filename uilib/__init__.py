@@ -1623,6 +1623,7 @@ class ClosableGroup(QtWidgets.QGroupBox):
     BgColor = QtGui.QColor(0, 0, 0, 80)
     PenColor = QtGui.QPen(QtGui.QColor(0, 0, 0))
     TextColor = QtGui.QPen(QtGui.QColor(200, 200, 200))
+
     def __init__(self, *args, **keywords):
         r"""
             Args:
@@ -1673,12 +1674,12 @@ class ClosableGroup(QtWidgets.QGroupBox):
             Args:
                 show (bool):
         """
-        def toggleVisibiliy(layout, is_shown):
+        def toggle_visibility(layout, is_shown):
             r"""
                 レイアウト内で再帰的に表示・非表示を設定するローカル関数。
                 
                 Args:
-                    layout (QLayout):
+                    layout (QtWidgets.QLayout):
                     is_shown (bool):
             """
             if not layout:
@@ -1690,8 +1691,9 @@ class ClosableGroup(QtWidgets.QGroupBox):
                     w.setVisible(is_shown)
                 l = item.layout()
                 if l:
-                    toggleVisibiliy(l, is_shown)
-        toggleVisibiliy(self.layout(), show)
+                    toggle_visibility(l, is_shown)
+
+        toggle_visibility(self.layout(), show)
         for child in self.children():
             if isinstance(child, QtWidgets.QWidget):
                 child.setVisible(show)

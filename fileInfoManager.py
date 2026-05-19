@@ -18,14 +18,15 @@ import json
 import time
 import re
 import shutil
-
 from . import lib, fileUtil, verutil
+
 
 class TimeoutError(Exception):
     r"""
         時間切れによる処理の中断が行われた時に送出される例外
     """
     pass
+
 
 class FileInfoModifier(object):
     r"""
@@ -483,7 +484,7 @@ class FileInfoManager(object):
         # 現在の情報ファイルを新しい名前としてリネーム。
         shutil.move(self.infoDir(), new_infodir)
         # =====================================================================
-
+        return True
 
 # /////////////////////////////////////////////////////////////////////////////
 # ファイルを廃棄ディレクトリへの移動、復帰を管理するクラス。                 //
@@ -533,10 +534,10 @@ class FileDiscarder(object):
         """
         workdir = self.workdir()
         if not os.path.isdir(workdir):
-            return (None, None, None)
+            return None, None, None
         dscdir = os.path.join(workdir, self.TargetDirectoryName)
         jsonfile = os.path.join(dscdir, self.Jsonfilename)
-        return (workdir, dscdir, jsonfile)
+        return workdir, dscdir, jsonfile
 
     def listMovedFiles(self):
         r"""
@@ -551,7 +552,6 @@ class FileDiscarder(object):
 
         ignored_ptn = re.compile('^\%s$|^__bk\d+$'+self.Jsonfilename)
         dscdir = os.path.join(workdir, self.TargetDirectoryName)
-        files = os.listdir(workdir)
 
         if os.path.exists(jsonfile):
             with open(jsonfile, 'r') as f:
@@ -643,6 +643,7 @@ class FileDiscarder(object):
             与えられたファイルを、fileInfoの情報に基いてworkDirに展開する。
             filenameは展開するファイルパス(moveToで移動後の名前）、
             fileInfoは書き出されたjsonファイルに格納されているファイルの辞書情報。
+            (listMovedFielsで取得可能なデータの中のfilenameをキーとする情報）
             
             Args:
                 filename (str):
@@ -672,6 +673,7 @@ class FileDiscarder(object):
     def cleanup(self):
         r"""
             古いデータを格納するディレクトリ内のクリーンナップを行う。
+            listMovedFiles
         """
         workdir, dscdir, jsonfile = self.workDiscardedDirs()
         datalist = self.listMovedFiles()
@@ -681,8 +683,39 @@ class FileDiscarder(object):
             except:
                 pass
             return
-
         self.writeFile(jsonfile, datalist)
+
+    def removeFiles(self, filenames):
+        r"""
+            与えられたファイル名のファイルを削除する。
+            引数filenamesには移動後のデータ名（moveToで移動後の名前）の一覧を渡す。
+            削除に失敗した場合は失敗理由を添えてプリントアウトする。
+            削除に成功した場合は何もレポートとして残さない。
+
+            Args:
+                filenames (list): 削除するファイル名のリスト
+        """
+        workdir, dscdir, jsonfile = self.workDiscardedDirs()
+        error_list = []
+        for name in filenames:
+            filepath =  os.path.join(dscdir, name)
+            try:
+                os.remove(filepath)
+            except Exception as e:
+                error_list.append([name, e])
+                continue
+        if error_list:
+            file_info = self.listMovedFiles()
+            for name, e in error_list:
+                if name not in file_info:
+                    continue
+                print(
+                    'Failed to remove file {} : {}'.format(
+                        file_info[name]['filename'], e.args[0]
+                    )
+                )
+        self.cleanup()
+
 # /////////////////////////////////////////////////////////////////////////////
 #                                                                            //
 # /////////////////////////////////////////////////////////////////////////////

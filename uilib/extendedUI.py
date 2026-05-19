@@ -48,13 +48,14 @@ class FilteredView(QtWidgets.QWidget):
         self.__view.installEventFilter(self)
 
         self.__field = QtWidgets.QLineEdit()
+        self.__field.setPlaceholderText('Type a text to filter the view')
         self.__field.hide()
         self.__field.installEventFilter(self)
         self.__field.textChanged.connect(self.setFilterToView)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(1)
+        layout.setSpacing(10)
         layout.addWidget(self.__view)
         layout.addWidget(self.__field)
 
@@ -134,6 +135,7 @@ class FilteredView(QtWidgets.QWidget):
         if key == QtCore.Qt.Key_Tab:
             self.__field.show()
             self.__field.setFocus(QtCore.Qt.ShortcutFocusReason)
+            self.setFilterToView(self.__field.text())
             return True
         return False
 

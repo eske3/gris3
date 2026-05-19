@@ -25,20 +25,21 @@ QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 class NoConstructorError(Exception):
     pass
 
-def coordinateFiles(files, extensions, format):
+
+def coordinateFiles(files, extensions, extFormat):
     r"""
         ScriptManagerに表示するファイルのフィルタ用関数。
         
         Args:
-            files (list):ファイルPASのリスト
+            files (list):ファイルパスのリスト
             extensions (list):拡張子のリスト
-            format (str):
+            extFormat (str):
             
         Returns:
             dict:
     """
-    reobj = re.compile(format % '|'.join(extensions))
-    matchedFiles = {}
+    reobj = re.compile(extFormat % '|'.join(extensions))
+    matched_files = {}
     files = [os.path.basename(x) for x in files]
     files.sort()
     for file in files:
@@ -50,11 +51,14 @@ def coordinateFiles(files, extensions, format):
             'sep':r.group(2), 'name':file, 'ext':r.group(3),
             'simpleName':reobj.sub(r'\1\2\3', file)
         }
-        if r.group(1) in matchedFiles:
-            matchedFiles[r.group(1)].append(data)
-        else:
-            matchedFiles[r.group(1)] = [data]
-    return matchedFiles
+        matched_files.setdefault(r.group(1), []).append(data)
+    return matched_files
+
+
+class ScriptListView(QtWidgets.QTreeView):
+    def drawBranches(self, painter, rect, index):
+        if not index.parent().isValid() and index.model().hasChildren(index):
+            super(ScriptListView, self).drawBranches(painter, rect, index)
 
 
 class ScriptHelperView(extendedUI.FilteredView):
@@ -76,7 +80,7 @@ class ScriptHelperView(extendedUI.FilteredView):
             Returns:
                 QTreeView/QListView/QTableView:
         """
-        view = QtWidgets.QTreeView()
+        view = ScriptListView()
         view.setAlternatingRowColors(True)
         view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)

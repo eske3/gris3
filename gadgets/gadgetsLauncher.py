@@ -62,7 +62,9 @@ class FunctionListStyle(QtWidgets.QStyledItemDelegate):
                 option (QtWidgets.QStyleOptionViewItem):
                 index (QtCore.QModelIndex):
         """
-        height = int(option.fontMetrics.boundingRect('f').height() * 5)
+        opt = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(opt, index)
+        height = int(opt.fontMetrics.height() * 5)
         return QtCore.QSize(option.rect.width(), height)
 
     def paint(self, painter, option, index):
@@ -161,6 +163,7 @@ class Launcher(QtWidgets.QWidget):
         """
         super(Launcher, self).__init__(parent)
         self.setWindowTitle('Gris Launcher')
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.__functions = {}
 
         self.__view = AppViewer()

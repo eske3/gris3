@@ -111,19 +111,20 @@ class ToolbarView(QtWidgets.QWidget):
         super(ToolbarView, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.FramelessWindowHint)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.__anchor = parent
+        self.__watched = []
+        self.__pos = None
+        self.__last_height = None
         self.__tab = QtWidgets.QStackedWidget()
-        self.__lock = False
-        self.__hide_timer_id = None
-        self.__entered_time = None
-        self.__wait_time = 0.5
-        self.__pre_parent_pos = None
         self.__gradient = QtGui.QLinearGradient()
         self.__gradient.setColorAt(0, QtGui.QColor(22, 42, 68, 240))
         self.__gradient.setColorAt(1, QtGui.QColor(0, 0, 0, 175))
 
         layout = QtWidgets.QVBoxLayout(self)
-        layout.addSpacing(self.ButtonSize)
+        layout.addSpacing(20)
         layout.addWidget(self.__tab)
+
+        self._installEventFiltersToAll()
 
     def addWidget(self, widget, withStretch=False):
         r"""
@@ -166,99 +167,81 @@ class ToolbarView(QtWidgets.QWidget):
             return
         self.__tab.setCurrentIndex(index)
 
-    def startToHide(self, count=100):
-        r"""
-            引き数count ms秒経過したら自身を非表示にするタイマーを開始する
-            
-            Args:
-                count (int):
-        """
-        if self.__hide_timer_id:
-            self.killTimer(self.__hide_timer_id)
-        self.__hide_timer_id = self.startTimer(count)
-
     def show(self):
-        self.__entered_time = time.time()
-        self.__lock = False
-        if self.parent():
-            p = self.parent()
-            self.__pre_parent_pos = p.mapToGlobal(p.pos())
-        else:
-            self.__pre_parent_pos = None
+        self.reposition()
         super(ToolbarView, self).show()
 
-    def hide(self):
-        self.__lock = False
-        self.__entered_time = None
-        self.__pre_parent_pos = None
-        super(ToolbarView, self).hide()
+    def _installEventFiltersToAll(self):
+        for w in self.__watched:
+            w.removeEventFilter(self)
+        self.__watched.clear()
+        window_flag = [QtCore.Qt.Window, QtCore.Qt.Widget]
+        widget_flag = [QtCore.Qt.Widget]
 
-    def setWaitTime(self, t):
-        r"""
-            マウスがウィジェットに侵入してから自動非表示機能を無効にするまでの
-            ウェイト時間を設定する。
+        w = self.__anchor
+        while w is not None:
+            wt = w.windowType()
+            w.installEventFilter(self)
+            self.__watched.append(w)
 
-            Args:
-                t (float):
-        """
-        self.__wait_time = t
+            parent = w.parentWidget()
+            if wt in window_flag:
+                if wt not in widget_flag or parent is None:
+                    break
+            w = parent
 
-    def waitTime(self):
-        r"""
-            マウスがウィジェットに侵入してから自動非表示機能を無効にするまでの
-            ウェイト時間を返す。
+    def reposition(self):
+        rect = self.__anchor.rect()
+        rect.moveTopLeft(self.__anchor.mapToGlobal(rect.topLeft()))
+        rect.moveTop(rect.top() + self.ButtonSize)
+        rect.setHeight(
+            self.__last_height if self.__last_height else uilib.hires(500)
+        )
+        self.setGeometry(rect)
 
-            Returns:
-                float:
-        """
-        return self.__wait_time
+    def eventFilter(self, obj, event):
+        et = event.type()
+        if obj in self.__watched:
+            if et in (
+                    QtCore.QEvent.ParentChange,
+                    QtCore.QEvent.ParentAboutToChange
+            ):
+                self._installEventFiltersToAll()
 
-    def timerEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEvent):
-        """
-        if event.timerId() == self.__hide_timer_id:
-            self.killTimer(self.__hide_timer_id)
-            self.hide()
-
-    def enterEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEvent):
-        """
-        self.__lock = False
-        if self.__pre_parent_pos:
-            p = self.parent()
-            if p.mapToGlobal(p.pos()) != self.__pre_parent_pos:
+            if et in (QtCore.QEvent.Show, QtCore.QEvent.Resize):
+                if self.isVisible():
+                    self.reposition()
+            elif et in (
+                QtCore.QEvent.Move,
+                QtCore.QEvent.Hide, QtCore.QEvent.Close,
+            ):
                 self.hide()
-                return
-        parent = self.parent()
-        while parent:
-            if not parent.isVisible():
+            elif et == QtCore.QEvent.Enter and obj == self.__anchor:
                 self.hide()
-                return
-            parent = parent.parent()
 
-        if self.__hide_timer_id:
-            self.killTimer(self.__hide_timer_id)
-        self.__hide_timer_id = None
-        self.__entered_time = time.time()
+        return super(ToolbarView, self).eventFilter(obj, event)
 
-    def leaveEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEvent):
-        """
-        if (
-            self.__entered_time
-            and time.time() - self.__entered_time > self.waitTime()
-        ):
-            self.__lock = True
-        if self.__lock:
+    def mousePressEvent(self, event):
+        self.__pos = None
+        if event.buttons() in (QtCore.Qt.RightButton, QtCore.Qt.MiddleButton):
+            self.__pos = [event.globalX(), event.globalY()]
+        super(ToolbarView, self).mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        super(ToolbarView, self).mouseMoveEvent(event)
+        if not self.__pos:
             return
+        cur_pos = [event.globalX(), event.globalY()]
+        move_value = cur_pos[1] - self.__pos[1]
+        rect = self.geometry()
+        self.__last_height = rect.height() + move_value
+        rect.setHeight(self.__last_height)
+        self.setGeometry(rect)
+        self.__pos = cur_pos
 
-        self.hide()
+    def mouseReleaseEvent(self, event):
+        self.__pos = None
+        super(ToolbarView, self).mouseReleaseEvent(event)
 
     def paintEvent(self, event):
         r"""
@@ -267,7 +250,7 @@ class ToolbarView(QtWidgets.QWidget):
         """
         painter = QtGui.QPainter(self)
         rect = self.rect()
-        rect.setTop(self.ButtonSize)
+        # rect.setTop(self.ButtonSize)
 
         self.__gradient.setFinalStop(0, rect.height())
         painter.setBrush(QtGui.QBrush(self.__gradient))
@@ -451,10 +434,6 @@ class Toolbar(QtWidgets.QWidget):
         if not widget in self.__btnlist:
             return
         index = self.__btnlist.index(widget)
-        rect = self.rect()
-        rect.moveTopLeft(self.mapToGlobal(rect.topLeft()))
-        rect.setHeight(uilib.hires(500))
-        self.__attached_view.setGeometry(rect)
         self.__attached_view.setCurrentIndex(index)
         self.__attached_view.show()
 
@@ -477,16 +456,6 @@ class Toolbar(QtWidgets.QWidget):
         """
         self.layout().addWidget(widget)
         self.__widget_count += 1
-
-    def leaveEvent(self, event):
-        r"""
-            Args:
-                event (QtCore.QEvent):
-        """
-        super(Toolbar, self).leaveEvent(event)
-        self.__attached_view.startToHide()
-        for btn in self.__btnlist:
-            btn.setNoDelay(False)
 
 
 class MainGUI(uilib.AbstractSeparatedWindow):

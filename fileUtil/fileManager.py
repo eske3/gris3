@@ -17,11 +17,10 @@ import os
 import re
 
 from . import fileLinker, operator
-from .. import exporter
-from .. import fileInfoManager
-from .. import fileUtil
+from .. import exporter, fileInfoManager, fileUtil
 
 VersionFileReTemplate = '^(.*)([_\.])(v\d+|cur)\.({})$'
+
 
 def coordinateFiles(files, extensions, extFormat=VersionFileReTemplate):
     r"""

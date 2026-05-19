@@ -163,7 +163,7 @@ class BrowserContext(uilib.ConstantWidget):
             GUIを作成する。
         """
         self.__manager = fileManager.FileManager()
-        self.resize(uilib.hires(200), uilib.hires(160))
+        self.resize(uilib.hires(400), uilib.hires(160))
         btn_size = 48
 
         # ラベル。

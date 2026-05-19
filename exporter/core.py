@@ -337,12 +337,14 @@ class BasicExporter(object):
 
         if not self.isMakingCurrent():
             return
-        from ..fileUtil import fileLinker
+        from ..fileUtil import fileLinker, operator
         print('Make current file :')
         print('    ' + latest_file)
         print('    -> %s' % cur_file)
         fl = fileLinker.FileLinker(cur_file)
         fl.makeLink(latest_file)
+        if os.path.exists(cur_file):
+            operator.deleteFile(cur_file)
 
 
 class JsonExporter(BasicExporter):

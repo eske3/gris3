@@ -66,9 +66,7 @@ class ImageItem(QtWidgets.QGraphicsObject):
 
         self.inner_scale = 1.0
         self.inner_offset = QtCore.QPointF(0.0, 0.0)
-
-        # self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
-        # self.setFlag(QtWidgets.QGraphicsItem.ItemIsFocusable, True)
+        self.is_active = False
 
     def boundingRect(self):
         r"""
@@ -108,15 +106,15 @@ class ImageItem(QtWidgets.QGraphicsObject):
         painter.drawPixmap(0, 0, self.pixmap)
         painter.restore()
 
-        # if self.isSelected():
-        #     painter.save()
-        #     pen = QtGui.QPen(QtGui.QColor(38, 111, 255, 255))
-        #     pen.setWidth(1.0)
-        #     pen.setCosmetic(True)
-        #     painter.setPen(pen)
-        #     painter.setBrush(QtCore.Qt.NoBrush)
-        #     painter.drawRect(self.rect)
-        #     painter.restore()
+        if self.is_active:
+            painter.save()
+            pen = QtGui.QPen(QtGui.QColor(38, 111, 255, 255))
+            pen.setWidth(1.0)
+            pen.setCosmetic(True)
+            painter.setPen(pen)
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.drawRect(self.rect)
+            painter.restore()
 
     def setPivot(self, scenePos):
         r"""
@@ -297,11 +295,19 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
         """
         screens = QtWidgets.QApplication.screens()
         if not screens:
-            return QtCore.QRect(0, 0, 1920, 1080)
+            return QtWidgets.QApplication.primaryScreen()
         rect = screens[0].geometry()
         for s in screens[1:]:
             rect = rect.united(s.geometry())
         return rect
+
+    def screenAtPoint(self, point):
+        screens = QtWidgets.QApplication.screens()
+        for s in screens:
+            rect: QtCore.QRect = s.geometry()
+            if rect.contains(point):
+                return rect
+        return QtWidgets.QApplication.primaryScreen()
 
     def _scene_pos_from_event(self, event):
         r"""
@@ -337,7 +343,7 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
             x for x in self.scene.selectedItems() if isinstance(x, ImageItem)
         ]
 
-    def _item_from_event(self, event):
+    def _item_from_event(self, event, affectsToAll=False):
         r"""
         与えられたイベントの位置情報から、シーン中のアイテムを特定し返す。
 
@@ -348,7 +354,22 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
             list(ImageItem):
         """
         if event.modifiers() & QtCore.Qt.ShiftModifier:
-            return self.allItems()
+            all_items = self.allItems()
+            if affectsToAll:
+                return all_items
+            screen = self.screenAtPoint(event.pos())
+            results = []
+            viewport = self.viewport()
+            for item in all_items:
+                scene_rect = item.sceneBoundingRect()
+                view_polygon = self.mapFromScene(scene_rect)
+                view_rect = view_polygon.boundingRect()
+                tl = viewport.mapToGlobal(view_rect.topLeft())
+                br = viewport.mapToGlobal(view_rect.bottomRight())
+                item_rect = QtCore.QRect(tl, br).normalized()
+                if screen.intersects(item_rect):
+                    results.append(item)
+            return results
 
         selected = self.selectedItems()
         if selected:
@@ -396,28 +417,6 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
         self._bring_to_front([item])
         return item
 
-        if center:
-            dw = float(self.desktopRect.width())
-            dh = float(self.desktopRect.height())
-            iw = float(pix.width())
-            ih = float(pix.height())
-            if iw > 0 and ih > 0:
-                s = min(dw / iw, dh / ih)
-            else:
-                s = 1.0
-            item.ext_scale = s
-            item.applyExternalTransform()
-
-            cx = self.desktopRect.left() + dw * 0.5
-            cy = self.desktopRect.top() + dh * 0.5
-            item.setPos(cx - (iw * s) * 0.5, cy - (ih * s) * 0.5)
-        else:
-            c = self.mapToScene(self.viewport().rect().center())
-            item.setPos(c.x() - pix.width() * 0.5, c.y() - pix.height() * 0.5)
-
-        self._bring_to_front([item])
-        return item
-
     def layoutImagesToCursorDesktop(self, items, sortFromPosition=True):
         r"""
         任意のアイテムをマウスカーソルが置いてあるデスクトップに横一列に並べる。
@@ -429,13 +428,8 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
             return
 
         cursor_pos = QtGui.QCursor.pos()
-        screen = QtGui.QGuiApplication.screenAt(cursor_pos)
-        if screen is None:
-            screen = QtWidgets.QApplication.primaryScreen()
-        if screen is None:
-            return
+        desk = self.screenAtPoint(cursor_pos)
 
-        desk = screen.geometry()
         desk_left = float(desk.left())
         desk_top = float(desk.top())
         desk_w = float(desk.width())
@@ -548,93 +542,6 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
         self.deleteItem(item)
         return True
 
-    def applyScaleToItem(self, item, factor, scenePivot):
-        r"""
-        任意のアイテムをシーン中のピボット位置をベースにスケールする。
-
-        Args:
-            item(ImageItem):操作対象アイテム
-            factor(float):
-            scenePivot(QtCore.QPointF):ピボット位置
-        """
-        factor = max(0.02, min(50.0, factor))
-        old = item.base_scale
-        new = max(0.01, min(100.0, old * factor))
-        actual = new / old if old != 0 else 1.0
-        if abs(actual - 1.0) < 1e-8:
-            return
-
-        local = item.mapFromScene(scenePivot)
-        item.base_scale = new
-        item.rebuildTransform()
-
-        mapped = item.mapToScene(local)
-        delta = scenePivot - mapped
-        item.setPos(item.pos() + delta)
-
-    def applyRotationToItem(self, item, rot, scenePivot):
-        r"""
-        任意のアイテムを回転させる。
-
-        Args:
-            item(ImageItem): 操作対象アイテム
-            rot(float):回転角度（Degree）
-            scenePivot(QtCore.QPointF): ピボット位置
-        """
-        local = item.mapFromScene(scenePivot)
-        item.rotation_deg += rot
-        item.rebuildTransform()
-
-        mapped = item.mapToScene(local)
-        delta = scenePivot - mapped
-        item.setPos(item.pos() + delta)
-
-    def applyFlipToItem(self, item, flipX, flipY, scenePivot):
-        r"""
-        アイテムを任意の倍率で水平・垂直にフリップする。
-
-        Args:
-            item(ImageItem): 操作対象アイテム
-            flipX(float): 水平方向のフリップ倍率
-            flipY(float): 垂直方向のフリップ倍率
-            scenePivot(QtCore.QPointF): ピボット位置
-        """
-        local = item.mapFromScene(scenePivot)
-        item.flip_x *= flipX
-        item.flip_y *= flipY
-        item.rebuildTransform()
-
-        mapped = item.mapToScene(local)
-        delta = scenePivot - mapped
-        item.setPos(item.pos() + delta)
-
-    def fitItemToScene(self, item):
-        r"""
-        任意のアイテムを画面全体にフィットさせる。
-
-        Args:
-            item(ImageItem):
-        """
-        pix = item.pixmap()
-        iw = float(pix.width())
-        ih = float(pix.height())
-        if iw <= 0 or ih <= 0:
-            return
-
-        dw = float(self.desktopRect.width())
-        dh = float(self.desktopRect.height())
-        s = min(dw / iw, dh / ih)
-
-        item.base_scale = s
-        item.rotation_deg = 0.0
-        item.flip_x = 1.0
-        item.flip_y = 1.0
-        item.rebuildTransform()
-
-        cx = self.desktopRect.left() + dw * 0.5
-        cy = self.desktopRect.top() + dh * 0.5
-        item.setPos(cx - (iw * s) * 0.5, cy - (ih * s) * 0.5)
-
     def mousePressEvent(self, event):
         scene_pos = self.mapToScene(event.position().toPoint())
         left = bool(event.buttons() & QtCore.Qt.LeftButton)
@@ -655,6 +562,8 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
                     'ext_scale': item.ext_scale,
                     'rotation_deg': item.rotation_deg,
                 }
+                item.is_active = True
+            self._bring_to_front(items)
 
             if left and right:
                 self._mode = 'rotate'
@@ -715,6 +624,8 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
         event.accept()
 
     def mouseReleaseEvent(self, event):
+        for item in self._active_items:
+            item.is_active = False
         self._active_items = {}
         self._mode = None
         self._last_scene_pos = None
@@ -758,13 +669,17 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
         key = event.key()
         mod = event.modifiers()
 
+        is_deleting = key in (
+            QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete, QtCore.Qt.Key_W
+        )
+        affects_to_all = is_deleting and mod & QtCore.Qt.ControlModifier
         # カーソル下の画像を優先、なければ最前面画像を対象
         mouse_event = QtGui.QMouseEvent(
             QtCore.QEvent.MouseMove,
             self.mapFromGlobal(QtGui.QCursor.pos()),
             QtCore.Qt.NoButton, QtCore.Qt.NoButton, mod
         )
-        targets = self._item_from_event(mouse_event)
+        targets = self._item_from_event(mouse_event, affects_to_all)
 
         if targets:
             if key == QtCore.Qt.Key_R:
@@ -786,9 +701,7 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
                     target.resetScale()
                 event.accept()
                 return
-            if key in (
-                QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete, QtCore.Qt.Key_W
-            ):
+            if is_deleting:
                 for target in targets:
                     self.deleteItem(target)
                 event.accept()

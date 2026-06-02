@@ -344,7 +344,7 @@ class BasicExporter(object):
         fl = fileLinker.FileLinker(cur_file)
         fl.makeLink(latest_file)
         if os.path.exists(cur_file):
-            operator.deleteFile(cur_file)
+            operator.deleteFiles(cur_file)
 
 
 class JsonExporter(BasicExporter):

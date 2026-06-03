@@ -18,19 +18,21 @@ r"""
 """
 import os
 import re
-from threading import Timer
 
-from .. import lib, node, func, core, grisNode, rigScripts, settings, verutil
 from .. import buildInfo
+from .. import lib, node, func, core, grisNode, rigScripts, settings, verutil
 from ..factoryModules import ModuleInfo
 from ..tools import cleanup
+from ..fileUtil import fileLinker
 
 cmds = func.cmds
 
 # /////////////////////////////////////////////////////////////////////////////
 # 定数。                                                                     //
 # /////////////////////////////////////////////////////////////////////////////
-CurrentFilePattern = '[\._]cur\.[a-z\d]+$'
+CurrentFilePattern = '[\._]cur\.[a-z\d]+(|{})$'.format(
+    fileLinker.FileLinker.Extension
+)
 LOD_LIST = ('low', 'high')
 LatestExecutedConstructor = None
 # /////////////////////////////////////////////////////////////////////////////
@@ -967,6 +969,8 @@ class BasicConstructor(rigScripts.BaseCreator):
             引数categoryで指定する値はsubdirの引数と同じもの。
             また、カレントファイルのフォーマットの指示は引数matchCharで
             正規表現を使用して指示する。
+            isFullPathがTrueでカレントファイルがリンカーファイルだった場合、
+            リンク先のファイルを使用する。
             
             Args:
                 category (str):
@@ -987,7 +991,16 @@ class BasicConstructor(rigScripts.BaseCreator):
             x for x in os.listdir(rootpath) if pattern.search(x)
         ]
         if isFullPath:
-            filelist = [os.path.join(rootpath, x) for x in filelist]
+            abs_files = [os.path.join(rootpath, x) for x in filelist]
+            filelist = []
+            for file in abs_files:
+                fl = fileLinker.getFileLinker(file)
+                if fl:
+                    p = fl.linkedPath()
+                    if p:
+                        file = p
+                filelist.append(file)
+
         return filelist
 
     def currentModuleFiles(
@@ -998,6 +1011,8 @@ class BasicConstructor(rigScripts.BaseCreator):
             カレントファイルをリストする。
             カレントファイルのフォーマットの指示は引数matchCharで正規表現を
             使用して指示する。
+            isFullPathがTrueでカレントファイルがリンカーファイルだった場合、
+            リンク先のファイルを使用する。
             
             Args:
                 moduleName (str):factoryModulesが内包するモジュール名
@@ -1853,7 +1868,7 @@ class BasicConstructor(rigScripts.BaseCreator):
             mayaファイルをインポートする。
             
             Args:
-                filepath ():
+                filepath (str):
                 isCheck (bool):ファイルの存在をチェックするかどうか
                 
             Returns:
@@ -1918,10 +1933,11 @@ class BasicConstructor(rigScripts.BaseCreator):
             lod = self.lod()
         files = self.currentModuleFiles('model', tag)
         filename_pattern = re.compile(
-            self.assetName()+'_'+lod+'\.cur\.[a-z\d]+$'
+            self.assetName()+'_'+lod+'\.(cur|v\d+)\.[a-z\d]+$'
         )
         models = None
         for file in files:
+            print('--> %s' % file)
             if not filename_pattern.search(os.path.basename(file)):
                 continue
             models = self.importFile(file, isCheck)

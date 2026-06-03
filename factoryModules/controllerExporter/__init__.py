@@ -48,17 +48,18 @@ class ContextOption(factoryUI.ContextOption):
         layout.addWidget(self.__view)
 
     def refresh(self):
-        import re
         import os
         model = self.__view.model()
         model.removeRows(0, model.rowCount())
-        files = self.fileNames()
-        file = os.path.join(self.path(), files[0])
+        files = self.files(expandLinkedPath=True)
+        if not files:
+            return
+        file = files[0]
         if not os.path.exists(file):
             return
 
-        shapelist = curveExporter.listCtrls(file)
-        for row, shape in enumerate(shapelist):
+        shape_list = curveExporter.listCtrls(file)
+        for row, shape in enumerate(shape_list):
             item = QtGui.QStandardItem(shape)
             item.setData(shape )
             model.setItem(row, 0, item)

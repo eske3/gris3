@@ -1,38 +1,41 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     archiver.py
-    @brief    ジョイントの編集機能を提供するGUI。
-    @class    ArchiveDataView       : アーカイブを行うためのUIを提供するクラス。
-    @class    ArchiveProgressWidget : アーカイブ経過表示ウィジェット
-    @class    RigDataArchiver       : ジョイントの作成、編集を行うためのツールを提供するクラス。
-    @class    MainGUI               : ここに説明文を記入
-    @function coordinateFiles       : ScriptManagerに表示するファイルのフィルタ用関数。
-    @function showWindow            : ウィンドウを作成するためのエントリ関数。
-    @date     2017/06/15 16:35[Eske](eske3g@gmail.com)
-    @update   2020/04/07 15:10[eske3g@gmail.com]
-    このソースの版権は[EskeYoshinob]にあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[EskeYoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
-import re, os
-from gris3 import lib, uilib, node
-from gris3.uilib import factoryUI
+# old_style:google style:google
+r"""
+    Factory用のコンテクストメニューを提供するクラス。
+
+    Dates:
+        date:2020/04/07 15:10 eske yoshinob[eske3g@gmail.com]
+        update:2026/05/19 22:33 eske yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2017 eske yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
+import os
+import re
+
+from ..uilib import factoryUI
+from .. import uilib
+
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
-def coordinateFiles(files, extensions, format):
-    # type: (list,list,str) -> dict
-    r'''
-        @brief  ScriptManagerに表示するファイルのフィルタ用関数。
-        @param  files(list)      : ファイルPASのリスト
-        @param  extensions(list) : 拡張子のリスト
-        @param  format(str)      : 
-        @return (dict):
-    '''
-    reobj = re.compile(format % '|'.join(extensions))
-    matchedFiles = {}
+def coordinateArchives(files, extensions, extFormat):
+    r"""
+    ScriptManagerに表示するファイルのフィルタ用関数。
+
+    Args:
+        files (list):ファイル操作する対象のパスリスト
+        extensions (list):フィルタをかける拡張子のリスト
+        extFormat (str):バージョン表記となる箇所を特定する正規表現
+
+    Returns:
+        dict:
+    """
+    reobj = re.compile(extFormat % '|'.join(extensions))
+    matched_files = {}
     files = [os.path.basename(x) for x in files]
     files.sort()
     for file in files:
@@ -42,29 +45,25 @@ def coordinateFiles(files, extensions, format):
         data = {
             'ver':r.group(3) if r.group(3) else 'cur',
             'sep':r.group(2), 'name':file, 'ext':r.group(3),
-            'simpleName':reobj.sub(r'\1\2\3', file)
+            'simpleName':reobj.sub(r'\1\2\3', file),
+            'isLinker': False
         }
-        if r.group(1) in matchedFiles:
-            matchedFiles[r.group(1)].append(data)
+        if r.group(1) in matched_files:
+            matched_files[r.group(1)].append(data)
         else:
-            matchedFiles[r.group(1)] = [data]
-    return matchedFiles
+            matched_files[r.group(1)] = [data]
+    return matched_files
+
 
 class ArchiveDataView(QtWidgets.QWidget):
-    r'''
-        @brief    アーカイブを行うためのUIを提供するクラス。
-        @inherit  QtWidgets.QWidget
-        @function view : ファイル一覧表示用のウィジェットを返す
-        @date     2019/10/29 11:04[eske3g@gmail.com]
-        @update   2020/04/07 15:10[eske3g@gmail.com]
-    '''
+    r"""
+    アーカイブを行うためのUIを提供するクラス。
+    """
     def __init__(self, parent=None):
-        # type: (QtWidgets.QWidget) -> any
-        r'''
-            @brief  初期化を行う
-            @param  parent(QtWidgets.QWidget) : 親ウィジェット
-            @return (any):
-        '''
+        r"""
+        Args:
+            parent(QtWidgets.QWidget): 親ウィジェット
+        """
         super(ArchiveDataView, self).__init__()
         label = QtWidgets.QLabel('Archive')
         arc_btn = uilib.OButton(uilib.IconPath('uiBtn_save'))
@@ -74,7 +73,7 @@ class ArchiveDataView(QtWidgets.QWidget):
 
         self.__view = factoryUI.ModuleBrowserWidget()
         self.__view.setExtensions('zip')
-        self.__view.setCoordinator(coordinateFiles)
+        self.__view.setCoordinator(coordinateArchives)
         self.__view.setVersionFormat('^(.*?)(\.|)(v\d+|)\.(%s)$')
 
         layout = QtWidgets.QGridLayout(self)
@@ -88,30 +87,24 @@ class ArchiveDataView(QtWidgets.QWidget):
         layout.setRowStretch(3, 1)
 
     def view(self):
-        # type: () -> factoryUI.ModuleBrowserWidget
-        r'''
-            @brief  ファイル一覧表示用のウィジェットを返す
-            @return (factoryUI.ModuleBrowserWidget):
-        '''
+        r"""
+        ファイル一覧表示用のウィジェットを返す
+
+        Returns:
+            factoryUI.ModuleBrowserWidget:
+        """
         return self.__view
 
+
 class ArchiveProgressWidget(QtWidgets.QWidget):
-    r'''
-        @brief    アーカイブ経過表示ウィジェット
-        @inherit  QtWidgets.QWidget
-        @function setup      : プログレスバーの最小・最大値を設定する
-        @function setMessage : ステータス進行表示用メッセージを設定する
-        @function goNext     : プログレスバーを次のステップへ進める
-        @date     2019/10/29 11:04[eske3g@gmail.com]
-        @update   2020/04/07 15:10[eske3g@gmail.com]
-    '''
+    r"""
+    アーカイブ経過表示ウィジェット
+    """
     def __init__(self, parent=None):
-        # type: (QtWidgets) -> any
-        r'''
-            @brief  初帰化を行う
-            @param  parent(QtWidgets) : 親ウィジェット
-            @return (any):
-        '''
+        r"""
+        Args:
+            parent(QtWidgets) : 親ウィジェット:
+        """
         super(ArchiveProgressWidget, self).__init__(parent)
         self.__message = QtWidgets.QLabel('Processing...')
         self.__progress = QtWidgets.QProgressBar()
@@ -130,57 +123,46 @@ class ArchiveProgressWidget(QtWidgets.QWidget):
         self.buttonClicked = cancel_btn.clicked
 
     def setup(self, minValue, maxValue):
-        # type: (int,int) -> any
-        r'''
-            @brief  プログレスバーの最小・最大値を設定する
-            @param  minValue(int) : 最小値
-            @param  maxValue(int) : 最大値
-            @return (any):
-        '''
+        r"""
+        プログレスバーの最小・最大値を設定する
+
+        Args:
+            minValue(int): 最小値
+            maxValue(int): 最大値
+        """
         self.__progress.setRange(minValue, maxValue)
         self.__progress.setValue(minValue)
 
     def setMessage(self, message):
-        # type: (str) -> any
-        r'''
-            @brief  ステータス進行表示用メッセージを設定する
-            @param  message(str) : 
-            @return (any):
-        '''
+        r"""
+        ステータス進行表示用メッセージを設定する
+
+        Args:
+            message(str):
+        """
         self.__message.setText(message)
 
     def goNext(self, message=None):
-        # type: (str) -> any
-        r'''
-            @brief  プログレスバーを次のステップへ進める
-            @param  message(str) : プログレスバーに変更を加えるメッセージ
-            @return (any):
-        '''
+        r"""
+        プログレスバーを次のステップへ進める
+
+        Args:
+            message(str): プログレスバーに変更を加えるメッセージ
+        """
         self.__progress.setValue(self.__progress.value()+1)
         if message:
             self.__progress.setFormat('%p% : '+message)
 
+
 class RigDataArchiver(uilib.ClosableGroup):
-    r'''
-        @brief    ジョイントの作成、編集を行うためのツールを提供するクラス。
-        @inherit  uilib.ClosableGroup
-        @function view           : ファイル一覧表示用のウィジェットを返す
-        @function refreshView    : ファイルビューワの更新を行う
-        @function setupProgress  : プログレスバーの初期状態を変更する
-        @function updateProgress : プログレスバーの状況を更新する
-        @function finished       : アーカイブ終了時のUI更新処理
-        @function archive        : アーカイブを実行する
-        @function cancel         : アーカイブ処理を中断する。
-        @date     2017/07/01 4:07[Eske](eske3g@gmail.com)
-        @update   2020/04/07 15:10[eske3g@gmail.com]
-    '''
+    r"""
+    リグデータをアーカイブするための機能を提供するGUIクラス。
+    """
     def __init__(self, parent=None):
-        # type: (QtWidgets.QWidget) -> any
-        r'''
-            @brief  初期化を行う。
-            @param  parent(QtWidgets.QWidget) : 親ウィジェット
-            @return (any):
-        '''
+        r"""
+        Args:
+            parent(QtWidgets.QWidget): 親ウィジェット
+        """
         super(RigDataArchiver, self).__init__('Archive Rig Project')
         self.setIcon(uilib.IconPath('uiBtn_save'))
 
@@ -197,7 +179,7 @@ class RigDataArchiver(uilib.ClosableGroup):
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(self.__stacked)
 
-        from gris3 import qtArchive
+        from .. import qtArchive
         self.__archiver = qtArchive.ArchiverThread(self)
         self.__archiver.StageChanged.connect(self.updateProgress)
         self.__archiver.MessageSent.connect(self.__progress.setMessage)
@@ -208,61 +190,58 @@ class RigDataArchiver(uilib.ClosableGroup):
         self.setExpanding(False)
 
     def view(self):
-        # type: () -> factoryUI.ModuleBrowserWidget
-        r'''
-            @brief  ファイル一覧表示用のウィジェットを返す
-            @return (factoryUI.ModuleBrowserWidget):
-        '''
+        r"""
+        ファイル一覧表示用のウィジェットを返す
+
+        Returns:
+            factoryUI.ModuleBrowserWidget:
+        """
         return self.__dataview.view()
 
     def refreshView(self):
-        r'''
-            @brief  ファイルビューワの更新を行う
-            @return (any):
-        '''
+        r"""
+        ファイルビューワの更新を行う
+        """
         self.view().refresh()
 
     def setupProgress(self, numberOfSteps):
-        # type: (int) -> any
-        r'''
-            @brief  プログレスバーの初期状態を変更する
-            @param  numberOfSteps(int) : 総ステップ数
-            @return (any):
-        '''
+        r"""
+        プログレスバーの初期状態を変更する
+
+        Args:
+            numberOfSteps(int): 総ステップ数
+        """
         self.__progress.setup(0, numberOfSteps)
 
     def updateProgress(self, stage, message):
-        # type: (int,str) -> any
-        r'''
-            @brief  プログレスバーの状況を更新する
-            @param  stage(int)   : ステップ数
-            @param  message(str) : 表示するメッセージ
-            @return (any):
-        '''
+        r"""
+        プログレスバーの状況を更新する
+
+        Args:
+            stage(int): ステップ数
+            message(str): 表示するメッセージ
+        """
         self.__progress.goNext(message)
 
     def finished(self):
-        r'''
-            @brief  アーカイブ終了時のUI更新処理
-            @return (any):
-        '''
+        r"""
+        アーカイブ終了時のUI更新処理
+        """
         self.__stacked.setCurrentIndex(0)
         self.refreshView()
 
     def archive(self):
-        r'''
-            @brief  アーカイブを実行する
-            @return (any):
-        '''
+        r"""
+        アーカイブを実行する
+        """
         self.__archiver.setup()
         self.__archiver.start()
         self.__stacked.setCurrentIndex(1)
 
     def cancel(self):
-        r'''
-            @brief  アーカイブ処理を中断する。
-            @return (any):
-        '''
+        r"""
+        アーカイブ処理を中断する。
+        """
         self.__archiver.stop()
         QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.__archiver.wait()
@@ -270,29 +249,27 @@ class RigDataArchiver(uilib.ClosableGroup):
         self.refreshView()
         QtWidgets.QApplication.restoreOverrideCursor()
 
+
 class MainGUI(uilib.AbstractSeparatedWindow):
-    r'''
-        @brief    ここに説明文を記入
-        @inherit  uilib.AbstractSeparatedWindow
-        @function centralWidget : ここに説明文を記入
-        @date     2017/06/27 18:31[s_eske](eske3g@gmail.com)
-        @update   2020/04/07 15:10[eske3g@gmail.com]
-    '''
     def centralWidget(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return (any):None
-        '''
+        r"""
+        Returns:
+            RigDataArchiver:
+        """
         return RigDataArchiver()
 
 
-def showWindow():
-    r'''
-        @brief  ウィンドウを作成するためのエントリ関数。
-        @return (any):QtWidgets.QWidget
-    '''
-    from gris3.uilib import mayaUIlib
-    widget = MainGUI(mayaUIlib.MainWindow)
+def showWindow(parent=None):
+    r"""
+    ウィンドウを作成するためのエントリ関数。
+
+    Returns:
+        MainGUI:
+    """
+    if parent is None:
+        from ..uilib import mayaUIlib
+        parent = mayaUIlib.MainWindow
+    widget = MainGUI(parent)
     widget.resize(480, 320)
     widget.show()
     return widget

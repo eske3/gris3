@@ -19,7 +19,8 @@ import math
 
 from . import context
 from ... import uilib
-from ...fileUtil import fileManager
+from ... import fileUtil
+from ...fileUtil import fileManager, fileLinker
 from ...uilib import extendedUI
 
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
@@ -108,10 +109,11 @@ class ModuleBrowserStyle(QtWidgets.QStyledItemDelegate):
                 title_font.setPixelSize(int(px * 1.25))
             title_h = QtGui.QFontMetrics(title_font).height()
 
-            ext = index.data(QtCore.Qt.UserRole + 2)
+            ext = index.data(QtCore.Qt.UserRole+2)
             num_children = index.model().rowCount(index)
-            text ='Type : {} | {} item{} included'.format(
-                ext, num_children, '' if num_children < 2 else 's'
+            text ='Type : {} | {} item{}'.format(
+                'link' if index.data(QtCore.Qt.UserRole+3) else ext,
+                num_children, '' if num_children < 2 else 's'
             )
             sub_rect = QtCore.QRect(rect)
             sub_rect.setTop(sub_rect.top() + offset + title_h)
@@ -243,15 +245,15 @@ class ModuleBrowserModel(QtGui.QStandardItemModel):
             Returns:
                 QtCore.QMimeData:
         """
-        filepathes = self.__itemview.selectedPathes()
+        file_paths = self.__itemview.selectedPathes()
         filelist = []
-        for file in filepathes:
+        for file in file_paths:
             url = QtCore.QUrl.fromLocalFile(file)
             filelist.append(url)
-        mimedata = QtCore.QMimeData()
-        mimedata.setUrls(filelist)
+        mime_data = QtCore.QMimeData()
+        mime_data.setUrls(filelist)
 
-        return mimedata
+        return mime_data
 
 
 class ModuleBrowser(extendedUI.FilteredView):
@@ -283,6 +285,7 @@ class ModuleBrowser(extendedUI.FilteredView):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         super(ModuleBrowser, self).__init__(parent)
+        self.__extension_visibles = False
         self.__child = None
         self.__path = ''
         self.__customFilters = []
@@ -292,8 +295,7 @@ class ModuleBrowser(extendedUI.FilteredView):
         self.__extra_context = None
         self.__browser_context = context.BrowserContext
         self.__version_format = ''
-        self.setVersionFormat(fileManager.VersionFileReTemplte)
-        self.setExtensionVisibles(False)
+        self.setVersionFormat(fileManager.VersionFileReTemplate)
 
         view = self.view()
         view.setColumnWidth(0, uilib.hires(220))
@@ -311,7 +313,6 @@ class ModuleBrowser(extendedUI.FilteredView):
         view = ModuleBrowserView()
         view.setVerticalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
         view.setHorizontalScrollMode(QtWidgets.QTreeView.ScrollPerPixel)
-        # view.setAlternatingRowColors(True)
         view.setSelectionMode(QtWidgets.QTreeView.ExtendedSelection)
         view.setDragEnabled(True)
         view.setIconSize(QtCore.QSize(icon_size, icon_size))
@@ -395,6 +396,7 @@ class ModuleBrowser(extendedUI.FilteredView):
                 'name': 元のファイル名
                 'ext': 拡張子
                 'simpleName': 拡張子を抜いたシンプルな名前
+                'isLinker': FileLinkerかどうか
 
             Args:
                 function (function):
@@ -441,7 +443,7 @@ class ModuleBrowser(extendedUI.FilteredView):
             Args:
                 state (bool):
         """
-        self.__extenstion_visibles = bool(state)
+        self.__extension_visibles = bool(state)
 
     def extensionVisibles(self):
         r"""
@@ -450,7 +452,7 @@ class ModuleBrowser(extendedUI.FilteredView):
             Returns:
                 bool:
         """
-        return self.__extenstion_visibles
+        return self.__extension_visibles
 
     def setExtraContext(self, contextOption):
         r"""
@@ -524,10 +526,12 @@ class ModuleBrowser(extendedUI.FilteredView):
                         item.setText(filename)
                         item.setData(os.path.join(offset, file['name']))
                         item.setData(file['ext'], QtCore.Qt.UserRole+2)
+                        item.setData(file['isLinker'], QtCore.Qt.UserRole+3)
                         continue
-                    fileitem = QtGui.QStandardItem(file['simpleName'])
-                    fileitem.setData(os.path.join(offset, file['name']))
-                    fileitem.setIcon(icon)
+                    file_item = QtGui.QStandardItem(file['simpleName'])
+                    file_item.setData(os.path.join(offset, file['name']))
+                    file_item.setIcon(icon)
+                    file_item.setData(file['isLinker'], QtCore.Qt.UserRole+3)
 
                     try:
                         t = os.path.getmtime(
@@ -542,7 +546,7 @@ class ModuleBrowser(extendedUI.FilteredView):
                     t_item = QtGui.QStandardItem(update_time)
 
                     row = item.rowCount()
-                    item.setChild(row, 0, fileitem)
+                    item.setChild(row, 0, file_item)
                     item.setChild(row, 1, t_item)
                 else:
                     if item.text():
@@ -591,7 +595,7 @@ class ModuleBrowser(extendedUI.FilteredView):
         self.__extensions = extensions[:]
         self.refresh()
 
-    def selectedPathes(self):
+    def selectedPathes(self, isAbsPath=True):
         r"""
             選択されたアイテムのファイルパスのリストを返す
 
@@ -599,18 +603,35 @@ class ModuleBrowser(extendedUI.FilteredView):
                 list:
         """
         path = self.path()
-        selectionModel = self.view().selectionModel()
+        selection_model = self.view().selectionModel()
         pathlist = []
         for index in [
-            x for x in selectionModel.selectedIndexes() if x.column() == 0
+            x for x in selection_model.selectedIndexes() if x.column() == 0
         ]:
-            pathes = [path, index.data(QtCore.Qt.UserRole + 1)]
-            pathlist.append(os.path.join(*pathes))
+            name = index.data(QtCore.Qt.UserRole+1)
+            filepath = os.path.join(path, name)
+            result_path = filepath
+            if index.data(QtCore.Qt.UserRole+3):
+                fl = fileLinker.FileLinker(filepath)
+                p = fl.linkedPath(not isAbsPath)
+                if p:
+                    result_path = p
+                else:
+                    result_path = name + fl.Ext_Ptn
+            else:
+                if not isAbsPath:
+                    result_path = name
+            pathlist.append(result_path)
         return pathlist
 
     def selectedItems(self, includeChildren=False):
         r"""
             選択アイテムの中身のデータをリストで返すメソッド。
+            selectedPathesと違い、こちらは
+                ・選択アイテムのパス
+                ・リンクの指すパス（選択アイテムがリンカーの場合）
+                ・子のファイル（includeChildrenがTrueの場合）
+            の３つのデータを持つtupleのリストを返す。
 
             Args:
                 includeChildren (bool):
@@ -618,56 +639,80 @@ class ModuleBrowser(extendedUI.FilteredView):
             Returns:
                 list:
         """
-        selectionModel = self.view().selectionModel()
-        # 子階層を含まない場合。===============================================
-        if not includeChildren:
-            return [
-                x.data(QtCore.Qt.UserRole + 1)
-                for x in selectionModel.selectedIndexes() if x.column() == 0
-            ]
-        # =====================================================================
 
+        parent_path = self.path()
+        def get_path_from_index(index):
+            r"""
+                与えられたindexからパス情報を取得して返す。
+                その際、ファイルがリンカーの時は内部パスに変換して返す。
+
+                Args:
+                    index (QModelIndex):
+
+                Returns:
+                    str:
+            """
+            filename = index.data(QtCore.Qt.UserRole + 1)
+            lnk_path = ''
+            if not index.data(QtCore.Qt.UserRole + 3):
+                return filename, lnk_path, []
+            filepath = os.path.join(parent_path, filename)
+            fl = fileLinker.FileLinker(filepath)
+            p = fl.linkedPath(True)
+            if p:
+                lnk_path = p
+            return filename + fl.Extension, lnk_path, []
+
+        selection_model = self.view().selectionModel()
         model = self.view().model()
         items = []
-        for index in selectionModel.selectedIndexes():
+        for index in selection_model.selectedIndexes():
             if index.column() != 0:
                 continue
-            items.append(index.data(QtCore.Qt.UserRole + 1))
+            data = get_path_from_index(index)
+            if data not in items:
+                items.append(data)
+
+            if not includeChildren:
+                continue
             i = 0
+            sub_items = data[-1]
             while (True):
                 child_index = model.index(i, 0, index)
                 if not child_index.isValid():
                     break
-                items.append(child_index.data(QtCore.Qt.UserRole + 1))
                 i += 1
-        items = list(set(items))
+                data = get_path_from_index(child_index)
+                if data in sub_items:
+                    continue
+                sub_items.append(data)
         return items
 
     def openInExplorer(self):
         r"""
             選択アイテムをエクスプローラーで開くメソッド。
         """
-        pathes = self.selectedPathes()
-        if len(pathes) != 1:
+        paths = self.selectedPathes()
+        if len(paths) != 1:
             return
-        name, ext = os.path.splitext(pathes[0])
-        if ext.lower() in ('.mb', '.ma') and os.path.isfile(pathes[0]):
+        name, ext = os.path.splitext(paths[0])
+        if ext.lower() in ('.mb', '.ma') and os.path.isfile(paths[0]):
             from ...ui import fileLoader
-            fileLoader.showAssistance(pathes[0], self)
+            fileLoader.showAssistance(paths[0], self)
         else:
             from ... import fileUtil
-            fileUtil.openFile(pathes[0])
+            fileUtil.openFile(paths[0])
 
     def setPathToChild(self):
         r"""
             子のブラウザへパスを渡す
         """
-        pathes = self.selectedPathes()
-        if len(pathes) != 1:
+        paths = self.selectedPathes()
+        if len(paths) != 1:
             return
         if not self.child():
             return
-        self.child().setPath(pathes[0])
+        self.child().setPath(paths[0])
 
     def setBrowserContext(self, context):
         r"""
@@ -691,7 +736,8 @@ class ModuleBrowser(extendedUI.FilteredView):
             self.__context.setExtensions(self.__extensions)
             self.__context.setVersionReTemplate(self.versionFormat())
             self.__context.setContextOption(self.__extra_context)
+            self.__context.fileChanged.connect(self.refresh)
         self.__context.setPath(self.path())
-        self.__context.setFileNames(self.selectedItems(True))
+        self.__context.setFileData(self.selectedItems(True))
         self.__context.show()
 

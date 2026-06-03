@@ -117,8 +117,6 @@ class ModuleBrowserWidget(QtWidgets.QWidget):
         super(ModuleBrowserWidget, self).keyPressEvent(event)
 
 
-
-
 class FileView(QtWidgets.QWidget):
     r"""
         ファイルの一覧および保存をするためのUIを提供するクラス。
@@ -235,7 +233,7 @@ class FileView(QtWidgets.QWidget):
         r"""
             ファイルのベースの名前を更新する
         """
-        selected = self.browser().selectedItems()
+        selected = self.browser().selectedPathes()
         if not selected:
             return
         name = os.path.basename(selected[0])

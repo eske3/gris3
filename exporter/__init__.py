@@ -18,11 +18,11 @@ import re
 import shutil
 
 from maya import cmds
-from . import core
-from . import skinWeightExporter
+
 from . import animationExporter
+from . import core
 from . import curveExporter
-from .. import func
+from . import skinWeightExporter
 
 class MayaFileExporter(core.BasicExporter):
     r"""
@@ -141,11 +141,11 @@ def getLatestAndCurrent(parentDir, filename, extension, isOverwrite=False):
     filepath = core.BasicExporter.getLatestFile(
         parentDir, filename, extension, isOverwrite=isOverwrite
     )
-    curpath = core.BasicExporter.getCurFile(
+    cur_path = core.BasicExporter.getCurFile(
         parentDir, filename, extension
     )
 
-    return (filename, filepath, curpath)
+    return filename, filepath, cur_path
 
 
 def exportSelectedDrivenKeys(parentDir, filename, isOverwrite=False):
@@ -232,6 +232,13 @@ def exportMayaFile(
     basename, filepath, curpath = getLatestAndCurrent(
         parentDir, filename, exporter.extension(), isOverwrite=isOverwrite
     )
+    # カレントリンクシステムに伴い、不要なリンクを先に削除する用動作変更。
+    from ..fileUtil import fileLinker, operator
+    fl = fileLinker.FileLinker(curpath)
+    lnkfile = fl.path(True)
+    if os.path.exists(lnkfile):
+        operator.deleteFiles(lnkfile)
+
     exp = exporter
     exp.setExportDir(parentDir)
     exp.setBasename(basename)

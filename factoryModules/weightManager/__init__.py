@@ -16,6 +16,7 @@ r"""
 from ... import factoryModules, exporter, uilib
 from ...gadgets import skinningEditor
 from ...uilib import factoryUI
+from ...exporter import skinWeightExporter
 QtWidgets, QtGui, QtCore = (
     factoryModules.QtWidgets, factoryModules.QtGui, factoryModules.QtCore
 )
@@ -133,16 +134,15 @@ class ContextOption(factoryUI.ContextOption):
             コンテキスト全体のリフレッシュを行う。
         """
         import os
-        files = self.fileNames()
         self.__path_editor.setText('')
+        files = self.files(expandLinkedPath=True)
         if not files:
             return
-        file = os.path.join(self.path(), files[0])
+        file = files[0]
         if not os.path.exists(file):
             return
         self.__path_editor.setText(file)
 
-        from gris3.exporter import skinWeightExporter
         r = skinWeightExporter.Restorer(file)
         data = r.analyzeInfo()
         self.setInfluences(data['Influence order'])
@@ -159,7 +159,6 @@ class ContextOption(factoryUI.ContextOption):
         file = self.files()
         if not file:
             return
-        from gris3.exporter import skinWeightExporter
         if not target:
             target = skinWeightExporter.cmds.ls(sl=True)[0]
             if not target:

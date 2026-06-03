@@ -15,13 +15,41 @@ r"""
 """
 import os
 from ... import uilib
-from ...fileUtil import fileManager
+from ...fileUtil import fileManager, fileLinker
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
+
+
+def listFilenamesFromData(
+        fileData, includeChildren=True, expandLinkedPath=True
+):
+    r"""
+        Args:
+            fileData(list):
+            includeChildren(bool):
+
+        Returns:
+            list:
+    """
+    if expandLinkedPath:
+        get_path = lambda x: x[1] if x[1] else x[0]
+    else:
+        get_path = lambda x: x[0]
+
+    results = []
+    for data in fileData:
+        file = get_path(data)
+        if file not in results:
+            results.append(file)
+        if not includeChildren:
+            continue
+        files = [get_path(x) for x in data[-1]]
+        results.extend([x for x in files if x not in results])
+    return results
 
 
 class ContextOption(QtWidgets.QWidget):
     r"""
-        enter description
+        コンテクストメニューの追加オプションを定義する基底クラス。
     """
 
     def __init__(self, parent=None):
@@ -31,7 +59,7 @@ class ContextOption(QtWidgets.QWidget):
         """
         super(ContextOption, self).__init__(parent)
         self.__path = ''
-        self.__filenames = []
+        self.__filedata = []
 
     def setPath(self, path):
         r"""
@@ -51,33 +79,55 @@ class ContextOption(QtWidgets.QWidget):
         """
         return self.__path
 
-    def setFileNames(self, files):
+    def setFileData(self, fileData):
         r"""
-            操作対象となるファイルリストを設定する
+            処理を行うファイル名のリストをセットする。
+            引数fileDataの中身は
+                ・選択アイテムのパス
+                ・リンクの指すパス（選択アイテムがリンカーの場合）
+                ・子のファイル（includeChildrenがTrueの場合）
+            の３つのデータを持つtupleのリスト。
 
             Args:
-                files (list):
+                fileData (list):
         """
-        self.__filenames = files
+        self.__filedata = fileData
 
-    def fileNames(self):
+    def fileNames(self, includeChildren=True, expandLinkedPath=False):
         r"""
-            操作対象となるファイルリストを返す
+            操作対象となるファイルリストを返す。
+            includeChildrenがTrueの場合、操作対象ファイルの子ファイルも合わせて返す。
+            expandLinkedPathがTrueの場合、戻り値の中にある操作対象ファイルのうち、
+            リンカーファイルはリンク先のパスに変換する。
+
+            Args:
+                includeChildren (bool):
+                expandLinkedPath (bool):
 
             Returns:
                 list:
         """
-        return self.__filenames
+        return listFilenamesFromData(
+            self.__filedata, includeChildren, expandLinkedPath
+        )
 
-    def files(self):
+    def files(self, includeChildren=True, expandLinkedPath=False):
         r"""
-            操作対象となるファイルのフルパスのリストを返す
+            操作対象となるファイルのフルパスのリストを返す。
+            引数はfileNamesと同じ内容。
+
+            Args:
+                includeChildren (bool):
+                expandLinkedPath (bool):
 
             Returns:
                 list:
         """
         p = self.path()
-        return [os.path.join(p, x) for x in self.fileNames()]
+        return [
+            os.path.join(p, x)
+            for x in self.fileNames(includeChildren, expandLinkedPath)
+        ]
 
     def hiddenTrigger(self):
         r"""
@@ -117,6 +167,7 @@ class BrowserContext(uilib.ConstantWidget):
     r"""
         ブラウザに表示するコンテキストメニュー機能を提供するクラス。
     """
+    fileChanged = QtCore.Signal()
 
     def __init__(self, moduleBrowser):
         r"""
@@ -125,13 +176,12 @@ class BrowserContext(uilib.ConstantWidget):
             Args:
                 moduleBrowser (ModuleBrowser):
         """
-        # if not isinstance(moduleBrowser, ModuleBrowser):
-        #     raise TypeError(
-        #         '%s is not instance of ModuleBrowser' % moduleBrowser
-        #     )
+        self.__manager = None
+        self.__discarded_manager = None
+        self.__filedata = []
+        self.__context_option = None
         super(BrowserContext, self).__init__(moduleBrowser)
         self.setObjectName('GRIS_BROWSER_CONTEXT')
-        self.__context_option = None
 
     def setContextOption(self, contextOption=None):
         r"""
@@ -163,18 +213,23 @@ class BrowserContext(uilib.ConstantWidget):
             GUIを作成する。
         """
         self.__manager = fileManager.FileManager()
-        self.__discarded_manager = None
-
-        self.__filenames = []
-        self.resize(uilib.hires(200), uilib.hires(160))
+        self.setScalable(True)
+        self.resize(uilib.hires(400), uilib.hires(160))
         btn_size = 48
 
         # ラベル。
-        label = QtWidgets.QLabel('Manage File')
-        label.setStyleSheet('QLabel{font-size:18px;}')
-        label.setSizePolicy(
+        self.__file_label = QtWidgets.QLabel('Manage File')
+        self.__file_label.setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
         )
+        self.__file_label.setMinimumWidth(10)
+
+        self.__linked_label = QtWidgets.QLabel('Path')
+        self.__linked_label.setStyleSheet('QLabel{font-size:12;}')
+        self.__linked_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed
+        )
+        self.__linked_label.setMinimumWidth(10)
 
         # ツールバー。=========================================================
         toolbar = QtWidgets.QGroupBox('Tool')
@@ -202,6 +257,7 @@ class BrowserContext(uilib.ConstantWidget):
         cur_btn.setBgColor(80, 80, 80)
         cur_btn.setToolTip('Change selected file to current.')
         cur_btn.clicked.connect(self.toCurrent)
+        self.__cur_btn = cur_btn
 
         t_layout = QtWidgets.QHBoxLayout(toolbar)
         t_layout.setContentsMargins(2, 8, 2, 2)
@@ -215,7 +271,9 @@ class BrowserContext(uilib.ConstantWidget):
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.setSpacing(2)
-        layout.addWidget(label)
+        layout.addWidget(self.__file_label)
+        layout.addWidget(self.__linked_label)
+        layout.addSpacing(20)
         layout.addWidget(toolbar)
 
     def setVersionReTemplate(self, template):
@@ -267,32 +325,85 @@ class BrowserContext(uilib.ConstantWidget):
     def path(self):
         return self.__manager.path()
 
-    def setFileNames(self, fileNames):
+    def hasLinker(self):
+        for data in self.__filedata:
+            if data[1]:
+                return True
+            for subdata in data[-1]:
+                if subdata[1]:
+                    return True
+        return False
+
+    def setFileData(self, fileData):
         r"""
-            処理を行うファイル名のリストをセットするメソッド。
+            処理を行うファイル名のリストをセットする。
+            引数fileDataの中身は
+                ・選択アイテムのパス
+                ・リンクの指すパス（選択アイテムがリンカーの場合）
+                ・子のファイル（includeChildrenがTrueの場合）
+            の３つのデータを持つtupleのリスト。
 
             Args:
-                fileNames (list):
+                fileData (list):
         """
-        self.__filenames = fileNames[:]
+        self.__filedata = fileData[:]
         if self.__context_option:
-            self.__context_option.setFileNames(self.__filenames)
+            self.__context_option.setFileData(self.__filedata)
 
-    def fileNames(self):
+        cur_btn_enabled = not self.hasLinker()
+        label = ''
+        linked = ''
+        if fileData:
+            fl = fileLinker.getFileLinker(
+                os.path.join(self.path(), fileData[0][0])
+            )
+            if fl:
+                name = os.path.basename('{} (link)'.format(fl.path()))
+                linked = 'Link to : {}'.format(
+                    os.path.basename(fl.linkedPath())
+                )
+            else:
+                name = fileData[0][0]
+            label = '<span style="font-size:15pt;">{}</span>'.format(name)
+
+            num = len(fileData)
+            for data in fileData:
+                num += len(data[-1])
+
+            if num > 1:
+                label = (
+                    '{} <span style="font-size:8pt;">+ {} files...</span>'
+                ).format(label, num-1)
+
+        self.__cur_btn.setEnabled(cur_btn_enabled)
+        self.__file_label.setText(label)
+        self.__linked_label.setText(linked)
+
+    def fileNames(self, includeChildren=True, expandLinkedPath=False):
         r"""
-            処理を行うファイル名のリストを返すメソッド。
+            操作対象となるファイルリストを返す。
+            includeChildrenがTrueの場合、操作対象ファイルの子ファイルも合わせて返す。
+            expandLinkedPathがTrueの場合、戻り値の中にある操作対象ファイルのうち、
+            リンカーファイルはリンク先のパスに変換する。
+
+            Args:
+                includeChildren (bool):
+                expandLinkedPath (bool):
 
             Returns:
                 list:
         """
-        return self.__filenames
+        return listFilenamesFromData(
+            self.__filedata, includeChildren, expandLinkedPath
+        )
 
     def discard(self):
         r"""
             ファイルをゴミ箱に処理するメソッド。
         """
         self.__manager.discard(self.fileNames())
-        self.parent().refresh()
+        self.fileChanged.emit()
+        self.hide()
 
     def showDiscardedFileManager(self):
         r"""
@@ -304,6 +415,9 @@ class BrowserContext(uilib.ConstantWidget):
             self.__discarded_manager.resize(
                 uilib.hires(600), uilib.hires(600)
             )
+            self.__discarded_manager.main().fileRestored.connect(
+                self.fileChanged.emit
+            )
         manager = self.__discarded_manager.main()
         manager.setWorkdir(self.__manager.path())
         self.hide()
@@ -313,8 +427,11 @@ class BrowserContext(uilib.ConstantWidget):
         r"""
             選択ファイルをカレントファイルに変更する。
         """
-        fileManager.toCurrent(self.path(), self.fileNames())
+        fileManager.toCurrent(
+            self.path(), self.fileNames()
+        )
         self.hide()
+        self.fileChanged.emit()
 
     def show(self):
         r"""
@@ -328,19 +445,32 @@ class BrowserContext(uilib.ConstantWidget):
 class MayaAsciiBrowserContext(BrowserContext):
     r"""
         Maya Asciiファイル用のコンテキスト。
-        Mayaのファイルに関する情報を表示する。（予定）
+        Mayaのファイルに関する情報を表示する。
     """
+    def __init__(self, moduleBrowser):
+        self.__requires = False
+        super().__init__(moduleBrowser)
+
 
     def buildUI(self):
-        self.__requires = []
         super(MayaAsciiBrowserContext, self).buildUI()
         self.__grp = uilib.ClosableGroup('Maya file information')
         self.__grp.setIcon(uilib.IconPath('unit'))
         self.__grp.expanded.connect(self.updateRequires)
 
-        model = QtCore.QStringListModel()
-        self.__info_list = QtWidgets.QListView()
+        model = QtGui.QStandardItemModel()
+        self.__info_list = QtWidgets.QTreeView()
+        self.__info_list.setVerticalScrollMode(
+            QtWidgets.QAbstractItemView.ScrollPerPixel
+        )
+        self.__info_list.setHorizontalScrollMode(
+            QtWidgets.QAbstractItemView.ScrollPerPixel
+        )
+        self.__info_list.setIconSize(QtCore.QSize(32, 32))
+        self.__info_list.setHeaderHidden(True)
+        self.__info_list.setRootIsDecorated(False)
         self.__info_list.setModel(model)
+        self.__info_list.setEditTriggers(QtWidgets.QTreeView.NoEditTriggers)
 
         label = QtWidgets.QLabel('Requires')
         layout = QtWidgets.QHBoxLayout(self.__grp)
@@ -358,28 +488,41 @@ class MayaAsciiBrowserContext(BrowserContext):
             self.setScalable(True)
 
     def updateRequires(self, isShown):
-        model = self.__info_list.model()
+        model: QtGui.QStandardItemModel = self.__info_list.model()
         if not isShown:
             return
         if self.__requires:
             return
-        names = self.fileNames()
+        names = self.fileNames(includeChildren=False, expandLinkedPath=True)
         if not names:
             return
-        target_path = os.path.join(self.path(), names[-1])
+
+        model.removeRows(0, model.rowCount())
         from ...tools.fileChecker import core, requires_checker
         checker = core.DataChckerManager()
         checker.install(requires_checker)
-        data = checker.check_file(target_path)
-        if not data:
-            return
-        self.__requires = [
-            x.strip() for x in data['Requires'][1].split('\n')[1:]
-        ]
-        model.setStringList(self.__requires)
+        parent_path = self.path()
+        is_single = len(names) == 1
+
+        for name in names:
+            data = checker.check_file(os.path.join(parent_path, name))
+            if not data:
+                continue
+
+            if not is_single:
+                parent_item = QtGui.QStandardItem(name)
+                parent_item.setIcon(QtGui.QIcon(uilib.IconPath('unit')))
+                model.setItem(model.rowCount(), 0, parent_item)
+            else:
+                parent_item = model.invisibleRootItem()
+            for d in [x.strip() for x in data['Requires'][1].split('\n')[1:]]:
+                item = QtGui.QStandardItem(d)
+                parent_item.setChild(parent_item.rowCount(), 0, item)
+        self.__info_list.expandAll()
+        self.__requires = True
 
     def show(self):
         self.__grp.setExpanding(False)
-        self.__requires = []
+        self.__requires = False
         super(MayaAsciiBrowserContext, self).show()
 

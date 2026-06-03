@@ -15,15 +15,14 @@ r"""
 """
 import os
 import re
-import shutil
 
-from .. import fileInfoManager
-from .. import exporter
-from .. import fileUtil
+from . import fileLinker, operator
+from .. import exporter, fileInfoManager, fileUtil
 
-VersionFileReTemplte = '^(.*)([_\.])(v\d+|cur)\.({})$'
+VersionFileReTemplate = '^(.*)([_\.])(v\d+|cur)\.({})$'
 
-def coordinateFiles(files, extensions, extFormat=VersionFileReTemplte):
+
+def coordinateFiles(files, extensions, extFormat=VersionFileReTemplate):
     r"""
         Args:
             files (list):ファイル操作する対象のパスリスト
@@ -46,17 +45,23 @@ def coordinateFiles(files, extensions, extFormat=VersionFileReTemplte):
         if os.path.isdir(filepath):
             matched_files.setdefault('/dir', []).append(file)
             continue
-        if not reobj:
-            matched_files.setdefault('/file', []).append(file)
-            continue
-        r = reobj.search(file)
-        if not r:
-            continue
-        data = {
-            'ver':r.group(3), 'sep':r.group(2), 'name':file, 'ext':r.group(4),
-            'simpleName':reobj.sub(r'\1\2\3', file)
-        }
-        matched_files.setdefault(r.group(1), []).append(data)
+
+        linker = fileLinker.getFileLinker(filepath)
+        if linker:
+            file = os.path.basename(linker.path())
+        if reobj:
+            r = reobj.search(file)
+            if r:
+                data = {
+                    'ver': r.group(3), 'sep': r.group(2), 'name': file,
+                    'ext': r.group(4),
+                    'simpleName': reobj.sub(r'\1\2\3', file),
+                    'isLinker': bool(linker)
+                }
+                matched_files.setdefault(r.group(1), []).append(data)
+                continue
+
+        matched_files.setdefault('/file', []).append(file)
     return matched_files
 
 
@@ -66,9 +71,11 @@ class FileManager(object):
     """
     def __init__(self):
         self.__path = ''
-        self.setCoordinator(coordinateFiles)
+        self.__coordinator = coordinateFiles
+        self.__extensions = []
+        self.__version_template = ''
         self.setExtensions(['ma'])
-        self.setVersionReTemplate(VersionFileReTemplte)
+        self.setVersionReTemplate(VersionFileReTemplate)
 
     def setPath(self, path):
         r"""
@@ -148,7 +155,11 @@ class FileManager(object):
 
 def toCurrent(parentDir, filepaths):
     r"""
-        任意のファイルをコピーしてカレントファイルとしてリネームする。
+        任意のファイルをカレントファイルに登録する。
+        カレントファイルはfileLinker.FileLinkerとして作成され、任意のファイルのパスを
+        指すようになる。
+        これに伴い、任意のファイルをコピーしてカレントファイルとしてリネームするという機能は
+        廃止となる。
         
         Args:
             parentDir (str):親ディレクトリパス
@@ -159,8 +170,8 @@ def toCurrent(parentDir, filepaths):
     for file in filepaths:
         filename, ext = os.path.splitext(file)
         name, path, cur = exporter.getLatestAndCurrent(parentDir, filename, ext)
-        src = fileUtil.normpath(os.path.join(parentDir, file))
-        cur = fileUtil.normpath(cur)
+        src = fileUtil.toStandardPath(os.path.join(parentDir, file))
+        cur = fileUtil.toStandardPath(cur)
         if src == cur:
             continue
         current_list.setdefault(cur, []).append(src)
@@ -169,5 +180,8 @@ def toCurrent(parentDir, filepaths):
         files.sort()
         print('# Change current file from "{}"'.format(files[-1]))
         print('     to "{}"'.format(cur))
-        shutil.copy2(files[-1], cur)
+        cur_lnk = fileLinker.FileLinker(cur)
+        cur_lnk.makeLink(files[-1])
+        if os.path.exists(cur):
+            operator.deleteFiles(cur)
     print('=' * 80)

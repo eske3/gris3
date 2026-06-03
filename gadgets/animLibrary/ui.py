@@ -339,7 +339,7 @@ class DataViewContext(uilib.ConstantWidget):
             super(DataViewContext, self).show()
 
 
-class DataView(imageViewer.ImageViewer):
+class DataView(imageViewer.ImageListView):
     r"""
         データを可視化したビューとして表示する。
     """

@@ -11,13 +11,11 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-import os
 from .. import uilib
-from ..uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
-class ImageViewer(QtWidgets.QListView):
+class ImageListView(QtWidgets.QListView):
     DefaultIcon = uilib.IconPath('uiBtn_noImage')
     itemIsClicked = QtCore.Signal(str)
     poseEditorRequested = QtCore.Signal(str, QtGui.QPixmap)
@@ -32,7 +30,7 @@ class ImageViewer(QtWidgets.QListView):
                 parent (QtWidgets.QWidget):親ウィジェット
         """
         iconsize = QtCore.QSize(228, 228)
-        super(ImageViewer, self).__init__(parent)
+        super(ImageListView, self).__init__(parent)
         self.__rootdir = rootdir
         self.__oldpos = None
         self.__start_pos = None
@@ -113,12 +111,10 @@ class ImageViewer(QtWidgets.QListView):
         """
         self.__start_pos = event.pos()
         self.__oldpos = None
-        # self.__drag_mode = self.dragEnabled()
         self.__pressed_button = event.buttons()
         if self.__pressed_button & QtCore.Qt.RightButton:
             self.__oldpos = event.pos()
-            # self.setDragEnabled(False)
-        super(ImageViewer, self).mousePressEvent(event)
+        super(ImageListView, self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         r"""
@@ -145,7 +141,7 @@ class ImageViewer(QtWidgets.QListView):
             self.__oldpos = cur_pos
         else:
             if is_starting_daragging():
-                super(ImageViewer, self).mouseMoveEvent(event)
+                super(ImageListView, self).mouseMoveEvent(event)
                 return
             if not self.__start_pos:
                 return
@@ -178,7 +174,23 @@ class ImageViewer(QtWidgets.QListView):
                 )
                 self.poseEditorRequested.emit(item.data(), pixmap)
                 return
-        super(ImageViewer, self).mouseReleaseEvent(event)
+        super(ImageListView, self).mouseReleaseEvent(event)
+
+    def viewImageOnScreen(self):
+        if self.selectionMode() == QtWidgets.QAbstractItemView.NoSelection:
+            return
+        model = self.model()
+        rows = [x.row() for x in self.selectionModel().selectedIndexes()]
+        filelist = []
+        for row in rows:
+            file = model.item(row, 0).data()
+            if file in filelist:
+                continue
+            filelist.append(file)
+        if not filelist:
+            return
+        from ..gadgets import onScreenImageViewer
+        onScreenImageViewer.showWindow(filelist)
 
     def keyPressEvent(self, event):
         r"""
@@ -191,13 +203,13 @@ class ImageViewer(QtWidgets.QListView):
             if key in (QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete):
                 self.deleteSelected()
                 return
-        super(ImageViewer, self).keyPressEvent(event)
+            elif key == QtCore.Qt.Key_Space:
+                self.viewImageOnScreen()
+                return
+        super(ImageListView, self).keyPressEvent(event)
 
     def eventFilter(self, obj, event):
         if obj == self.viewport():
-            print('%s : %s' % (event.type(), QtCore.QEvent.MouseMove))
             if event.type() == QtCore.QEvent.MouseMove:
                 self.mouseMoveEvent(event)
-        return super(ImageViewer, self).eventFilter(obj, event)
-        
-        
+        return super(ImageListView, self).eventFilter(obj, event)

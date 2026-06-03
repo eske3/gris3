@@ -255,3 +255,15 @@ def openScriptExecutor():
     from . import scriptExecUtility
     scriptExecUtility.showWindow()
 
+
+def openOnScreenImageViewer():
+    r"""
+        イメージビューアーを開く。
+
+        Returns:
+            onScreenImageViewer.DesktopImageViewer:
+    """
+    from . import onScreenImageViewer
+    w = onScreenImageViewer.showWindow()
+    w.allowImageAddition(True)
+    return w

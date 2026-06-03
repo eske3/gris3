@@ -92,7 +92,7 @@ class ArgList(QtWidgets.QWidget):
         super(ArgList, self).__init__(parent)
         view = QtWidgets.QTreeView()
         view.setRootIsDecorated(False)
-        view.setEditTriggers(view.AllEditTriggers)
+        view.setEditTriggers(QtWidgets.QAbstractItemView.AllEditTriggers)
         view.setItemDelegate(ArgEditorStyle())
         
         model = QtGui.QStandardItemModel(0, 2)

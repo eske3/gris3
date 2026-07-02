@@ -18,7 +18,7 @@ import re
 
 from maya import mel
 
-from .. import node, mathlib
+from .. import node, mathlib, func
 from . import util, selectionUtil, cleanup
 cmds = node.cmds
 

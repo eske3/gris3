@@ -1,27 +1,33 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     drivenUtilities.py
-    @brief    ドリブンキーに関する便利機能を提供するモジュール。
-    @function hasDriven : ここに説明文を記入
-    @function mirrorDriven : 選択しているL側のドリブンキーをR側に移植する。
-    @function selectDrivenNode : 選択されたノード下にあるDrivenKeyのついているノードを返す。
-    @date        2017/02/13 23:56[Eske](eske3g@gmail.com)
-    @update      2017/09/03 23:07[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
+# old_style:google style:google
+r"""
+    ドリブンキーに関する便利機能を提供するモジュール。
+
+    Dates:
+        date:2018/03/06 8:53[Eske](eske3g@gmail.com)
+        update:2026/06/04 22:17 Eske Yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2018 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
 import re
-from gris3 import node
+from .. import node
 cmds = node.cmds
 
+
 def hasDriven(obj):
-    r'''
-        @brief  ドリブンキーが入っているノードかどうかを判定する関数。
-        @param  obj : [node.AbstractNode]
-        @return bool
-    '''
+    r"""
+    ドリブンキーが入っているノードかどうかを判定する関数。
+
+    Args:
+        obj(node.AbstractNode):
+
+    Returns:
+        bool:
+    """
     anm_crv = obj.sources(scn=True)
     anm_crv = cmds.ls(
         anm_crv, type=[
@@ -31,20 +37,23 @@ def hasDriven(obj):
     )
     return True if anm_crv else False
 
+
 def copyDrivenNetworks(attr):
-    r'''
-        @brief  引数attrに接続されているドリブンのノードネットワークをコピー
-        @brief  する関数。
-        @brief  戻り値は辞書で以下の情報を持つ
-        @brief  inputPlugs
-        @brief    ドライバの受けとなるカーブの入力アトリビュートをキーとし
-        @brief    元々接続されていたドライバの出力アトリビュート名を値とする
-        @brief    辞書
-        @brief  outPlugs:
-        @brief    ドリブンノードに接続する出力アトリビュート
-        @param  attr : [node.Attribute]ドリブンアトリビュート
-        @return dict
-    '''
+    r"""
+    引数attrに接続されているドリブンのノードネットワークをコピーする関数。
+    戻り値は辞書で以下の情報を持つ
+    inputPlugs
+        ドライバの受けとなるカーブの入力アトリビュートをキーとし
+        元々接続されていたドライバの出力アトリビュート名を値とする辞書
+    outPlugs:
+        ドリブンノードに接続する出力アトリビュート
+
+    Args:
+        attr(node.Attribute):ドリブンアトリビュート
+
+    Returns:
+        dict:
+    """
     blend_weighted = attr.source(type='blendWeighted')
     if blend_weighted:
         anim_curves = node.sources(
@@ -79,12 +88,14 @@ def copyDrivenNetworks(attr):
     result = {'inputPlugs':input_plugs, 'outPlug':out_plug}
     return result
 
+
 def mirrorDriven(targets=None):
-    r'''
-        @brief  選択しているL側のドリブンキーをR側に移植する。
-        @param  targets(None) : [list]
-        @return None
-    '''
+    r"""
+    選択しているL側のドリブンキーをR側に移植する。
+
+    Args:
+        targets(list):
+    """
     from gris3 import system
     scaled_attr = re.compile('translate[XYZ]')
     name_rule = system.GlobalSys().nameRule()
@@ -175,13 +186,17 @@ def mirrorDriven(targets=None):
 
 
 def selectDrivenNode(topNodes=None, isSelecting=False):
-    r'''
-        @brief  選択されたノード下にあるDrivenKeyのついているノードを返す。
-        @brief  引数isSelectingがTrueの場合は選択も行う。
-        @param  topNodes(None) : [list]
-        @param  isSelecting(False) : [edit]
-        @return list
-    '''
+    r"""
+    選択されたノード下にあるDrivenKeyのついているノードを返す。
+    引数isSelectingがTrueの場合は選択も行う。
+
+    Args:
+        topNodes(list): 操作対象となるノード名のリスト
+        isSelecting(bool): 選択まで行うかどうか
+
+    Returns:
+        list:
+    """
     topNodes = node.selected(topNodes)
     if not topNodes:
         raise RuntimeError('No object were specified.')

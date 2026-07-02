@@ -1,35 +1,32 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-r'''
-    @file     drivenManager.py
-    @brief    ジョイントの編集機能を提供するGUI。
-    @class    DrivenUtility : ドリブンキーにまつわる便利ツールGUIを提供するクラス。
-    @class    MainGUI : 単独ウィンドウとして表示されるウィンドウ。
-    @function showWindow : ウィンドウを作成するためのエントリ関数。
-    @date        2017/06/15 16:35[Eske](eske3g@gmail.com)
-    @update      2017/09/03 23:27[Eske](eske3g@gmail.com)
-    このソースの版権はEske Yoshinobにあります
-    無断転載、改ざん、無断使用は基本的に禁止しておりますので注意して下さい
-    このソースを使用して不具合や不利益等が生じても[Eske Yoshinob]
-    は一切責任を負いませんのであらかじめご了承ください
-'''
-from gris3.tools import drivenUtilities
-from gris3 import uilib
+# old_style:google style:google
+r"""
+    選択に関する便利関数を収録するモジュール。
+
+    Dates:
+        date:2018/03/06 8:53[Eske](eske3g@gmail.com)
+        update:2026/06/04 22:17 Eske Yoshinob[eske3g@gmail.com]
+
+    License:
+        Copyright 2018 Eske Yoshinob[eske3g@gmail.com] - All Rights Reserved
+        Unauthorized copying of this file, via any medium is strictly prohibited
+        Proprietary and confidential
+"""
+from ..tools import drivenUtilities
+from .. import uilib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
 
 class DrivenUtility(uilib.ClosableGroup):
-    r'''
-        @brief       ドリブンキーにまつわる便利ツールGUIを提供するクラス。
-        @inheritance uilib.ClosableGroup
-        @date        2017/09/03 23:26[Eske](eske3g@gmail.com)
-        @update      2017/09/03 23:27[Eske](eske3g@gmail.com)
-    '''
+    r"""
+    ドリブンキーにまつわる便利ツールGUIを提供するクラス。
+    """
     def __init__(self, parent=None):
-        r'''
-            @brief  初期化を行う。
-            @param  parent(None) : [QtWidgets.QWidget]
-            @return None
-        '''
+        r"""
+        Args:
+            parent(QtWidgets.QWidget):親ウィジェット
+        """
         super(DrivenUtility, self).__init__('Driven Utilities', parent)
         self.setWindowTitle('+Driven Manager')
         layout = QtWidgets.QHBoxLayout(self)
@@ -61,33 +58,32 @@ class DrivenUtility(uilib.ClosableGroup):
         layout.addStretch()
 
     def selectDriven(self):
-        r'''
-            @brief  選択されているノード下のドリブンノードを選択する。
-            @return None
-        '''
+        r"""
+        選択されているノード下のドリブンノードを選択する。
+        """
         drivenUtilities.selectDrivenNode(isSelecting=True)
 
+
 class MainGUI(uilib.AbstractSeparatedWindow):
-    r'''
-        @brief       単独ウィンドウとして表示されるウィンドウ。
-        @inheritance uilib.AbstractSeparatedWindow
-        @date        2017/06/27 18:31[s_eske](eske3g@gmail.com)
-        @update      2017/09/03 23:27[Eske](eske3g@gmail.com)
-    '''
+    r"""
+    単独ウィンドウとして表示されるウィンドウ。
+    """
     def centralWidget(self):
-        r'''
-            @brief  ここに説明文を記入
-            @return None
-        '''
+        r"""
+        Returns:
+            DrivenUtility:
+        """
         return DrivenUtility()
 
 
 def showWindow():
-    r'''
-        @brief  ウィンドウを作成するためのエントリ関数。
-        @return QtWidgets.QWidget
-    '''
-    from gris3.uilib import mayaUIlib
+    r"""
+    ウィンドウを作成するためのエントリ関数。
+
+    Returns:
+        MainGUI:
+    """
+    from ..uilib import mayaUIlib
     widget = MainGUI(mayaUIlib.MainWindow)
     widget.resize(300, 100)
     widget.show()

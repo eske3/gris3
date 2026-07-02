@@ -215,8 +215,8 @@ class ImageItem(QtWidgets.QGraphicsObject):
 
     def innerTranslate(self, delta):
         delta = delta / self.ext_scale
-        new_ox = self.inner_offset.x() + delta.x()
-        new_oy = self.inner_offset.y() + delta.y()
+        new_ox = self.inner_offset.x() + delta.x() * self.flip_x
+        new_oy = self.inner_offset.y() + delta.y() * self.flip_y
         self.inner_offset = QtCore.QPointF(new_ox, new_oy)
         self.update()
 
@@ -599,7 +599,7 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
                 i.innerTranslate(delta)
         elif self._mode == 'scale':
             d = total.x() + total.y()
-            factor = math.exp(d * 0.01)
+            factor = math.exp(d * 0.002)
 
             for i, cache in self._active_items.items():
                 i.ext_scale = max(0.05, cache['ext_scale'] * factor)
@@ -615,7 +615,7 @@ class DesktopImageViewer(QtWidgets.QGraphicsView):
                 )
         elif self._mode == 'inner_scale':
             d = delta.x() + delta.y()
-            factor = math.exp(d * 0.01)
+            factor = math.exp(d * 0.004)
             factor = max(0.1, min(10.0, factor))
             for i in self._active_items:
                 i.innerScaleWithPivot(factor, scene_pos)

@@ -496,6 +496,8 @@ class ConditionalSelection(object):
     def __init__(self):
         self.__node_types = []
         self.__filter_text = ''
+        self.__is_animated = False
+        self.__is_driven = False
         self.__use_re_in_filter = False
         self.__searching_text = ''
         self.__replaced_text = ''
@@ -506,6 +508,18 @@ class ConditionalSelection(object):
 
     def nodeTypes(self):
         return self.__node_types
+
+    def setFilterToAnimated(self, state):
+        self.__is_animated = bool(state)
+
+    def isFilteringToAnimated(self):
+        return self.__is_animated
+
+    def isFilteringToDriven(self):
+        return self.__is_driven
+
+    def setFilterToDriven(self, state):
+        self.__is_driven = bool(state)
 
     def setFilterText(self, text=''):
         self.__filter_text = text
@@ -563,6 +577,22 @@ class ConditionalSelection(object):
                     break
         return targets
 
+    def filterByAnim(self, nodelist):
+        from . import drivenUtilities
+        targets = nodelist
+        if self.isFilteringToAnimated():
+            anim_curves = ['animCurveT' + x for x in 'ALTU']
+            animated = []
+            for n in nodelist:
+                if not cmds.ls(n.sources(), type=anim_curves):
+                    continue
+                animated.append(n)
+            if animated:
+                targets = animated
+        if self.isFilteringToDriven():
+            targets = [x for x in targets if drivenUtilities.hasDriven(x)]
+        return targets
+
     def filterByText(self, nodelist):
         text = self.filterText()
         if not text:
@@ -582,11 +612,12 @@ class ConditionalSelection(object):
                 for x in nodelist
             ]
         return nodelist
-        
 
     def select(self, nodelist=None, **args):
         targets = self.listFilteredByNodeType(node.selected(nodelist), True)
         targets = self.filterByText(targets)
+        targets = self.filterByAnim(targets)
+        print(targets)
         targets = self.replaceText(targets)
         targets = cmds.ls(targets)
         cmds.select(targets, **args)
@@ -597,6 +628,7 @@ class ConditionalSelection(object):
             node.selected(), includeTransform='d' in args
         )
         targets = self.filterByText(targets)
+        targets = self.filterByAnim(targets)
         targets = self.replaceText(targets)
         targets = cmds.ls(targets)
         if not targets:

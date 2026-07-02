@@ -13,7 +13,7 @@ r"""
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
-from .. import uilib, lib, node
+from .. import uilib, node, lib
 from ..tools import selectionUtil
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
@@ -56,9 +56,7 @@ class BasicSelectionWidget(uilib.ClosableGroup):
             grp = QtWidgets.QGroupBox(grp_name)
             grp_layout = QtWidgets.QHBoxLayout(grp)
             for mode, icon, color in data:
-                icon_path = uilib.IconPath(
-                    'uiBtn_{}'.format(icon if icon else method)
-                )
+                icon_path = uilib.IconPath('uiBtn_{}'.format(icon))
                 btn = uilib.OButton(icon_path)
                 btn.setToolTip(tooltips[mode])
                 btn._mode = mode
@@ -219,6 +217,38 @@ class TextFilter(QtWidgets.QGroupBox):
         return self.__use_re.isChecked()
 
 
+class AnimatedFilter(QtWidgets.QGroupBox):
+    def __init__(self, parent=None):
+        super().__init__('Animated Filter', parent)
+        self.setCheckable(True)
+        self.setChecked(False)
+
+        self.__ui = {}
+        layout = QtWidgets.QHBoxLayout(self)
+        for label, state in (
+                ('animated', True), ('drivenKey', False),
+        ):
+            self.__ui[label] = QtWidgets.QCheckBox(lib.title(label))
+            self.__ui[label].setChecked(state)
+            layout.addWidget(self.__ui[label])
+            layout.addStretch()
+        layout.addStretch()
+
+    def getValues(self):
+        r"""
+            GUIのチェック状態を返す。
+            戻り値は辞書で、キーはanimatedとdrivenKeyの2種、値はbool。
+
+        Returns:
+            dict:
+        """
+        if self.isChecked():
+            f = lambda x : x.isChecked()
+        else:
+            f = lambda x : False
+        return {x: f(y) for x, y in self.__ui.items()}
+
+
 class TextReplacer(QtWidgets.QGroupBox):
     def __init__(self, parent=None):
         super(TextReplacer, self).__init__('Replace Text', parent)
@@ -251,10 +281,17 @@ class TextReplacer(QtWidgets.QGroupBox):
         self.__rem_ns.setChecked(bool(isUsing))
 
     def getValues(self):
+        if self.isChecked():
+            values = [
+                self.__searching.text(), self.__replaced.text(),
+                self.__rem_ns.isChecked()
+            ]
+        else:
+            values = [False, False , False]
+
         return {
-            'searching': self.__searching.text(),
-            'replaced': self.__replaced.text(),
-            'removeNamespace': self.__rem_ns.isChecked()
+            x: y for x, y in
+            zip(['searching', 'replaced', 'removeNamespace'], values)
         }
 
 
@@ -276,11 +313,13 @@ class ConditionalSelectionWidget(BasicSelectionWidget):
         # Node type filter
         self.__nt_filter_grp = NodeTypeFilter()
         self.__text_filter = TextFilter()
+        self.__animated_filter = AnimatedFilter()
         self.__text_replacer = TextReplacer()
         
         layout.addWidget(self.__nt_filter_grp, 1, 0, 1, 3)
         layout.addWidget(self.__text_filter, 2, 0, 1, 3)
-        layout.addWidget(self.__text_replacer, 3, 0, 1, 3)
+        layout.addWidget(self.__animated_filter, 3, 0, 1, 3)
+        layout.addWidget(self.__text_replacer, 4, 0, 1, 3)
 
     def listFilteredTypes(self):
         return self.__nt_filter_grp.listFilteredTypes()
@@ -295,8 +334,10 @@ class ConditionalSelectionWidget(BasicSelectionWidget):
         return self.__text_replacer.getValues()
 
     def execCommand(self, mode):
-        # from importlib import reload
-        # reload(selectionUtil)
+        from importlib import reload
+        reload(selectionUtil)
+
+        anim_filter = self.__animated_filter.getValues()
         
         filter_text = self.filterText()
         is_using_re_in_filter = self.isUsingReInFilter()
@@ -304,6 +345,8 @@ class ConditionalSelectionWidget(BasicSelectionWidget):
         
         cs = selectionUtil.ConditionalSelection()
         cs.setNodeTypes(self.listFilteredTypes())
+        cs.setFilterToAnimated(anim_filter['animated'])
+        cs.setFilterToDriven(anim_filter['drivenKey'])
         cs.setFilterText(filter_text)
         cs.setUsingReInFilter(is_using_re_in_filter)
         cs.setSearchingText(rep_text['searching'])

@@ -6,10 +6,10 @@ r"""
     
     Dates:
         date:2017/02/25 13:10[Eske](eske3g@gmail.com)
-        update:2021/08/21 04:45 noriyoshi tsujimoto[tensoftware@hotmail.co.jp]
+        update:2021/08/21 04:45 [Eske](eske3g@gmail.com)
         
     License:
-        Copyright 2017 noriyoshi tsujimoto[tensoftware@hotmail.co.jp] - All Rights Reserved
+        Copyright 2017 [Eske](eske3g@gmail.com) - All Rights Reserved
         Unauthorized copying of this file, via any medium is strictly prohibited
         Proprietary and confidential
 """
@@ -39,7 +39,7 @@ def createJointDataFromSelected():
         return data
     for jnt in node.selected():
         datalist[jnt] = getData(jnt)
-    return(json.dumps(datalist, indent=4))
+    return json.dumps(datalist, indent=4)
 
 
 TweakJointData = OrderedDict()

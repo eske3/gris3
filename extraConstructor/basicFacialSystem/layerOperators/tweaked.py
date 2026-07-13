@@ -5,7 +5,7 @@ r"""
     顔のツイーク制御を行うためのフェイシャル用制御レイヤを提供するモジュール。
     
     Dates:
-        date:2017/02/25 13:10[Eske](eske3g@gmail.com)
+        date:2017/02/25 13:10 Eske Yoshinob[eske3g@gmail.com]
         update:2025/06/22 04:32 Eske Yoshinob[eske3g@gmail.com]
         
     License:
@@ -22,6 +22,18 @@ cmds = node.cmds
 class Tweaked(layer.LayerOperator):
     r"""
         顔のツイーク制御を行うためのフェイシャル用制御レイヤを提供するクラス。
+
+        メンバー関数のStackFaceNameにはツイークするためのジョイントが追従するメッシュの
+        名前をキーに、ジョイントが所属するグループ名を値とした辞書を設定する。
+        その際、キーには以下の書式に則った名前の部位名を記述する。
+            部位名_geo(_位置）
+        例）
+            face_geo  →  faceがキー
+        位置を表す文字列も入れる場合はキーを
+            部位名:位置
+        として記述する。
+        例）
+            brow_geo_L  →  brow:Lがキー
     """
     JointData = tweakData.TweakJointData
     JointGroupName = 'facialTweakJnt_grp'
@@ -69,7 +81,6 @@ class Tweaked(layer.LayerOperator):
 
     def preSetup(self):
         cst = self.constructor()
-        anim_set = self.animSet()
         tweak_grp = node.asObject(self.JointGroupName)
         root_group = self.rootGroup()
         if not tweak_grp:
@@ -81,16 +92,24 @@ class Tweaked(layer.LayerOperator):
         all_children = tgt_objects[0].allChildren()
         fitter = {}
         for part, targets in self.StackFaceName.items():
-            name = '{}_{}Mesh'.format(part, self.prefix())
+            if ':' in part:
+                part, pos = part.split(':')
+                name = '{}_{}Mesh_{}'.format(part, self.prefix(), pos)
+            else:
+                name = '{}_{}Mesh'.format(part, self.prefix())
             strack_face = [x for x in all_children if x == name]
             if not strack_face:
                 continue
-            src = cmds.listConnections(strack_face[0]+'.inMesh', s=True, d=False)
+            src = cmds.listConnections(
+                strack_face[0]+'.inMesh', s=True, d=False
+            )
             if not src:
                 continue
             fitter[targets] = func.SurfaceFitter(src[0])
+
         if not fitter:
             return
+
         self.jointlist = {}
         for grp in tweak_grp.children():
             grp = node.parent(grp, root_group)[0]

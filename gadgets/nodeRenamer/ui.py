@@ -14,12 +14,12 @@ r"""
         Proprietary and confidential
 """
 from . import renamerEngine 
-from ... import uilib, node, lib
+from ... import uilib, node
 from ...uilib import mayaUIlib
 QtWidgets, QtGui, QtCore = uilib.QtWidgets, uilib.QtGui, uilib.QtCore
 
-from importlib import reload
-reload(renamerEngine)
+#from importlib import reload
+#reload(renamerEngine)
 
 class NameEditor(QtWidgets.QScrollArea):
     def __init__(self, parent=None):
@@ -145,9 +145,11 @@ class NodeRenamer(QtWidgets.QWidget):
         mod = event.modifiers()
         if key in (QtCore.Qt.Key_Enter , QtCore.Qt.Key_Return):
             self.rename()
+            event.ignore()
             return
         elif key == QtCore.Qt.Key_Escape:
             self._emit_closing()
+            event.ignore()
             return
         if mod != QtCore.Qt.ControlModifier:
             return
@@ -155,6 +157,7 @@ class NodeRenamer(QtWidgets.QWidget):
         if key in nums:
             index = nums.index(key)
             self.setFocusToEditor(index)
+            event.ignore()
             return
         super(NodeRenamer, self).keyPressEvent(event)
 

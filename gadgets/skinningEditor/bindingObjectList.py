@@ -37,6 +37,7 @@ class BindingListView(QtWidgets.QTreeView):
 class BindingLister(extendedUI.FilteredView):
     def __init__(self, parent=None):
         super(BindingLister, self).__init__(parent)
+        self.__selection_enabled = True
         self.view().selectionModel().selectionChanged.connect(
             self.selectNode
         )
@@ -53,6 +54,7 @@ class BindingLister(extendedUI.FilteredView):
         return model
 
     def updateList(self, targetJoints=None):
+        self.__selection_enabled = False
         proxy = self.view().model()
         model = proxy.sourceModel()
         model.removeRows(0, model.rowCount())
@@ -78,7 +80,11 @@ class BindingLister(extendedUI.FilteredView):
         if row == 1:
             self.view().expandAll()
 
+        self.__selection_enabled = True
+
     def selectNode(self, selected, deselected):
+        if not self.__selection_enabled:
+            return
         sel_model = self.view().selectionModel()
         selections = []
         for index in sel_model.selectedIndexes():
